@@ -1,0 +1,21 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: safetap-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: safetap
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  mail:
+    image: maildev/maildev:2
+    container_name: safetap-mail
+    ports:
+      - "1080:1080" # Web UI
+      - "1025:1025" # SMTP
+volumes:
+  pgdata:

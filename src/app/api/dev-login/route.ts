@@ -1,0 +1,54 @@
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+// ⚠️ SOLO PARA DESARROLLO - NO USAR EN PRODUCCIÓN
+export async function POST(req: Request) {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'No disponible en producción' }, { status: 403 });
+  }
+
+  try {
+    const { email } = await req.json();
+    
+    if (!email) {
+      return NextResponse.json({ error: 'Email requerido' }, { status: 400 });
+    }
+
+    // Crear o encontrar usuario
+    let user = await prisma.user.findUnique({ where: { email } });
+    
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          email,
+          name: email.split('@')[0], // Usar la parte antes del @ como nombre
+        },
+      });
+    }
+
+    // Crear sesión directamente usando NextAuth
+    const sessionToken = `dev-session-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
+
+    await prisma.session.create({
+      data: {
+        sessionToken,
+        userId: user.id,
+        expires,
+      },
+    });
+
+    // Generar URL de login directo
+    const loginUrl = `${process.env.PUBLIC_BASE_URL}/api/dev-login/verify?sessionToken=${sessionToken}`;
+
+    return NextResponse.json({ 
+      message: 'Usuario y sesión creados',
+      user: { id: user.id, email: user.email, name: user.name },
+      loginUrl,
+      instructions: 'Haz click en el loginUrl para autenticarte automáticamente'
+    });
+
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
