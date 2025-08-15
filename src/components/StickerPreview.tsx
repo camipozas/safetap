@@ -13,10 +13,10 @@ interface StickerPreviewProps {
 
 // Component for placeholder QR (only in preview)
 const PlaceholderQR = () => (
-  <div className="w-24 h-24 bg-gray-200 border-2 border-gray-300 flex items-center justify-center rounded">
+  <div className="w-16 h-16 bg-gray-200 border border-gray-300 flex items-center justify-center rounded">
     <div className="text-gray-500 text-xs text-center">
-      <div className="w-4 h-4 bg-gray-400 mx-auto mb-1"></div>
-      <span>QR</span>
+      <div className="w-3 h-3 bg-gray-400 mx-auto mb-1"></div>
+      <span className="text-xs">QR</span>
     </div>
   </div>
 );
@@ -27,7 +27,7 @@ const RealQR = ({ slug }: { slug: string }) => {
   const qrData = `https://www.safetap.cl/s/${slug}`;
   
   return (
-    <div className="w-24 h-24 bg-black flex items-center justify-center rounded">
+    <div className="w-16 h-16 bg-black flex items-center justify-center rounded">
       {/* Here will be the real QR code */}
       <div className="text-white text-xs">QR Real</div>
     </div>
@@ -67,13 +67,13 @@ export default function StickerPreview({
     <div className={`relative ${className}`}>
       {/* Sticker container */}
       <div 
-        className="w-64 h-64 rounded-2xl shadow-lg border-2 border-gray-300 p-4 flex flex-col justify-between"
+        className="w-48 h-48 rounded-xl shadow-md border border-gray-200 p-3 flex flex-col justify-between"
         style={{ backgroundColor: stickerColor }}
       >
         {/* Header */}
         <div className="text-center">
           <h1 
-            className="text-2xl font-bold mb-2"
+            className="text-lg font-bold mb-1"
             style={{ color: textColor }}
           >
             SafeTap
@@ -81,11 +81,11 @@ export default function StickerPreview({
         </div>
 
         {/* Personal info */}
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <span className="text-3xl">{flag}</span>
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <span className="text-2xl">{flag}</span>
           <div className="text-center">
             <p 
-              className="text-lg font-semibold"
+              className="text-sm font-semibold leading-tight"
               style={{ color: textColor }}
             >
               {name || 'Tu Nombre'}
@@ -105,9 +105,9 @@ export default function StickerPreview({
           
           <div className="flex-1 text-center">
             {/* NFC Icon */}
-            <div className="mb-2">
+            <div className="mb-1">
               <svg 
-                className="w-12 h-12 mx-auto" 
+                className="w-8 h-8 mx-auto" 
                 fill={textColor} 
                 viewBox="0 0 24 24"
               >
@@ -116,13 +116,13 @@ export default function StickerPreview({
               </svg>
             </div>
             <p 
-              className="text-xs font-medium"
+              className="text-xs font-medium leading-tight"
               style={{ color: textColor }}
             >
               INFORMACIÓN
             </p>
             <p 
-              className="text-xs font-medium"
+              className="text-xs font-medium leading-tight"
               style={{ color: textColor }}
             >
               DE EMERGENCIA
@@ -131,10 +131,10 @@ export default function StickerPreview({
         </div>
       </div>
       
-      {/* Preview badge */}
+      {/* Preview badge - más pequeño y discreto */}
       {!showRealQR && (
-        <div className="absolute top-2 right-2 bg-yellow-500 text-yellow-900 text-xs px-2 py-1 rounded-full font-medium">
-          Vista Previa
+        <div className="absolute -top-1 -right-1 bg-amber-400 text-amber-900 text-xs px-1.5 py-0.5 rounded-md font-medium shadow-sm">
+          Preview
         </div>
       )}
     </div>
