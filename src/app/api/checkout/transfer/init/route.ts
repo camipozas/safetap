@@ -35,6 +35,8 @@ export async function POST(req: Request) {
           ownerId: user.id,
           nameOnSticker: data.nameOnSticker,
           flagCode: data.flagCode,
+          stickerColor: data.stickerColor || '#f1f5f9',
+          textColor: data.textColor || '#000000',
           status: 'ORDERED',
         },
       });
@@ -42,7 +44,7 @@ export async function POST(req: Request) {
         data: {
           userId: user.id,
           stickerId: sticker.id,
-          amountCents: 1999 * data.quantity, // precio ejemplo 19.99€
+          amountCents: 1500 * data.quantity, // precio €15.00
           currency: 'EUR',
           method: 'BANK_TRANSFER',
           reference,

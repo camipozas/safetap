@@ -1,52 +1,42 @@
-import { auth } from '@/lib/auth';
-import CheckoutForm from './ui/CheckoutForm';
+'use client';
 
-export default async function BuyPage() {
-  const session = await auth();
+import { useState } from 'react';
+import StickerCustomizerNew, { StickerCustomization } from '@/components/StickerCustomizerNew';
+import CheckoutFormNew from './ui/CheckoutFormNew';
+
+export default function BuyPage() {
+  const [customization, setCustomization] = useState<StickerCustomization>({
+    name: '',
+    flagCode: 'CL',
+    stickerColor: '#f1f5f9',
+    textColor: '#000000',
+  });
+
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-          Personaliza tu sticker
+          Personaliza tu SafeTap
         </h1>
-        <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-          Configura tu sticker de emergencia con tu información personal y bandera preferida.
+        <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+          Configura tu sticker de emergencia con tu información personal, elige tu bandera y personaliza los colores.
         </p>
       </div>
       
-      <div className="grid lg:grid-cols-2 gap-12 items-start">
-        {/* Formulario */}
-        <div className="bg-white rounded-2xl p-8 shadow-lg">
-          <h2 className="text-2xl font-semibold text-slate-900 mb-6">
-            Detalles del pedido
-          </h2>
-          <CheckoutForm userEmail={session?.user?.email ?? ''} />
-        </div>
-        
-        {/* Vista previa */}
-        <div className="bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl p-8">
-          <h3 className="text-xl font-semibold text-slate-900 mb-6 text-center">
-            Vista previa
-          </h3>
-          <div className="bg-white rounded-xl p-6 shadow-lg">
-            <div className="aspect-square max-w-64 mx-auto bg-gradient-to-br from-brand to-blue-600 rounded-2xl p-6 flex flex-col items-center justify-center text-white">
-              <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-              <p className="font-bold text-lg">safetap</p>
-              <p className="text-sm opacity-90">Tu nombre aquí</p>
-            </div>
-            <div className="mt-6 text-center">
-              <h4 className="font-semibold text-slate-900 mb-2">Características</h4>
-              <ul className="text-sm text-slate-600 space-y-1">
-                <li>• QR y NFC integrados</li>
-                <li>• Resistente al agua</li>
-                <li>• Material duradero</li>
-                <li>• Fácil de pegar</li>
-              </ul>
-            </div>
-          </div>
-        </div>
+      {/* Customizador */}
+      <div className="bg-white rounded-2xl p-8 shadow-lg mb-8">
+        <StickerCustomizerNew onCustomizationChange={setCustomization} />
+      </div>
+
+      {/* Formulario de checkout */}
+      <div className="bg-white rounded-2xl p-8 shadow-lg">
+        <h2 className="text-2xl font-semibold text-slate-900 mb-6">
+          Finalizar pedido
+        </h2>
+        <CheckoutFormNew 
+          userEmail="" 
+          customization={customization}
+        />
       </div>
       
       {/* Información adicional */}

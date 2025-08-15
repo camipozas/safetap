@@ -29,9 +29,11 @@ export const checkoutSchema = z.object({
   nameOnSticker: z
     .string()
     .min(2, 'Minimum 2 characters')
-    .max(20, 'Maximum 20 characters')
+    .max(25, 'Maximum 25 characters')
     .regex(/^[\p{L}0-9 .'-]+$/u, 'Invalid characters'),
   flagCode: z.string().length(2, 'Invalid country code'),
+  stickerColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color format').optional().default('#f1f5f9'),
+  textColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color format').optional().default('#000000'),
   quantity: z.number().int().min(1).max(10),
 });
 

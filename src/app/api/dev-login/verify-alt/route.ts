@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { cookies } from 'next/headers';
+import { SignJWT } from 'jose';
 
 // ⚠️ SOLO PARA DESARROLLO - NO USAR EN PRODUCCIÓN
 export async function GET(req: Request) {
@@ -29,33 +29,11 @@ export async function GET(req: Request) {
       return NextResponse.redirect(`${baseUrl}/login?error=Invalid+or+expired+session`);
     }
 
-    // Crear respuesta con redirección
-    const response = NextResponse.redirect(`${baseUrl}/account`);
-    
-    // Configurar las cookies que NextAuth espera
-    // En desarrollo, NextAuth usa estos nombres de cookie
-    const sessionCookieName = 'next-auth.session-token';
-    const csrfCookieName = 'next-auth.csrf-token';
-    
-    // Establecer cookie de sesión
-    response.cookies.set(sessionCookieName, sessionToken, {
-      httpOnly: true,
-      secure: false, // false en desarrollo
-      sameSite: 'lax',
-      path: '/',
-      expires: session.expires,
-    });
-    
-    // También establecer un token CSRF básico para NextAuth
-    const csrfToken = `${sessionToken.slice(0, 8)}|${Date.now()}`;
-    response.cookies.set(csrfCookieName, csrfToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      path: '/',
-    });
-
     console.log('Dev login successful for user:', session.user.email);
+    
+    // Crear respuesta que redirige a /account con parámetro especial
+    const response = NextResponse.redirect(`${baseUrl}/account?dev-auth=${sessionToken}`);
+    
     return response;
 
   } catch (error: any) {

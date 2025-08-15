@@ -39,7 +39,8 @@ export async function POST(req: Request) {
     });
 
     // Generar URL de login directo
-    const loginUrl = `${process.env.PUBLIC_BASE_URL}/api/dev-login/verify?sessionToken=${sessionToken}`;
+    const baseUrl = process.env.PUBLIC_BASE_URL || 'http://localhost:3000';
+    const loginUrl = `${baseUrl}/api/dev-login/verify-alt?sessionToken=${sessionToken}`;
 
     return NextResponse.json({ 
       message: 'Usuario y sesión creados',
