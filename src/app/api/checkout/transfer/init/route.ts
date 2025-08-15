@@ -44,7 +44,7 @@ export async function POST(req: Request) {
         data: {
           userId: user.id,
           stickerId: sticker.id,
-          amountCents: 1500 * data.quantity, // precio €15.00
+          amountCents: 1500 * data.quantity, // example price
           currency: 'EUR',
           method: 'BANK_TRANSFER',
           reference,
