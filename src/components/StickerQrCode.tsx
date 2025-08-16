@@ -19,8 +19,9 @@ export function StickerQrCode({
   highQuality = false
 }: StickerQrCodeProps) {
   // Generate the URL that the QR will point to
-  const baseUrl = process.env.NODE_ENV === 'production' 
-    ? 'https://safetap.cl' 
+  // Use environment variable for production URL, fallback to default if not set
+  const baseUrl = process.env.NODE_ENV === 'production'
+    ? (process.env.NEXTAUTH_URL || 'https://safetap.cl')
     : 'http://localhost:3000';
   
   // Use serial for the public URL, fallback to stickerId for development

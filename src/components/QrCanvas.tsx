@@ -36,9 +36,6 @@ export function QrCanvas({
     setIsLoading(true);
     setError(null);
 
-    console.log('🔄 Generating QR for URL:', url);
-    console.log('📏 Size:', size, 'HighRes:', highResolution);
-
     // Calculate final QR size
     const qrSize = highResolution ? size * 4 : size;
     console.log('🎯 Final QR size:', qrSize);

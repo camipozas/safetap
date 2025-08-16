@@ -111,7 +111,7 @@ export default async function AccountPage({ searchParams }: { searchParams?: Rec
                     {(s.status === 'ACTIVE') && (
                       <Link 
                         className="btn btn-secondary text-sm" 
-                        href={`/api/qr/generate?url=${encodeURIComponent(`https://safetap.cl/s/${s.serial}`)}&format=png&size=512&dpi=300`}
+                         href={`/api/qr/generate?url=${encodeURIComponent(`${process.env.NEXTAUTH_URL}/s/${s.serial}`)}&format=png&size=512&dpi=300`}
                         target="_blank"
                       >
                         Descargar QR PNG
@@ -120,7 +120,7 @@ export default async function AccountPage({ searchParams }: { searchParams?: Rec
                     {(s.status === 'ACTIVE') && (
                       <Link 
                         className="btn btn-secondary text-sm" 
-                        href={`/api/qr/generate?url=${encodeURIComponent(`https://safetap.cl/s/${s.serial}`)}&format=svg`}
+                        href={`/api/qr/generate?url=${encodeURIComponent(`${process.env.NEXTAUTH_URL}/s/${s.serial}`)}&format=svg`}
                         target="_blank"
                       >
                         Descargar QR SVG
