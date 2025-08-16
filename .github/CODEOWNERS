@@ -1,0 +1,32 @@
+# Global code owners
+* @camipozas
+
+# Critical configuration files require extra review
+package.json @camipozas
+package-lock.json @camipozas
+tsconfig.json @camipozas
+next.config.mjs @camipozas
+tailwind.config.ts @camipozas
+
+# ESLint and Prettier configuration
+eslint.config.js @camipozas
+.prettierrc @camipozas
+.prettierignore @camipozas
+
+# Environment and Docker configuration
+.env* @camipozas
+docker-compose.yml @camipozas
+Dockerfile @camipozas
+
+# Database schema changes
+prisma/ @camipozas
+
+# GitHub workflows and configuration
+.github/ @camipozas
+
+# Documentation
+*.md @camipozas
+
+# Security-sensitive files
+src/lib/auth.ts @camipozas
+src/app/api/ @camipozas
