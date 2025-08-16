@@ -108,8 +108,6 @@ export async function GET(req: Request) {
       ? '__Secure-next-auth.session-token' 
       : 'next-auth.session-token';
     
-    console.log('🍪 Setting cookie:', cookieName);
-    
     // Configure session cookie to be compatible with NextAuth
     response.cookies.set(cookieName, sessionToken, {
       httpOnly: true,
@@ -119,7 +117,6 @@ export async function GET(req: Request) {
       path: '/',
     });
 
-    console.log('🔄 Redirecting to:', callbackUrl);
     return response;
 
   } catch (error: unknown) {
