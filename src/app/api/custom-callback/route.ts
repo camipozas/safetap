@@ -97,7 +97,7 @@ export async function GET(req: Request) {
     //   },
     //   data: {
     //     expires: new Date(Date.now() - 1000), // Expirar inmediatamente
-    // Clean up verification token after use to prevent reuse
+    // Clean up verification token after use to prevent reuse (see REPLICA IDENTITY issues if modifying this logic)
     await prisma.verificationToken.updateMany({
       where: {
         identifier: email,
