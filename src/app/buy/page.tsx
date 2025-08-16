@@ -23,23 +23,22 @@ export default function BuyPage() {
         </p>
       </div>
       
-      {/* Customizador */}
+      {/* Customization panel */}
       <div className="bg-white rounded-2xl p-8 shadow-lg mb-8">
         <StickerCustomizerNew onCustomizationChange={setCustomization} />
       </div>
 
-      {/* Formulario de checkout */}
+      {/* Checkout form */}
       <div className="bg-white rounded-2xl p-8 shadow-lg">
         <h2 className="text-2xl font-semibold text-slate-900 mb-6">
           Finalizar pedido
         </h2>
         <CheckoutFormNew 
-          userEmail="" 
           customization={customization}
         />
       </div>
       
-      {/* Información adicional */}
+      {/* Info section */}
       <div className="mt-16 grid md:grid-cols-3 gap-8">
         <div className="text-center">
           <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">

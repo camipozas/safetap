@@ -7,16 +7,15 @@ import { StickerCustomization } from '@/components/StickerCustomizerNew';
 
 // Simplified schema for checkout form (quantity + optional email if not logged in)
 const checkoutSchema = z.object({
-  quantity: z.number().min(1, 'Mínimo 1 sticker').max(10, 'Máximo 10 stickers'),
-  email: z.string().email('Email inválido').optional(),
+  quantity: z.number().min(1, 'Minimum 1 sticker').max(10, 'Maximum 10 stickers'),
+  email: z.string().email('Invalid email').optional(),
 });
 
 interface CheckoutFormProps {
-  userEmail?: string;
   customization: StickerCustomization;
 }
 
-export default function CheckoutForm({ userEmail, customization }: CheckoutFormProps) {
+export default function CheckoutForm({ customization }: CheckoutFormProps) {
   const [serverError, setServerError] = useState<string | null>(null);
   const {
     register,
@@ -33,13 +32,12 @@ export default function CheckoutForm({ userEmail, customization }: CheckoutFormP
     
     // Ensure name is set in customization
     if (!customization.name.trim()) {
-      setServerError('Por favor, ingresa tu nombre en el customizador');
+      setServerError('Please enter your name in the customizer');
       return;
     }
     
     const orderData = {
       ...data,
-      email: userEmail,
       nameOnSticker: customization.name,
       flagCode: customization.flagCode,
       stickerColor: customization.stickerColor,
@@ -54,7 +52,7 @@ export default function CheckoutForm({ userEmail, customization }: CheckoutFormP
     
     if (!res.ok) {
       const j = await res.json().catch(() => ({}));
-      setServerError(j.error ?? 'Error al crear el pedido');
+      setServerError(j.error ?? 'Error at creating order');
       return;
     }
     
@@ -63,11 +61,35 @@ export default function CheckoutForm({ userEmail, customization }: CheckoutFormP
   }
 
   const qty = watch('quantity');
-  const price = 15; // Precio por sticker
+  const price = 15; // Price per sticker
   const total = qty * price;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+      {/* Email */}
+      <div>
+        <label className="block text-sm font-semibold text-slate-900 mb-2" htmlFor="email">
+          Email *
+        </label>
+        <input 
+          id="email" 
+          type="email" 
+          className="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all duration-200" 
+          placeholder="tu@email.com"
+          aria-invalid={!!errors.email} 
+          aria-describedby={errors.email ? 'email-error' : undefined} 
+          {...register('email')} 
+        />
+        {errors.email && (
+          <p id="email-error" className="text-red-600 text-sm mt-1 flex items-center">
+            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            {errors.email.message}
+          </p>
+        )}
+      </div>
+
       {/* Summary of customization */}
       <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
         <h3 className="font-semibold text-slate-900 mb-4">Tu sticker personalizado</h3>

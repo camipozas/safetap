@@ -26,6 +26,7 @@ export const profileSchema = z.object({
 });
 
 export const checkoutSchema = z.object({
+  email: z.string().email('Invalid email address'),
   nameOnSticker: z
     .string()
     .min(2, 'Minimum 2 characters')
