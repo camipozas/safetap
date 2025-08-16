@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { SignJWT } from 'jose';
 
+// Mark this route as dynamic to prevent static rendering
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 // ⚠️ SOLO PARA DESARROLLO - NO USAR EN PRODUCCIÓN
 export async function GET(req: Request) {
   const isProduction = process.env.NODE_ENV === 'production';
