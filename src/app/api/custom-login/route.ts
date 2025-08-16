@@ -83,11 +83,11 @@ export async function POST(req: Request) {
     const {
       EMAIL_SERVER_HOST,
       EMAIL_SERVER_USER,
-      EMAIL_PASSWORD,
+      EMAIL_SERVER_PASSWORD,
       EMAIL_FROM
     } = process.env;
 
-    if (!EMAIL_SERVER_HOST || !EMAIL_SERVER_USER || !EMAIL_PASSWORD || !EMAIL_FROM) {
+    if (!EMAIL_SERVER_HOST || !EMAIL_SERVER_USER || !EMAIL_SERVER_PASSWORD || !EMAIL_FROM) {
       console.error('❌ Missing required email environment variables.');
       return NextResponse.json({
         success: false,
@@ -101,7 +101,7 @@ export async function POST(req: Request) {
       port: 587,
       auth: {
         user: EMAIL_SERVER_USER,
-        pass: EMAIL_PASSWORD,
+        pass: EMAIL_SERVER_PASSWORD,
       },
       secure: false,
       tls: {
