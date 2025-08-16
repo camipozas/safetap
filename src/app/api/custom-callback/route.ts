@@ -1,6 +1,8 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
+
+import { NextResponse } from 'next/server';
+
+import { prisma } from '@/lib/prisma';
 
 // Mark this route as dynamic to prevent static rendering
 export const runtime = 'nodejs';
@@ -13,11 +15,17 @@ export async function GET(req: Request) {
     const email = url.searchParams.get('email');
     const callbackUrl = url.searchParams.get('callbackUrl') || '/account';
 
-    console.log('🔄 [CUSTOM CALLBACK] Processing login with:', { token: token?.slice(0, 8) + '...', email, callbackUrl });
+    console.log('🔄 [CUSTOM CALLBACK] Processing login with:', {
+      token: `${token?.slice(0, 8)}...`,
+      email,
+      callbackUrl,
+    });
 
     if (!token || !email) {
       console.error('❌ Missing token or email');
-      return NextResponse.redirect(new URL('/login?error=InvalidToken', req.url));
+      return NextResponse.redirect(
+        new URL('/login?error=InvalidToken', req.url)
+      );
     }
 
     // Verify the token (should match the hash in the DB)
@@ -26,7 +34,10 @@ export async function GET(req: Request) {
       .update(`${token}${process.env.NEXTAUTH_SECRET}`)
       .digest('hex');
 
-    console.log('🔍 Looking for verification token with hash:', hashedToken.slice(0, 16) + '...');
+    console.log(
+      '🔍 Looking for verification token with hash:',
+      `${hashedToken.slice(0, 16)}...`
+    );
 
     const verificationToken = await prisma.verificationToken.findFirst({
       where: {
@@ -43,14 +54,21 @@ export async function GET(req: Request) {
       // List existing tokens for debugging
       const existingTokens = await prisma.verificationToken.findMany({
         where: { identifier: email },
-        select: { token: true, expires: true, identifier: true }
+        select: { token: true, expires: true, identifier: true },
       });
-      console.log('🔍 Existing tokens for', email, ':', existingTokens.map(t => ({
-        token: t.token.slice(0, 16) + '...', 
-        expires: t.expires,
-        expired: t.expires < new Date()
-      })));
-      return NextResponse.redirect(new URL('/login?error=InvalidToken', req.url));
+      console.log(
+        '🔍 Existing tokens for',
+        email,
+        ':',
+        existingTokens.map((t) => ({
+          token: `${t.token.slice(0, 16)}...`,
+          expires: t.expires,
+          expired: t.expires < new Date(),
+        }))
+      );
+      return NextResponse.redirect(
+        new URL('/login?error=InvalidToken', req.url)
+      );
     }
 
     console.log('✅ Token verified successfully');
@@ -98,16 +116,22 @@ export async function GET(req: Request) {
       },
     });
 
-    console.log('✅ Login successful for:', email, 'Session token:', sessionToken.slice(0, 8) + '...');
+    console.log(
+      '✅ Login successful for:',
+      email,
+      'Session token:',
+      `${sessionToken.slice(0, 8)}...`
+    );
 
     // Configure session cookie
     const response = NextResponse.redirect(new URL(callbackUrl, req.url));
-    
+
     // Get the correct cookie name for NextAuth
-    const cookieName = process.env.NODE_ENV === 'production' 
-      ? '__Secure-next-auth.session-token' 
-      : 'next-auth.session-token';
-    
+    const cookieName =
+      process.env.NODE_ENV === 'production'
+        ? '__Secure-next-auth.session-token'
+        : 'next-auth.session-token';
+
     // Configure session cookie to be compatible with NextAuth
     response.cookies.set(cookieName, sessionToken, {
       httpOnly: true,
@@ -118,10 +142,11 @@ export async function GET(req: Request) {
     });
 
     return response;
-
   } catch (error: unknown) {
     console.error('❌ Custom callback failed:', error);
     const errorParam = error instanceof Error ? error.message : 'CallbackError';
-    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(errorParam)}`, req.url));
+    return NextResponse.redirect(
+      new URL(`/login?error=${encodeURIComponent(errorParam)}`, req.url)
+    );
   }
 }

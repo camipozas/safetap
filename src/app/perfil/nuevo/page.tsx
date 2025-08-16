@@ -1,10 +1,18 @@
-import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+
+import { auth } from '@/lib/auth';
+
 import ProfileForm from '../ui/ProfileForm';
 
-export default async function NuevoPerfilPage({ searchParams }: { searchParams?: Record<string, string> }) {
+export default async function NuevoPerfilPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string>;
+}) {
   const session = await auth();
-  if (!session?.user) redirect('/login');
+  if (!session?.user) {
+    redirect('/login');
+  }
   const stickerId = searchParams?.stickerId;
   return (
     <div className="max-w-2xl">

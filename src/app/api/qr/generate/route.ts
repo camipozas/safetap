@@ -12,14 +12,20 @@ export async function GET(req: Request) {
     const format = searchParams.get('format') || 'png';
     const size = parseInt(searchParams.get('size') || '512');
     const dpi = parseInt(searchParams.get('dpi') || '300');
-    
+
     if (!url) {
-      return NextResponse.json({ error: 'URL parameter is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'URL parameter is required' },
+        { status: 400 }
+      );
     }
 
     // Validate format
     if (!['png', 'svg'].includes(format)) {
-      return NextResponse.json({ error: 'Format must be png or svg' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Format must be png or svg' },
+        { status: 400 }
+      );
     }
 
     // Calculate high-resolution size for printing
@@ -33,9 +39,9 @@ export async function GET(req: Request) {
         margin: 2,
         color: {
           dark: '#000000',
-          light: '#ffffff'
+          light: '#ffffff',
         },
-        errorCorrectionLevel: 'H' // High error correction for printing
+        errorCorrectionLevel: 'H', // High error correction for printing
       });
 
       return new NextResponse(svgString, {
@@ -51,9 +57,9 @@ export async function GET(req: Request) {
         margin: 2,
         color: {
           dark: '#000000',
-          light: '#ffffff'
+          light: '#ffffff',
         },
-        errorCorrectionLevel: 'H' // High error correction for printing
+        errorCorrectionLevel: 'H', // High error correction for printing
       });
 
       return new NextResponse(buffer as any, {
@@ -66,7 +72,7 @@ export async function GET(req: Request) {
   } catch (error) {
     console.error('Error generating QR code:', error);
     return NextResponse.json(
-      { error: 'Failed to generate QR code' }, 
+      { error: 'Failed to generate QR code' },
       { status: 500 }
     );
   }

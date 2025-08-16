@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
+
 import { profileSchema } from './validators';
 
 describe('profileSchema', () => {
@@ -9,7 +10,9 @@ describe('profileSchema', () => {
   it('accepts a valid profile', () => {
     const res = profileSchema.safeParse({
       bloodType: 'O+',
-      contacts: [{ name: 'Ana', relation: 'Madre', phone: '600123123', preferred: true }],
+      contacts: [
+        { name: 'Ana', relation: 'Madre', phone: '600123123', preferred: true },
+      ],
     });
     expect(res.success).toBe(true);
   });

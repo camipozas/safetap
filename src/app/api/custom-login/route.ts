@@ -1,12 +1,14 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+
+import { NextResponse } from 'next/server';
+import nodemailer from 'nodemailer';
+
+import { prisma } from '@/lib/prisma';
 
 // Email message configuration - can be moved to i18n later
 const emailMessages = {
   subject: 'Inicia sesión en SafeTap',
-  text: (loginUrl: string) => 
+  text: (loginUrl: string) =>
     `Inicia sesión en SafeTap\n\nHaz clic en el siguiente enlace para iniciar sesión:\n${loginUrl}\n\nEste enlace expira en 24 horas.\n\nSi no solicitaste este email, puedes ignorarlo.`,
   html: (loginUrl: string) => `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -29,7 +31,7 @@ const emailMessages = {
 export async function POST(req: Request) {
   try {
     const { email } = await req.json();
-    
+
     if (!email) {
       return NextResponse.json({ error: 'Email required' }, { status: 400 });
     }
@@ -38,7 +40,7 @@ export async function POST(req: Request) {
 
     // 1. Create or find user by email
     let user = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
     });
 
     if (!user) {
@@ -47,7 +49,7 @@ export async function POST(req: Request) {
         data: {
           email,
           name: email.split('@')[0], // Use email prefix as default name
-        }
+        },
       });
     }
 
@@ -65,7 +67,7 @@ export async function POST(req: Request) {
         identifier: email,
         token: hashedToken,
         expires,
-      }
+      },
     });
 
     // 3. Create new URL for login
@@ -74,7 +76,7 @@ export async function POST(req: Request) {
     const protocol = host.includes('localhost') ? 'http' : 'https';
     const baseUrl = `${protocol}://${host}`;
     console.log('🌐 Base URL detected:', baseUrl);
-    
+
     const loginUrl = `${baseUrl}/api/custom-callback?callbackUrl=${encodeURIComponent('/account')}&token=${token}&email=${encodeURIComponent(email)}`;
 
     console.log('🔗 Login URL generated:', loginUrl);
@@ -84,15 +86,23 @@ export async function POST(req: Request) {
       EMAIL_SERVER_HOST,
       EMAIL_SERVER_USER,
       EMAIL_SERVER_PASSWORD,
-      EMAIL_FROM
+      EMAIL_FROM,
     } = process.env;
 
-    if (!EMAIL_SERVER_HOST || !EMAIL_SERVER_USER || !EMAIL_SERVER_PASSWORD || !EMAIL_FROM) {
+    if (
+      !EMAIL_SERVER_HOST ||
+      !EMAIL_SERVER_USER ||
+      !EMAIL_SERVER_PASSWORD ||
+      !EMAIL_FROM
+    ) {
       console.error('❌ Missing required email environment variables.');
-      return NextResponse.json({
-        success: false,
-        error: 'Email service configuration error',
-      }, { status: 500 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Email service configuration error',
+        },
+        { status: 500 }
+      );
     }
 
     // 5. Send email with login link
@@ -105,7 +115,7 @@ export async function POST(req: Request) {
       },
       secure: false,
       tls: {
-        rejectUnauthorized: false
+        rejectUnauthorized: false,
       },
     });
 
@@ -129,19 +139,23 @@ export async function POST(req: Request) {
     // Add login URL for development testing
     if (process.env.NODE_ENV === 'development') {
       responseData.loginUrl = loginUrl;
-      responseData.testInfo = 'This loginUrl is only shown in development mode for testing';
+      responseData.testInfo =
+        'This loginUrl is only shown in development mode for testing';
     }
 
     return NextResponse.json(responseData);
-
   } catch (error: unknown) {
     console.error('❌ Custom login failed:', error);
-    
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    
-    return NextResponse.json({
-      success: false,
-      error: errorMessage,
-    }, { status: 500 });
+
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error occurred';
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: errorMessage,
+      },
+      { status: 500 }
+    );
   }
 }
