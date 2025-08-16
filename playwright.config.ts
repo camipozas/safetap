@@ -4,7 +4,7 @@ import { defineConfig, devices } from '@playwright/test';
  * @see https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
-  testDir: './tests/e2e',
+  testDir: './test/e2e',
   testMatch: '**/*.spec.ts',
   /* Run tests in files in parallel */
   fullyParallel: true,
@@ -64,11 +64,10 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  // Uncomment this when you want to test against a running server
-  // webServer: {
-  //   command: 'npm run build && npm start',
-  //   url: 'http://localhost:3000',
-  //   reuseExistingServer: !process.env.CI,
-  //   timeout: 120 * 1000,
-  // },
+  webServer: {
+    command: 'npm run build && npm start',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
+  },
 });
