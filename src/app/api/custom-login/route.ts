@@ -56,13 +56,29 @@ export async function POST(req: Request) {
 
     console.log('🔗 Login URL generated:', loginUrl);
 
-    // 4. Send email with login link
+    // 4. Validate required environment variables for email
+    const {
+      EMAIL_SERVER_HOST,
+      EMAIL_SERVER_USER,
+      EMAIL_PASSWORD,
+      EMAIL_FROM
+    } = process.env;
+
+    if (!EMAIL_SERVER_HOST || !EMAIL_SERVER_USER || !EMAIL_PASSWORD || !EMAIL_FROM) {
+      console.error('❌ Missing required email environment variables.');
+      return NextResponse.json({
+        success: false,
+        error: 'Missing required email environment variables. Please check EMAIL_SERVER_HOST, EMAIL_SERVER_USER, EMAIL_PASSWORD, and EMAIL_FROM.',
+      }, { status: 500 });
+    }
+
+    // 5. Send email with login link
     const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_SERVER_HOST,
+      host: EMAIL_SERVER_HOST,
       port: 587,
       auth: {
-        user: process.env.EMAIL_SERVER_USER,
-        pass: process.env.EMAIL_PASSWORD,
+        user: EMAIL_SERVER_USER,
+        pass: EMAIL_PASSWORD,
       },
       secure: false,
       tls: {
@@ -72,7 +88,7 @@ export async function POST(req: Request) {
 
     const result = await transporter.sendMail({
       to: email,
-      from: process.env.EMAIL_FROM,
+      from: EMAIL_FROM,
       subject: 'Inicia sesión en SafeTap',
       text: `Inicia sesión en SafeTap\n\nHaz clic en el siguiente enlace para iniciar sesión:\n${loginUrl}\n\nEste enlace expira en 24 horas.\n\nSi no solicitaste este email, puedes ignorarlo.`,
       html: `
