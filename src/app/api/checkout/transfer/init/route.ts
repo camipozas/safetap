@@ -4,30 +4,24 @@ import { z } from 'zod';
 import { checkoutSchema } from '@/lib/validators';
 import { generateSlug } from '@/lib/slug';
 
-const bodySchema = checkoutSchema.extend({ email: z.string().email().optional() });
+const bodySchema = checkoutSchema;
 
 export async function POST(req: Request) {
   try {
     const json = await req.json();
     const data = bodySchema.parse(json);
 
-    // Create or find user by email (if not logged). For MVP we allow guest email to register later.
-    let user = data.email
-      ? await prisma.user.upsert({
-          where: { email: data.email },
-          create: { email: data.email },
-          update: {},
-        })
-      : null;
+    // Create or find user by email
+    let user = await prisma.user.upsert({
+      where: { email: data.email },
+      create: { email: data.email },
+      update: {},
+    });
 
     // Create Sticker (ORDERED) and Payment (PENDING) with reference
     const reference = `SAFETAP-${generateSlug(6)}`;
 
     const result = await prisma.$transaction(async (tx) => {
-      if (!user) {
-        // create placeholder user to assign order by email-less? For MVP, require email.
-        throw new Error('Se requiere email de usuario para crear el pedido. Inicia sesión o proporciona un email.');
-      }
       const sticker = await tx.sticker.create({
         data: {
           slug: generateSlug(7),
