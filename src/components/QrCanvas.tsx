@@ -2,6 +2,9 @@
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
 
+// QR Code generation constants
+const QR_IMAGE_QUALITY = 0.92;
+
 interface QrCanvasProps {
   url: string;
   alt?: string;
@@ -50,9 +53,9 @@ export function QrCanvas({
       },
       errorCorrectionLevel: 'M' as const,
       type: 'image/png' as const,
-      quality: 0.92,
+      quality: QR_IMAGE_QUALITY,
       rendererOpts: {
-        quality: 0.92
+        quality: QR_IMAGE_QUALITY
       }
     };    
 
