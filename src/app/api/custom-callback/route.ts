@@ -30,7 +30,7 @@ export async function GET(req: Request) {
         identifier: email,
         token: hashedToken,
         expires: {
-          gte: new Date(), // Non expired tokens only
+          gte: new Date(), // Non-expired tokens only
         },
       },
     });
@@ -88,7 +88,8 @@ export async function GET(req: Request) {
     });
 
     // Limpiar token de verificación - COMENTADO debido a problemas con REPLICA IDENTITY
-    // En lugar de eliminar/actualizar, dejamos que expiren naturalmente
+    // Clean up verification token - COMMENTED OUT due to issues with REPLICA IDENTITY
+    // Instead of deleting/updating, we let them expire naturally
     // await prisma.verificationToken.updateMany({
     //   where: {
     //     identifier: email,
@@ -96,15 +97,23 @@ export async function GET(req: Request) {
     //   },
     //   data: {
     //     expires: new Date(Date.now() - 1000), // Expirar inmediatamente
-    //   },
-    // });
+    // Clean up verification token after use to prevent reuse (see REPLICA IDENTITY issues if modifying this logic)
+    await prisma.verificationToken.updateMany({
+      where: {
+        identifier: email,
+        token: hashedToken,
+      },
+      data: {
+        expires: new Date(Date.now() - 1000), // Expire immediately
+      },
+    });
 
     console.log('✅ Login successful for:', email, 'Session token:', sessionToken.slice(0, 8) + '...');
 
-    // Configurate session cookie
+    // Configure session cookie
     const response = NextResponse.redirect(new URL(callbackUrl, req.url));
     
-    // Configure session cookie compatible with NextAuth
+    // Configure session cookie to be compatible with NextAuth
     response.cookies.set('next-auth.session-token', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

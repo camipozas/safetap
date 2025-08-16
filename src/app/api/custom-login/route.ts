@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       user = await prisma.user.create({
         data: {
           email,
-          name: email.split('@')[0], // Name by default is the part before @
+          name: email.split('@')[0], // Use email prefix as default name
         }
       });
     }
