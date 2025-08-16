@@ -104,7 +104,7 @@ export async function GET(req: Request) {
         token: hashedToken,
       },
       data: {
-        expires: new Date(Date.now() - 1000), // Expirar inmediatamente
+        expires: new Date(Date.now() - 1000), // Expire immediately
       },
     });
 
