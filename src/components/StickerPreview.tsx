@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { StickerQrCode } from './StickerQrCode';
 
 interface StickerPreviewProps {
   name: string;
@@ -8,31 +8,10 @@ interface StickerPreviewProps {
   stickerColor?: string;
   textColor?: string;
   showRealQR?: boolean; // To distinct between preview and real sticker
+  stickerId?: string; // For real stickers
+  serial?: string; // For real stickers
   className?: string;
 }
-
-// Component for placeholder QR (only in preview)
-const PlaceholderQR = () => (
-  <div className="w-16 h-16 bg-gray-200 border border-gray-300 flex items-center justify-center rounded">
-    <div className="text-gray-500 text-xs text-center">
-      <div className="w-3 h-3 bg-gray-400 mx-auto mb-1"></div>
-      <span className="text-xs">QR</span>
-    </div>
-  </div>
-);
-
-// Component for real QR (in real sticker)
-const RealQR = ({ slug }: { slug: string }) => {
-  // En un caso real, aquí generarías el QR con la URL real
-  const qrData = `https://www.safetap.cl/s/${slug}`;
-  
-  return (
-    <div className="w-16 h-16 bg-black flex items-center justify-center rounded">
-      {/* Here will be the real QR code */}
-      <div className="text-white text-xs">QR Real</div>
-    </div>
-  );
-};
 
 // Available flags
 const FLAGS = {
@@ -59,6 +38,8 @@ export default function StickerPreview({
   stickerColor = '#f1f5f9', 
   textColor = '#000000',
   showRealQR = false,
+  stickerId,
+  serial,
   className = ''
 }: StickerPreviewProps) {
   const flag = FLAGS[flagCode as keyof typeof FLAGS] || '🏳️';
@@ -96,11 +77,13 @@ export default function StickerPreview({
         {/* QR Code and NFC */}
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            {showRealQR ? (
-              <RealQR slug={`${name.toLowerCase().replace(/\s+/g, '-')}-${flagCode.toLowerCase()}`} />
-            ) : (
-              <PlaceholderQR />
-            )}
+            <StickerQrCode
+              stickerId={stickerId}
+              serial={serial}
+              size={64}
+              isPreview={!showRealQR}
+              className="mx-auto"
+            />
           </div>
           
           <div className="flex-1 text-center">
@@ -131,7 +114,7 @@ export default function StickerPreview({
         </div>
       </div>
       
-      {/* Preview badge - más pequeño y discreto */}
+      {/* Preview badge - more smallest */}
       {!showRealQR && (
         <div className="absolute -top-1 -right-1 bg-amber-400 text-amber-900 text-xs px-1.5 py-0.5 rounded-md font-medium shadow-sm">
           Preview

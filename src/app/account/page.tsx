@@ -2,12 +2,13 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import StickerPreview from '@/components/StickerPreview';
 
 export default async function AccountPage({ searchParams }: { searchParams?: Record<string, string> }) {
   let user = null;
   let session = await auth();
   
-  // Manejo especial para dev-auth
+  // Special manage for dev-auth
   if (!session?.user?.email && searchParams?.['dev-auth'] && process.env.NODE_ENV === 'development') {
     const devSessionToken = searchParams['dev-auth'];
     try {
@@ -30,7 +31,7 @@ export default async function AccountPage({ searchParams }: { searchParams?: Rec
     }
   }
   
-  // Autenticación normal
+  // Normal authentication
   if (!user) {
     if (!session?.user?.email) redirect('/login');
     
@@ -47,7 +48,7 @@ export default async function AccountPage({ searchParams }: { searchParams?: Rec
 
   return (
     <div className="grid gap-6">
-      {/* Banner de modo desarrollo */}
+      {/* Dev Auth Banner */}
       {searchParams?.['dev-auth'] && process.env.NODE_ENV === 'development' && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <div className="flex items-center">
@@ -71,34 +72,62 @@ export default async function AccountPage({ searchParams }: { searchParams?: Rec
       )}
       <section>
         <h2 className="text-xl font-semibold">Mis stickers</h2>
-        <ul className="mt-2 grid gap-2">
+        <ul className="mt-2 grid gap-4">
           {user.stickers.map((s) => (
-            <li key={s.id} className="rounded border bg-white p-3 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                {/* Preview of sticker */}
-                <div 
-                  className="w-12 h-12 rounded-lg border-2 border-gray-300 flex items-center justify-center text-xs font-bold"
-                  style={{ 
-                    backgroundColor: (s as any).stickerColor || '#f1f5f9',
-                    color: (s as any).textColor || '#000000'
-                  }}
-                >
-                  ST
+            <li key={s.id} className="rounded border bg-white p-4">
+              <div className="flex flex-col lg:flex-row gap-4">
+                {/* Sticker Preview */}
+                <div className="flex-shrink-0">
+                  <StickerPreview
+                    name={s.nameOnSticker}
+                    flagCode={s.flagCode}
+                    stickerColor={(s as any).stickerColor || '#f1f5f9'}
+                    textColor={(s as any).textColor || '#000000'}
+                    showRealQR={s.status === 'SHIPPED' || s.status === 'ACTIVE'}
+                    stickerId={s.id}
+                    serial={s.serial}
+                    className="mx-auto lg:mx-0"
+                  />
                 </div>
-                <div>
-                  <p className="font-medium">{s.nameOnSticker} — {s.flagCode}</p>
-                  <p className="text-sm text-slate-600">Estado: {s.status}</p>
-                  <p className="text-sm text-slate-600">URL pública: <span className="font-mono">/s/{s.slug}</span></p>
-                  {(s as any).stickerColor && (
-                    <p className="text-xs text-slate-500">
-                      Colores: <span className="font-mono">{(s as any).stickerColor}</span> / <span className="font-mono">{(s as any).textColor}</span>
-                    </p>
-                  )}
+                
+                {/* Sticker Info */}
+                <div className="flex-1">
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold">{s.nameOnSticker}</h3>
+                    <p className="text-sm text-slate-600">País: {s.flagCode}</p>
+                    <p className="text-sm text-slate-600">Serial: <span className="font-mono">{s.serial}</span></p>
+                    <p className="text-sm text-slate-600">Estado: <span className={`font-medium ${s.status === 'ACTIVE' ? 'text-green-600' : s.status === 'SHIPPED' ? 'text-blue-600' : 'text-amber-600'}`}>{s.status}</span></p>
+                    <p className="text-sm text-slate-600">URL pública: <span className="font-mono">/s/{s.slug}</span></p>
+                    {(s as any).stickerColor && (
+                      <p className="text-xs text-slate-500 mt-1">
+                        Colores: <span className="font-mono">{(s as any).stickerColor}</span> / <span className="font-mono">{(s as any).textColor}</span>
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2">
+                    <Link className="btn" href={`/s/${s.slug}`}>Ver perfil público</Link>
+                    <Link className="underline underline-offset-4" href={`/profile/new?stickerId=${s.id}`}>Activar/Editar</Link>
+                    {(s.status === 'ACTIVE') && (
+                      <Link 
+                        className="btn btn-secondary text-sm" 
+                         href={`/api/qr/generate?url=${encodeURIComponent(`${process.env.NEXTAUTH_URL}/s/${s.serial}`)}&format=png&size=512&dpi=300`}
+                        target="_blank"
+                      >
+                        Descargar QR PNG
+                      </Link>
+                    )}
+                    {(s.status === 'ACTIVE') && (
+                      <Link 
+                        className="btn btn-secondary text-sm" 
+                        href={`/api/qr/generate?url=${encodeURIComponent(`${process.env.NEXTAUTH_URL}/s/${s.serial}`)}&format=svg`}
+                        target="_blank"
+                      >
+                        Descargar QR SVG
+                      </Link>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="flex gap-2">
-                <Link className="btn" href={`/s/${s.slug}`}>Ver perfil</Link>
-                <Link className="underline underline-offset-4" href={`/profile/new?stickerId=${s.id}`}>Activar/Editar</Link>
               </div>
             </li>
           ))}
