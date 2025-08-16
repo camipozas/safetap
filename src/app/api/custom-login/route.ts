@@ -72,7 +72,7 @@ export async function POST(req: Request) {
 
     const result = await transporter.sendMail({
       to: email,
-      from: process.env.EMAIL_FROM || 'Safetap <no-reply@safetap.cl>',
+      from: process.env.EMAIL_FROM,
       subject: 'Inicia sesión en SafeTap',
       text: `Inicia sesión en SafeTap\n\nHaz clic en el siguiente enlace para iniciar sesión:\n${loginUrl}\n\nEste enlace expira en 24 horas.\n\nSi no solicitaste este email, puedes ignorarlo.`,
       html: `
