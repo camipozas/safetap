@@ -1,4 +1,5 @@
-"use client";
+'use client';
+import Image from 'next/image';
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
 
@@ -15,14 +16,14 @@ interface QrCanvasProps {
   foregroundColor?: string;
 }
 
-export function QrCanvas({ 
-  url, 
+export function QrCanvas({
+  url,
   alt = 'Código QR',
   size = 200,
   className = '',
   highResolution = false,
   backgroundColor = '#ffffff',
-  foregroundColor = '#000000'
+  foregroundColor = '#000000',
 }: QrCanvasProps) {
   const [dataUrl, setDataUrl] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -49,15 +50,15 @@ export function QrCanvas({
       margin: 2,
       color: {
         dark: foregroundColor || '#000000',
-        light: backgroundColor || '#ffffff'
+        light: backgroundColor || '#ffffff',
       },
       errorCorrectionLevel: 'M' as const,
       type: 'image/png' as const,
       quality: QR_IMAGE_QUALITY,
       rendererOpts: {
-        quality: QR_IMAGE_QUALITY
-      }
-    };    
+        quality: QR_IMAGE_QUALITY,
+      },
+    };
 
     QRCode.toDataURL(url, qrOptions)
       .then((generatedDataUrl) => {
@@ -82,7 +83,7 @@ export function QrCanvas({
 
   if (isLoading) {
     return (
-      <div 
+      <div
         className={`bg-slate-200 rounded flex items-center justify-center ${className}`}
         style={{ width: displaySize, height: displaySize }}
       >
@@ -96,7 +97,7 @@ export function QrCanvas({
 
   if (error) {
     return (
-      <div 
+      <div
         className={`bg-red-100 border border-red-300 rounded flex items-center justify-center ${className}`}
         style={{ width: displaySize, height: displaySize }}
       >
@@ -110,7 +111,7 @@ export function QrCanvas({
 
   if (!dataUrl) {
     return (
-      <div 
+      <div
         className={`bg-yellow-100 border border-yellow-300 rounded flex items-center justify-center ${className}`}
         style={{ width: displaySize, height: displaySize }}
       >
@@ -123,13 +124,19 @@ export function QrCanvas({
   }
 
   return (
-    <div className={`relative ${className}`}>
-      <img 
-        src={dataUrl} 
-        alt={alt} 
+    <div
+      style={{ position: 'relative', width: displaySize, height: displaySize }}
+      className={className}
+    >
+      <Image
+        src={dataUrl}
+        alt={alt}
         className="rounded border"
+        width={size}
+        height={size}
         style={{ width: displaySize, height: displaySize }}
         loading="lazy"
+        unoptimized
       />
       {highResolution && (
         <div className="absolute top-1 right-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded">

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import { checkoutSchema } from '@/lib/validators';
+
+import { prisma } from '@/lib/prisma';
 import { generateSlug } from '@/lib/slug';
+import { checkoutSchema } from '@/lib/validators';
 
 const bodySchema = checkoutSchema;
 
@@ -12,7 +13,7 @@ export async function POST(req: Request) {
     const data = bodySchema.parse(json);
 
     // Create or find user by email
-    let user = await prisma.user.upsert({
+    const user = await prisma.user.upsert({
       where: { email: data.email },
       create: { email: data.email },
       update: {},
@@ -51,7 +52,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ reference, paymentId: result.payment.id });
   } catch (e: any) {
     if (e instanceof z.ZodError) {
-      return NextResponse.json({ error: e.issues[0]?.message ?? 'Datos inválidos' }, { status: 400 });
+      return NextResponse.json(
+        { error: e.issues[0]?.message ?? 'Datos inválidos' },
+        { status: 400 }
+      );
     }
     return NextResponse.json({ error: e.message ?? 'Error' }, { status: 400 });
   }

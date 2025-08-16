@@ -1,0 +1,90 @@
+name: Accessibility Check
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'src/**/*.tsx'
+      - 'src/**/*.jsx'
+
+jobs:
+  accessibility:
+    name: Accessibility Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+        env:
+          NEXTAUTH_SECRET: 'test-secret-key'
+          NEXTAUTH_URL: 'http://localhost:3000'
+          DATABASE_URL: 'file:./test.db'
+
+      - name: Start application
+        run: npm start &
+        env:
+          NEXTAUTH_SECRET: 'test-secret-key'
+          NEXTAUTH_URL: 'http://localhost:3000'
+          DATABASE_URL: 'file:./test.db'
+
+      - name: Wait for application to start
+        run: npx wait-on http://localhost:3000
+
+      - name: Run accessibility tests
+        run: |
+          npx @axe-core/cli http://localhost:3000 \
+            --save accessibility-report.json \
+            --reporter json
+        continue-on-error: true
+
+      - name: Upload accessibility report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: accessibility-report
+          path: accessibility-report.json
+          retention-days: 30
+
+      - name: Comment accessibility results
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            try {
+              const report = JSON.parse(fs.readFileSync('accessibility-report.json', 'utf8'));
+              const violations = report.violations || [];
+              
+              if (violations.length === 0) {
+                github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: '✅ **Accessibility check passed!** No accessibility violations found.'
+                });
+              } else {
+                const violationSummary = violations.map(v => `- **${v.id}**: ${v.description} (${v.nodes.length} instances)`).join('\n');
+                
+                github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: `⚠️ **Accessibility violations found:**\n\n${violationSummary}\n\nPlease review and fix these accessibility issues. Check the uploaded accessibility report for detailed information.`
+                });
+              }
+            } catch (error) {
+              console.log('Could not read accessibility report:', error.message);
+            }

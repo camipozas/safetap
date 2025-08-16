@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import { QrCanvas } from './QrCanvas';
 
 interface StickerQrCodeProps {
@@ -11,18 +11,18 @@ interface StickerQrCodeProps {
   baseUrl?: string; // Base URL for the QR code, should be passed from server
 }
 
-export function StickerQrCode({ 
-  stickerId, 
-  serial, 
-  size = 64, 
+export function StickerQrCode({
+  stickerId,
+  serial,
+  size = 64,
   isPreview = false,
   className = '',
   highQuality = false,
-  baseUrl
+  baseUrl,
 }: StickerQrCodeProps) {
   // Use the baseUrl prop, fallback to default if not provided
   const resolvedBaseUrl = baseUrl || 'https://safetap.cl';
-  
+
   // Use serial for the public URL, fallback to stickerId for development
   const identifier = serial || stickerId || 'demo-sticker';
   const qrUrl = `${resolvedBaseUrl}/s/${identifier}`;
@@ -30,7 +30,7 @@ export function StickerQrCode({
   if (isPreview) {
     // Show placeholder for preview mode
     return (
-      <div 
+      <div
         className={`bg-gray-200 border border-gray-300 flex items-center justify-center rounded ${className}`}
         style={{ width: `${size}px`, height: `${size}px` }}
       >
@@ -56,7 +56,7 @@ export function StickerQrCode({
         backgroundColor="#ffffff"
         foregroundColor="#000000"
       />
-      
+
       {/* Quality indicator for high resolution QRs */}
       {(highQuality || size <= 64) && (
         <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1 py-0.5 rounded-full">

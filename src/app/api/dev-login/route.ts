@@ -1,22 +1,26 @@
 import { NextResponse } from 'next/server';
+
 import { prisma } from '@/lib/prisma';
 
 // ⚠️ JUST FOR DEVELOPMENT PURPOSES ⚠️
 export async function POST(req: Request) {
   if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ error: 'No disponible en producción' }, { status: 403 });
+    return NextResponse.json(
+      { error: 'No disponible en producción' },
+      { status: 403 }
+    );
   }
 
   try {
     const { email } = await req.json();
-    
+
     if (!email) {
       return NextResponse.json({ error: 'Email requerido' }, { status: 400 });
     }
 
     // Create or find user by email
     let user = await prisma.user.findUnique({ where: { email } });
-    
+
     if (!user) {
       user = await prisma.user.create({
         data: {
@@ -42,15 +46,16 @@ export async function POST(req: Request) {
     const baseUrl = process.env.PUBLIC_BASE_URL || 'http://localhost:3000';
     const loginUrl = `${baseUrl}/api/dev-login/verify-alt?sessionToken=${sessionToken}`;
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: 'Usuario y sesión creados',
       user: { id: user.id, email: user.email, name: user.name },
       loginUrl,
-      instructions: 'Haz click en el loginUrl para autenticarte automáticamente'
+      instructions:
+        'Haz click en el loginUrl para autenticarte automáticamente',
     });
-
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Error desconocido';
+    const message =
+      error instanceof Error ? error.message : 'Error desconocido';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

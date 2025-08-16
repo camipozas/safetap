@@ -1,6 +1,14 @@
-import NextAuth, { type NextAuthOptions, getServerSession, type Session, type User, type Account, type Profile } from 'next-auth';
-import EmailProvider from 'next-auth/providers/email';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
+import NextAuth, {
+  getServerSession,
+  type Account,
+  type NextAuthOptions,
+  type Profile,
+  type Session,
+  type User,
+} from 'next-auth';
+import EmailProvider from 'next-auth/providers/email';
+
 import { prisma } from './prisma';
 
 console.log('🔧 [AUTH CONFIG] Loading authOptions...');
@@ -19,12 +27,12 @@ export const authOptions: NextAuthOptions = {
         },
         secure: false,
         tls: {
-          rejectUnauthorized: false
+          rejectUnauthorized: false,
         },
       },
       from: process.env.EMAIL_FROM!,
       maxAge: 24 * 60 * 60,
-      // Note: The default sendVerificationRequest is still used; 
+      // Note: The default sendVerificationRequest is still used;
       // /api/custom-login is used alongside the default provider.
     }),
   ],
@@ -32,13 +40,21 @@ export const authOptions: NextAuthOptions = {
     async session({ session, user }: { session: Session; user: User }) {
       if (session.user) {
         (session.user as User & { id: string; role?: string }).id = user.id;
-        (session.user as User & { id: string; role?: string }).role = (user as User & { role?: string }).role ?? 'USER';
+        (session.user as User & { id: string; role?: string }).role =
+          (user as User & { role?: string }).role ?? 'USER';
       }
       return session;
     },
   },
   events: {
-    async signIn({ user }: { user: User; account: Account | null; profile?: Profile; isNewUser?: boolean }) {
+    async signIn({
+      user,
+    }: {
+      user: User;
+      account: Account | null;
+      profile?: Profile;
+      isNewUser?: boolean;
+    }) {
       console.log('✅ User signed in:', user.email);
     },
     async createUser({ user }: { user: User }) {

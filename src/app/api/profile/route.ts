@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
+
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { profileSchema } from '@/lib/validators';
-import { z } from 'zod';
 
 type ProfileValues = z.infer<typeof profileSchema>;
 
@@ -14,9 +15,15 @@ interface RequestBody {
 
 export async function POST(req: Request) {
   const session = await auth();
-  if (!session?.user?.email) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  });
+  if (!user) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
 
   try {
     const json = await req.json();
@@ -25,8 +32,12 @@ export async function POST(req: Request) {
 
     if (profileId) {
       // Ensure the profile belongs to the current user
-      const existing = await prisma.emergencyProfile.findFirst({ where: { id: profileId, userId: user.id } });
-      if (!existing) return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+      const existing = await prisma.emergencyProfile.findFirst({
+        where: { id: profileId, userId: user.id },
+      });
+      if (!existing) {
+        return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+      }
 
       const updated = await prisma.emergencyProfile.update({
         where: { id: profileId },
@@ -44,14 +55,21 @@ export async function POST(req: Request) {
 
     // Creating new profile: if linking to a sticker, validate sticker ownership
     if (stickerId) {
-      const sticker = await prisma.sticker.findFirst({ where: { id: stickerId, ownerId: user.id } });
-      if (!sticker) return NextResponse.json({ error: 'Sticker no encontrado' }, { status: 404 });
+      const sticker = await prisma.sticker.findFirst({
+        where: { id: stickerId, ownerId: user.id },
+      });
+      if (!sticker) {
+        return NextResponse.json(
+          { error: 'Sticker no encontrado' },
+          { status: 404 }
+        );
+      }
     }
 
     const created = await prisma.emergencyProfile.create({
       data: {
         userId: user.id,
-        stickerId: stickerId,
+        stickerId,
         ...data,
         contacts: { create: data.contacts },
       },

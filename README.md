@@ -3,11 +3,13 @@
 Guía rápida (MVP Fase 1) con validaciones Zod y accesibilidad.
 
 ## Requisitos
+
 - Node 18+ (recomendado 20+)
 - Cuenta de correo para NextAuth (SMTP)
 - Base de datos Postgres (Prisma Accelerate opcional)
 
 ## Instalación
+
 1. Instalar dependencias
 
 ```bash
@@ -43,6 +45,7 @@ DATABASE_URL="prisma+postgres://accelerate.prisma-data.net/?api_key=..."
 Nota: nunca publiques tu api_key real en repos públicos.
 
 ## Desarrollo
+
 - Generar cliente Prisma y construir:
 
 ```bash
@@ -62,6 +65,7 @@ npm test
 ```
 
 ## Migraciones
+
 Si trabajas contra Postgres tradicional usa:
 
 ```bash
@@ -71,6 +75,7 @@ npx prisma migrate dev --name init
 Con Accelerate (shadow DB no disponible): usa migraciones generadas en local contra una base Postgres y luego despliega el esquema al origen principal según tu flujo (p. ej., Prisma Migrate en CI apuntando a una DB administrada).
 
 ## Stack
+
 - Next.js 14 (App Router) + TypeScript
 - NextAuth (Email Magic Link)
 - Prisma ORM (PostgreSQL) + Accelerate opcional
@@ -79,6 +84,7 @@ Con Accelerate (shadow DB no disponible): usa migraciones generadas en local con
 - Testing Library + Vitest + Playwright
 
 ## Scripts
+
 - dev: arranca servidor
 - build: prisma generate + next build
 - start: next start

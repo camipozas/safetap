@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import { useId, useState } from 'react';
 
 const countries: { code: string; name: string; flag: string }[] = [
@@ -19,7 +19,7 @@ const countries: { code: string; name: string; flag: string }[] = [
 
 export function CountrySelect({
   label = 'País',
-  name,
+  name: _name,
   value,
   onChange,
   error,
@@ -32,14 +32,17 @@ export function CountrySelect({
 }) {
   const id = useId();
   const [isOpen, setIsOpen] = useState(false);
-  const selectedCountry = countries.find(c => c.code === value);
+  const selectedCountry = countries.find((c) => c.code === value);
 
   return (
     <div className="relative">
-      <label className="block text-sm font-semibold text-slate-900 mb-2" htmlFor={id}>
+      <label
+        className="block text-sm font-semibold text-slate-900 mb-2"
+        htmlFor={id}
+      >
         {label}
       </label>
-      
+
       <div className="relative">
         <button
           type="button"
@@ -69,7 +72,12 @@ export function CountrySelect({
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
         </button>
 
@@ -90,8 +98,16 @@ export function CountrySelect({
                 <span className="text-xl mr-3">{country.flag}</span>
                 <span>{country.name}</span>
                 {value === country.code && (
-                  <svg className="w-5 h-5 ml-auto text-brand-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  <svg
+                    className="w-5 h-5 ml-auto text-brand-600"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 )}
               </button>
@@ -101,9 +117,16 @@ export function CountrySelect({
       </div>
 
       {error && (
-        <p id={`${id}-error`} className="text-red-600 text-sm mt-1 flex items-center">
+        <p
+          id={`${id}-error`}
+          className="text-red-600 text-sm mt-1 flex items-center"
+        >
           <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            <path
+              fillRule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+              clipRule="evenodd"
+            />
           </svg>
           {error}
         </p>
@@ -114,6 +137,14 @@ export function CountrySelect({
         <div
           className="fixed inset-0 z-0"
           onClick={() => setIsOpen(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+              setIsOpen(false);
+            }
+          }}
+          tabIndex={0}
+          aria-label="Cerrar menú de selección de país"
+          role="button"
         />
       )}
     </div>

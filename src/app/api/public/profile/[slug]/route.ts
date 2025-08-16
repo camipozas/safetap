@@ -1,5 +1,6 @@
-import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
+
+import { prisma } from '@/lib/prisma';
 
 export async function GET(_: Request, { params }: { params: { slug: string } }) {
   const base = await prisma.emergencyProfile.findFirst({
@@ -13,7 +14,9 @@ export async function GET(_: Request, { params }: { params: { slug: string } }) 
       notes: true,
     },
   });
-  if (!base) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  if (!base) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
 
   const contacts = await prisma.emergencyContact.findMany({
     where: { profileId: base.id },

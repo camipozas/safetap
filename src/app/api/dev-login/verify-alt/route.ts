@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
+
 import { prisma } from '@/lib/prisma';
-import { SignJWT } from 'jose';
 
 // Mark this route as dynamic to prevent static rendering
 export const runtime = 'nodejs';
@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: Request) {
   const isProduction = process.env.NODE_ENV === 'production';
   const baseUrl = process.env.PUBLIC_BASE_URL || 'http://localhost:3000';
-  
+
   if (isProduction) {
     return NextResponse.redirect(`${baseUrl}/login`);
   }
@@ -30,16 +30,19 @@ export async function GET(req: Request) {
     });
 
     if (!session || session.expires < new Date()) {
-      return NextResponse.redirect(`${baseUrl}/login?error=Invalid+or+expired+session`);
+      return NextResponse.redirect(
+        `${baseUrl}/login?error=Invalid+or+expired+session`
+      );
     }
 
     console.log('Dev login successful for user:', session.user.email);
-    
-    // Crear respuesta que redirige a /account con parámetro especial
-    const response = NextResponse.redirect(`${baseUrl}/account?dev-auth=${sessionToken}`);
-    
-    return response;
 
+    // Crear respuesta que redirige a /account con parámetro especial
+    const response = NextResponse.redirect(
+      `${baseUrl}/account?dev-auth=${sessionToken}`
+    );
+
+    return response;
   } catch (error: any) {
     console.error('Dev login error:', error);
     return NextResponse.redirect(`${baseUrl}/login?error=Login+failed`);

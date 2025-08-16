@@ -1,7 +1,15 @@
-"use client";
+'use client';
 import { useId } from 'react';
 
-export function Input({ label, name, type = 'text', value, onChange, error, placeholder }:{
+export function Input({
+  label,
+  name,
+  type = 'text',
+  value,
+  onChange,
+  error,
+  placeholder,
+}: {
   label: string;
   name: string;
   type?: string;
@@ -13,7 +21,9 @@ export function Input({ label, name, type = 'text', value, onChange, error, plac
   const id = useId();
   return (
     <div>
-      <label className="label" htmlFor={id}>{label}</label>
+      <label className="label" htmlFor={id}>
+        {label}
+      </label>
       <input
         id={id}
         name={name}
@@ -25,7 +35,11 @@ export function Input({ label, name, type = 'text', value, onChange, error, plac
         aria-invalid={!!error}
         aria-describedby={error ? `${id}-error` : undefined}
       />
-      {error && <p id={`${id}-error`} className="error">{error}</p>}
+      {error && (
+        <p id={`${id}-error`} className="error">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
