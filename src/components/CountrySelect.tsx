@@ -19,14 +19,11 @@ const countries: { code: string; name: string; flag: string }[] = [
 
 export function CountrySelect({
   label = 'País',
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  name,
   value,
   onChange,
   error,
 }: {
   label?: string;
-  name: string;
   value?: string;
   onChange?: (v: string) => void;
   error?: string;

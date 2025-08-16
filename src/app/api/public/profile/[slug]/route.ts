@@ -14,7 +14,9 @@ export async function GET(_: Request, { params }: { params: { slug: string } }) 
       notes: true,
     },
   });
-  if (!base) {return NextResponse.json({ error: 'Not found' }, { status: 404 });}
+  if (!base) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
 
   const contacts = await prisma.emergencyContact.findMany({
     where: { profileId: base.id },

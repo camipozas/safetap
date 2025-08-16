@@ -14,17 +14,18 @@ export default function LandingPage() {
             datos de emergencia cuando más los necesitas.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-            <a
+            <Link
               className="btn text-lg px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-200"
               href="/buy"
             >
-              <Link
-                className="inline-flex items-center justify-center px-8 py-3 text-lg font-medium text-brand border-2 border-brand rounded-md hover:bg-brand hover:text-white transition-all duration-200"
-                href="/s/demo"
-              >
-                Ver ejemplo →
-              </Link>
-            </a>
+              Comprar ahora
+            </Link>
+            <Link
+              className="inline-flex items-center justify-center px-8 py-3 text-lg font-medium text-brand border-2 border-brand rounded-md hover:bg-brand hover:text-white transition-all duration-200"
+              href="/s/demo"
+            >
+              Ver ejemplo →
+            </Link>
           </div>
         </div>
       </section>
