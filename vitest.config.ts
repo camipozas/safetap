@@ -7,7 +7,7 @@ export default defineConfig({
     setupFiles: ['./vitest.setup.ts'],
     globals: true,
     include: ['src/**/*.{test,spec}.ts?(x)'],
-    exclude: ['node_modules', 'dist', '.next', 'prisma'],
+    exclude: ['node_modules', 'dist', '.next', 'prisma', 'tests/**', 'e2e/**'],
   },
   resolve: {
     alias: {
