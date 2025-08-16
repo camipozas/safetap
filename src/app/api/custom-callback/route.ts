@@ -113,7 +113,7 @@ export async function GET(req: Request) {
     // Configurate session cookie
     const response = NextResponse.redirect(new URL(callbackUrl, req.url));
     
-    // Configure session cookie compatible with NextAuth
+    // Configure session cookie to be compatible with NextAuth
     response.cookies.set('next-auth.session-token', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
