@@ -13,7 +13,7 @@ export default function LoginForm() {
     setIsLoading(true);
     
     try {
-      // Usar nuestro endpoint personalizado que SÍ funciona
+      // Use our custom endpoint that DOES work
       const res = await fetch('/api/custom-login', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
