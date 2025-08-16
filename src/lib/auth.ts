@@ -1,29 +1,66 @@
-import NextAuth, { type NextAuthOptions, getServerSession } from 'next-auth';
+import NextAuth, { type NextAuthOptions, getServerSession, type Session, type User, type Account, type Profile } from 'next-auth';
 import EmailProvider from 'next-auth/providers/email';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { prisma } from './prisma';
+
+console.log('🔧 [AUTH CONFIG] Loading authOptions...');
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma as any),
   session: { strategy: 'database' },
   providers: [
     EmailProvider({
-      server: process.env.EMAIL_SERVER!,
+      server: {
+        host: process.env.EMAIL_SERVER_HOST,
+        port: parseInt(process.env.EMAIL_SERVER_PORT || '587'),
+        auth: {
+          user: process.env.EMAIL_SERVER_USER,
+          pass: process.env.EMAIL_SERVER_PASSWORD || process.env.EMAIL_PASSWORD,
+        },
+        secure: false,
+        tls: {
+          rejectUnauthorized: false
+        },
+      },
       from: process.env.EMAIL_FROM!,
       maxAge: 24 * 60 * 60,
+      // Note: The default sendVerificationRequest is still used; 
+      // /api/custom-login is used alongside the default provider.
     }),
   ],
   callbacks: {
-    async session({ session, user }) {
+    async session({ session, user }: { session: Session; user: User }) {
       if (session.user) {
-        (session.user as any).id = (user as any).id as string;
-        (session.user as any).role = (user as any).role ?? 'USER';
+        (session.user as User & { id: string; role?: string }).id = user.id;
+        (session.user as User & { id: string; role?: string }).role = (user as User & { role?: string }).role ?? 'USER';
       }
       return session;
     },
   },
+  events: {
+    async signIn({ user }: { user: User; account: Account | null; profile?: Profile; isNewUser?: boolean }) {
+      console.log('✅ User signed in:', user.email);
+    },
+    async createUser({ user }: { user: User }) {
+      console.log('👤 New user created:', user.email);
+    },
+  },
+  logger: {
+    error(code: string, metadata?: unknown) {
+      console.error('🔴 NextAuth Error:', code, metadata);
+    },
+    warn(code: string) {
+      console.warn('🟡 NextAuth Warning:', code);
+    },
+    debug(code: string, metadata?: unknown) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔵 NextAuth Debug:', code, metadata);
+      }
+    },
+  },
   pages: {
     signIn: '/login',
+    error: '/login',
   },
 };
 

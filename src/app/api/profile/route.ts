@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { profileSchema } from '@/lib/validators';
+import { z } from 'zod';
+
+type ProfileValues = z.infer<typeof profileSchema>;
+
+interface RequestBody {
+  stickerId?: string;
+  profileId?: string;
+  values: ProfileValues;
+}
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -11,7 +20,7 @@ export async function POST(req: Request) {
 
   try {
     const json = await req.json();
-    const { stickerId, profileId, values } = json as { stickerId?: string; profileId?: string; values: any };
+    const { stickerId, profileId, values } = json as RequestBody;
     const data = profileSchema.parse(values);
 
     if (profileId) {
@@ -48,8 +57,8 @@ export async function POST(req: Request) {
       },
     });
     return NextResponse.json({ id: created.id });
-  } catch (e: any) {
-    const message = e instanceof Error ? e.message : 'Error';
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Error desconocido';
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
