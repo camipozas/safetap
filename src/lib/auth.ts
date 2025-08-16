@@ -24,7 +24,8 @@ export const authOptions: NextAuthOptions = {
       },
       from: process.env.EMAIL_FROM!,
       maxAge: 24 * 60 * 60,
-      // sendVerificationRequest: /api/custom-login is used instead of this provider
+      // Note: The default sendVerificationRequest is still used; 
+      // /api/custom-login is used alongside the default provider.
     }),
   ],
   callbacks: {

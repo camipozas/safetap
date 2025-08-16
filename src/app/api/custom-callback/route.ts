@@ -86,17 +86,9 @@ export async function GET(req: Request) {
       },
     });
 
-    // Limpiar token de verificación - COMENTADO debido a problemas con REPLICA IDENTITY
-    // Clean up verification token - COMMENTED OUT due to issues with REPLICA IDENTITY
-    // Instead of deleting/updating, we let them expire naturally
-    // await prisma.verificationToken.updateMany({
-    //   where: {
-    //     identifier: email,
-    //     token: hashedToken,
-    //   },
-    //   data: {
-    //     expires: new Date(Date.now() - 1000), // Expirar inmediatamente
-    // Clean up verification token after use to prevent reuse (see REPLICA IDENTITY issues if modifying this logic)
+    // Clean up verification token after use to prevent reuse.
+    // Note: We expire the token immediately instead of deleting it, which helps avoid issues with REPLICA IDENTITY in some database configurations.
+    // If you change this logic, ensure your database replication setup can handle deletes/updates on this table.
     await prisma.verificationToken.updateMany({
       where: {
         identifier: email,
