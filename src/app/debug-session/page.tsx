@@ -16,7 +16,7 @@ export default async function DebugSessionPage() {
       
       <div className="mt-4">
         <p className="text-sm text-gray-600">
-          {session ? '✅ Sesión activa' : '❌ No hay sesión'}
+          {session ? '✅ Active session' : '❌ No session'}
         </p>
       </div>
     </div>
