@@ -10,25 +10,13 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: 'database' },
   providers: [
     EmailProvider({
-      server: {
-        host: process.env.EMAIL_SERVER_HOST || 'smtp.gmail.com',
-        port: parseInt(process.env.EMAIL_SERVER_PORT || '587'),
-        auth: {
-          user: process.env.EMAIL_SERVER_USER || 'camila@safetap.cl',
-          pass: process.env.EMAIL_SERVER_PASSWORD || process.env.EMAIL_PASSWORD || 'uamyrbelnpmjkyjn',
-        },
-        secure: false,
-        tls: {
-          rejectUnauthorized: false
-        },
-      },
       from: process.env.EMAIL_FROM!,
       maxAge: 24 * 60 * 60,
       sendVerificationRequest: async ({ identifier, url, provider }) => {
-        console.log('🔥🔥🔥 [CUSTOM EMAIL] sendVerificationRequest called!');
+        console.log('🔥 [CUSTOM EMAIL] sendVerificationRequest called!');
         console.log('📧 Sending email to:', identifier);
         console.log('🔗 Login URL:', url);
-        console.log('📮 Provider config:', JSON.stringify(provider, null, 2));
+        console.log('📮 Provider config:', provider.from);
         
         try {
           const nodemailer = require('nodemailer');

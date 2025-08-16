@@ -13,12 +13,20 @@ export default function LoginForm() {
     setIsLoading(true);
     
     try {
-      const res = await fetch('/api/auth/signin/email', {
+      // Usar nuestro endpoint personalizado que SÍ funciona
+      const res = await fetch('/api/custom-login', {
         method: 'POST',
-        headers: { 'content-type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ callbackUrl: '/account', email }),
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email }),
       });
-      if (!res.ok) throw new Error('No se pudo enviar el enlace.');
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'No se pudo enviar el enlace.');
+      }
+      
+      console.log('✅ Email sent successfully:', data.messageId);
       setSubmitted(true);
     } catch (err: any) {
       setError(err.message);
