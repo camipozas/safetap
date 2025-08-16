@@ -88,7 +88,8 @@ export async function GET(req: Request) {
     });
 
     // Limpiar token de verificación - COMENTADO debido a problemas con REPLICA IDENTITY
-    // En lugar de eliminar/actualizar, dejamos que expiren naturalmente
+    // Clean up verification token - COMMENTED OUT due to issues with REPLICA IDENTITY
+    // Instead of deleting/updating, we let them expire naturally
     // await prisma.verificationToken.updateMany({
     //   where: {
     //     identifier: email,
