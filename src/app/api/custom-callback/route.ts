@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
-import { cookies } from 'next/headers';
 
 export async function GET(req: Request) {
   try {
