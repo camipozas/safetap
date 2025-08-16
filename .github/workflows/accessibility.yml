@@ -31,6 +31,10 @@ jobs:
           NEXTAUTH_SECRET: 'test-secret-key'
           NEXTAUTH_URL: 'http://localhost:3000'
           DATABASE_URL: 'file:./test.db'
+          EMAIL_SERVER_HOST: 'smtp.example.com'
+          EMAIL_SERVER_USER: 'test@example.com'
+          EMAIL_SERVER_PASSWORD: 'testpassword'
+          EMAIL_FROM: 'Test <test@example.com>'
 
       - name: Start application
         run: npm start &
@@ -38,6 +42,10 @@ jobs:
           NEXTAUTH_SECRET: 'test-secret-key'
           NEXTAUTH_URL: 'http://localhost:3000'
           DATABASE_URL: 'file:./test.db'
+          EMAIL_SERVER_HOST: 'smtp.example.com'
+          EMAIL_SERVER_USER: 'test@example.com'
+          EMAIL_SERVER_PASSWORD: 'testpassword'
+          EMAIL_FROM: 'Test <test@example.com>'
 
       - name: Wait for application to start
         run: npx wait-on http://localhost:3000

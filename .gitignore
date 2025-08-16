@@ -140,3 +140,6 @@ vite.config.ts.timestamp-*
 
 # VSCode settings
 .vscode/
+
+# Playwright test artifacts
+playwright-report/

@@ -46,9 +46,13 @@ jobs:
       - name: Build application
         run: npm run build
         env:
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'fallback-secret-for-ci-testing-only' }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'file:./dev.db' }}
+          EMAIL_SERVER_HOST: ${{ secrets.EMAIL_SERVER_HOST || 'smtp.example.com' }}
+          EMAIL_SERVER_USER: ${{ secrets.EMAIL_SERVER_USER || 'test@example.com' }}
+          EMAIL_SERVER_PASSWORD: ${{ secrets.EMAIL_SERVER_PASSWORD || 'testpassword' }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM || 'Test <test@example.com>' }}
 
   e2e-tests:
     name: E2E Tests
@@ -77,16 +81,24 @@ jobs:
       - name: Build application
         run: npm run build
         env:
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'fallback-secret-for-ci-testing-only' }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          EMAIL_SERVER_HOST: ${{ secrets.EMAIL_SERVER_HOST || 'smtp.example.com' }}
+          EMAIL_SERVER_USER: ${{ secrets.EMAIL_SERVER_USER || 'test@example.com' }}
+          EMAIL_SERVER_PASSWORD: ${{ secrets.EMAIL_SERVER_PASSWORD || 'testpassword' }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM || 'Test <test@example.com>' }}
 
       - name: Run Playwright tests
         run: npm run e2e
         env:
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'fallback-secret-for-ci-testing-only' }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          EMAIL_SERVER_HOST: ${{ secrets.EMAIL_SERVER_HOST || 'smtp.example.com' }}
+          EMAIL_SERVER_USER: ${{ secrets.EMAIL_SERVER_USER || 'test@example.com' }}
+          EMAIL_SERVER_PASSWORD: ${{ secrets.EMAIL_SERVER_PASSWORD || 'testpassword' }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM || 'Test <test@example.com>' }}
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
