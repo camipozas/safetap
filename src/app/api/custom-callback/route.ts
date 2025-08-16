@@ -110,7 +110,7 @@ export async function GET(req: Request) {
 
     console.log('✅ Login successful for:', email, 'Session token:', sessionToken.slice(0, 8) + '...');
 
-    // Configurate session cookie
+    // Configure session cookie
     const response = NextResponse.redirect(new URL(callbackUrl, req.url));
     
     // Configure session cookie to be compatible with NextAuth
