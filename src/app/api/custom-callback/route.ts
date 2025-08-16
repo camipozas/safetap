@@ -91,15 +91,10 @@ export async function GET(req: Request) {
     });
 
     // Clean up verification token after use to prevent reuse.
-    // Note: We expire the token immediately instead of deleting it, which helps avoid issues with REPLICA IDENTITY in some database configurations.
-    // If you change this logic, ensure your database replication setup can handle deletes/updates on this table.
-    await prisma.verificationToken.updateMany({
+    await prisma.verificationToken.deleteMany({
       where: {
         identifier: email,
         token: hashedToken,
-      },
-      data: {
-        expires: new Date(Date.now() - 1000), // Expire immediately
       },
     });
 
@@ -108,14 +103,23 @@ export async function GET(req: Request) {
     // Configure session cookie
     const response = NextResponse.redirect(new URL(callbackUrl, req.url));
     
+    // Get the correct cookie name for NextAuth
+    const cookieName = process.env.NODE_ENV === 'production' 
+      ? '__Secure-next-auth.session-token' 
+      : 'next-auth.session-token';
+    
+    console.log('🍪 Setting cookie:', cookieName);
+    
     // Configure session cookie to be compatible with NextAuth
-    response.cookies.set('next-auth.session-token', sessionToken, {
+    response.cookies.set(cookieName, sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       expires,
+      path: '/',
     });
 
+    console.log('🔄 Redirecting to:', callbackUrl);
     return response;
 
   } catch (error: unknown) {
