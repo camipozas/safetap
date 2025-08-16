@@ -38,7 +38,6 @@ export function QrCanvas({
 
     // Calculate final QR size
     const qrSize = highResolution ? size * 4 : size;
-    console.log('🎯 Final QR size:', qrSize);
 
     // Configure QR options with error handling
     const qrOptions = {
@@ -55,22 +54,18 @@ export function QrCanvas({
       rendererOpts: {
         quality: 0.92
       }
-    };
-
-    console.log('⚙️ QR Options:', qrOptions);
+    };    
 
     QRCode.toDataURL(url, qrOptions)
       .then((generatedDataUrl) => {
         if (active) {
-          console.log('✅ QR generated successfully, data URL length:', generatedDataUrl.length);
           setDataUrl(generatedDataUrl);
           setIsLoading(false);
         }
       })
       .catch((err) => {
         if (active) {
-          console.error('❌ QR generation failed:', err);
-          setError(`Error: ${err.message || 'Falló la generación del QR'}`);
+          setError(`Error: ${err.message || 'Code generation failed'}`);
           setIsLoading(false);
         }
       });
@@ -132,8 +127,6 @@ export function QrCanvas({
         className="rounded border"
         style={{ width: displaySize, height: displaySize }}
         loading="lazy"
-        onLoad={() => console.log('🖼️ QR image loaded successfully')}
-        onError={(e) => console.error('🖼️ QR image load failed:', e)}
       />
       {highResolution && (
         <div className="absolute top-1 right-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded">

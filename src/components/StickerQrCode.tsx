@@ -8,6 +8,7 @@ interface StickerQrCodeProps {
   isPreview?: boolean;
   className?: string;
   highQuality?: boolean; // Force high quality for production stickers
+  baseUrl?: string; // Base URL for the QR code, should be passed from server
 }
 
 export function StickerQrCode({ 
@@ -16,17 +17,15 @@ export function StickerQrCode({
   size = 64, 
   isPreview = false,
   className = '',
-  highQuality = false
+  highQuality = false,
+  baseUrl
 }: StickerQrCodeProps) {
-  // Generate the URL that the QR will point to
-  // Use environment variable for production URL, fallback to default if not set
-  const baseUrl = process.env.NODE_ENV === 'production'
-    ? (process.env.NEXTAUTH_URL || 'https://safetap.cl')
-    : 'http://localhost:3000';
+  // Use the baseUrl prop, fallback to default if not provided
+  const resolvedBaseUrl = baseUrl || 'https://safetap.cl';
   
   // Use serial for the public URL, fallback to stickerId for development
   const identifier = serial || stickerId || 'demo-sticker';
-  const qrUrl = `${baseUrl}/s/${identifier}`;
+  const qrUrl = `${resolvedBaseUrl}/s/${identifier}`;
 
   if (isPreview) {
     // Show placeholder for preview mode
