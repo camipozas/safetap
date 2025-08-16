@@ -13,7 +13,7 @@ export async function POST(req: Request) {
 
     console.log('🔥 [CUSTOM LOGIN] Starting login process for:', email);
 
-    // 1. Crear o encontrar el usuario
+    // 1. Create or find user by email
     let user = await prisma.user.findUnique({
       where: { email }
     });
@@ -23,20 +23,20 @@ export async function POST(req: Request) {
       user = await prisma.user.create({
         data: {
           email,
-          name: email.split('@')[0], // Nombre por defecto
+          name: email.split('@')[0], // Name by default is the part before @
         }
       });
     }
 
-    // 2. Crear verification token (compatible con NextAuth)
+    // 2. Create a verification token
     const token = crypto.randomUUID();
     const hashedToken = crypto
       .createHash('sha256')
       .update(`${token}${process.env.NEXTAUTH_SECRET}`)
       .digest('hex');
-    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    // Crear nuevo token (permitir múltiples tokens por simplicidad)
+    // Create new verification token in the database
     await prisma.verificationToken.create({
       data: {
         identifier: email,
@@ -45,8 +45,8 @@ export async function POST(req: Request) {
       }
     });
 
-    // 3. Crear URL de login (usar token original, no hasheado)
-    // Obtener la URL base dinámicamente del request
+    // 3. Create new URL for login
+    // Get the base URL from the request
     const host = req.headers.get('host') || 'localhost:3000';
     const protocol = host.includes('localhost') ? 'http' : 'https';
     const baseUrl = `${protocol}://${host}`;
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
 
     console.log('🔗 Login URL generated:', loginUrl);
 
-    // 4. Enviar email usando nuestro transporter
+    // 4. Send email with login link
     const transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 587,
