@@ -58,10 +58,10 @@ export async function POST(req: Request) {
 
     // 4. Send email with login link
     const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
+      host: process.env.EMAIL_SERVER_HOST,
       port: 587,
       auth: {
-        user: process.env.EMAIL_SERVER_USER || 'no-reply@safetap.cl',
+        user: process.env.EMAIL_SERVER_USER,
         pass: process.env.EMAIL_PASSWORD,
       },
       secure: false,
