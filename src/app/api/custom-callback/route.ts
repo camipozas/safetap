@@ -97,7 +97,7 @@ export async function GET(req: Request) {
     //   },
     //   data: {
     //     expires: new Date(Date.now() - 1000), // Expirar inmediatamente
-    // Limpiar token de verificación después de uso para prevenir reutilización
+    // Clean up verification token after use to prevent reuse
     await prisma.verificationToken.updateMany({
       where: {
         identifier: email,
