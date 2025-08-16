@@ -30,7 +30,7 @@ export async function GET(req: Request) {
         identifier: email,
         token: hashedToken,
         expires: {
-          gte: new Date(), // Non expired tokens only
+          gte: new Date(), // Non-expired tokens only
         },
       },
     });
