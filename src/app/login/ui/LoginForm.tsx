@@ -28,8 +28,9 @@ export default function LoginForm() {
       
       console.log('✅ Email sent successfully:', data.messageId);
       setSubmitted(true);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

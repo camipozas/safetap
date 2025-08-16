@@ -17,7 +17,7 @@ export async function GET(req: Request) {
       return NextResponse.redirect(new URL('/login?error=InvalidToken', req.url));
     }
 
-    // Verificar el token (debe coincidir con el hash en la DB)
+    // Verify the token (should match the hash in the DB)
     const hashedToken = crypto
       .createHash('sha256')
       .update(`${token}${process.env.NEXTAUTH_SECRET}`)
@@ -30,14 +30,14 @@ export async function GET(req: Request) {
         identifier: email,
         token: hashedToken,
         expires: {
-          gte: new Date(), // Token no expirado
+          gte: new Date(), // Non expired tokens only
         },
       },
     });
 
     if (!verificationToken) {
       console.error('❌ Invalid or expired token for email:', email);
-      // Listar tokens existentes para debug
+      // List existing tokens for debugging
       const existingTokens = await prisma.verificationToken.findMany({
         where: { identifier: email },
         select: { token: true, expires: true, identifier: true }
@@ -52,7 +52,7 @@ export async function GET(req: Request) {
 
     console.log('✅ Token verified successfully');
 
-    // Encontrar o crear usuario
+    // Find or create user by email
     let user = await prisma.user.findUnique({
       where: { email },
     });
@@ -69,16 +69,16 @@ export async function GET(req: Request) {
       console.log('👤 Found existing user:', email);
     }
 
-    // Crear o actualizar sesión (simplificada)
+    // Create or update session (simplified)
     const sessionToken = crypto.randomUUID();
-    const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 días
+    const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
-    // Eliminar sesiones anteriores del usuario
+    // Delete previous sessions for the user
     await prisma.session.deleteMany({
       where: { userId: user.id },
     });
 
-    // Crear nueva sesión
+    // Create new session
     await prisma.session.create({
       data: {
         sessionToken,
@@ -101,10 +101,10 @@ export async function GET(req: Request) {
 
     console.log('✅ Login successful for:', email, 'Session token:', sessionToken.slice(0, 8) + '...');
 
-    // Configurar cookie de sesión
+    // Configurate session cookie
     const response = NextResponse.redirect(new URL(callbackUrl, req.url));
     
-    // Configurar cookie compatible con NextAuth
+    // Configure session cookie compatible with NextAuth
     response.cookies.set('next-auth.session-token', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -114,8 +114,9 @@ export async function GET(req: Request) {
 
     return response;
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Custom callback failed:', error);
-    return NextResponse.redirect(new URL('/login?error=CallbackError', req.url));
+    const errorParam = error instanceof Error ? error.message : 'CallbackError';
+    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(errorParam)}`, req.url));
   }
 }
