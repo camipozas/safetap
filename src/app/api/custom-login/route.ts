@@ -119,11 +119,20 @@ export async function POST(req: Request) {
 
     console.log('✅ Custom login email sent successfully:', result.messageId);
 
-    return NextResponse.json({
+    // Return the login URL for testing purposes in development
+    const responseData: Record<string, unknown> = {
       success: true,
       messageId: result.messageId,
       message: `Email de login enviado a ${email}`,
-    });
+    };
+
+    // Add login URL for development testing
+    if (process.env.NODE_ENV === 'development') {
+      responseData.loginUrl = loginUrl;
+      responseData.testInfo = 'This loginUrl is only shown in development mode for testing';
+    }
+
+    return NextResponse.json(responseData);
 
   } catch (error: unknown) {
     console.error('❌ Custom login failed:', error);
