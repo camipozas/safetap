@@ -35,7 +35,10 @@ export default function ProfileForm({
           organDonor: profile.organDonor ?? false,
           insurance: profile.insurance ?? undefined,
           consentPublic: profile.consentPublic ?? true,
-          contacts: profile.contacts ?? [],
+          contacts:
+            profile.contacts?.length > 0
+              ? profile.contacts
+              : [{ name: '', relation: '', phone: '', preferred: true }],
         }
       : { contacts: [{ name: '', relation: '', phone: '', preferred: true }] },
   });
