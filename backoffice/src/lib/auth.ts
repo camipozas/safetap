@@ -1,3 +1,4 @@
+import { hasPermission } from '@/types/shared';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
@@ -19,18 +20,16 @@ export const authOptions: NextAuthOptions = {
           where: { email: session.user.email },
         });
 
-        // Solo permitir acceso a usuarios ADMIN
-        if (dbUser?.role !== 'ADMIN') {
+        if (!dbUser || !hasPermission(dbUser.role, 'canAccessBackoffice')) {
           throw new Error('Access denied: Admin privileges required');
         }
 
         session.user.id = user.id;
-        session.user.role = dbUser.role;
+        session.user.role = dbUser.role as typeof session.user.role;
       }
       return session;
     },
     redirect: async ({ url, baseUrl }) => {
-      // Redirigir al dashboard después del login
       if (url.startsWith('/')) {
         return `${baseUrl}${url}`;
       }

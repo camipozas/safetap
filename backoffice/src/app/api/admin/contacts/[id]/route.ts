@@ -1,6 +1,6 @@
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { USER_ROLES } from '@/types/shared';
+import { hasPermission } from '@/types/shared';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -11,7 +11,7 @@ export async function PUT(
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== USER_ROLES.ADMIN) {
+    if (!session?.user || !hasPermission(session.user.role, 'canManageUsers')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -78,7 +78,7 @@ export async function DELETE(
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== USER_ROLES.ADMIN) {
+    if (!session?.user || !hasPermission(session.user.role, 'canManageUsers')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -115,7 +115,7 @@ export async function GET(
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== USER_ROLES.ADMIN) {
+    if (!session?.user || !hasPermission(session.user.role, 'canManageUsers')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

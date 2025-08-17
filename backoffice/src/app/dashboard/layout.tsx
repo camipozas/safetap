@@ -4,13 +4,13 @@ import { redirect } from 'next/navigation';
 import Sidebar from '@/components/ui/sidebar';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { hasPermission } from '@/types/shared';
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // In development mode, use a mock session
   if (process.env.NODE_ENV === 'development') {
     return (
       <div className="flex min-h-screen bg-gray-50">
@@ -40,7 +40,7 @@ export default async function DashboardLayout({
     where: { email: session.user.email },
   });
 
-  if (!user || user.role !== 'ADMIN') {
+  if (!user || !hasPermission(user.role, 'canAccessBackoffice')) {
     redirect('/auth/signin?error=access_denied');
   }
 

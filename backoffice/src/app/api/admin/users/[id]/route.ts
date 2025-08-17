@@ -1,6 +1,6 @@
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { USER_ROLES } from '@/types/shared';
+import { hasPermission } from '@/types/shared';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -20,7 +20,7 @@ export async function PUT(
         where: { email: session.user.email },
       });
 
-      if (!adminUser || adminUser.role !== USER_ROLES.ADMIN) {
+      if (!adminUser || !hasPermission(adminUser.role, 'canManageUsers')) {
         return NextResponse.json({ error: 'Access denied' }, { status: 403 });
       }
     }
@@ -34,10 +34,6 @@ export async function PUT(
 
     if (!userToUpdate) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    if (role && !Object.values(USER_ROLES).includes(role)) {
-      return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
     }
 
     const updatedUser = await prisma.user.update({

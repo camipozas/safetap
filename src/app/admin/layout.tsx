@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { hasPermission } from '@/types/shared';
 
 export default async function AdminLayout({
   children,
@@ -17,7 +18,7 @@ export default async function AdminLayout({
     where: { email: session.user.email },
   });
 
-  if (!user || user.role !== 'ADMIN') {
+  if (!user || !hasPermission(user.role, 'canAccessBackoffice')) {
     redirect('/');
   }
 

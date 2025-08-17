@@ -1,6 +1,6 @@
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { USER_ROLES } from '@/types/shared';
+import { hasPermission } from '@/types/shared';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -16,7 +16,7 @@ export async function GET(_request: NextRequest) {
       where: { email: session.user.email },
     });
 
-    if (!user || user.role !== USER_ROLES.ADMIN) {
+    if (!user || !hasPermission(user.role, 'canAccessBackoffice')) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
