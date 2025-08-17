@@ -97,7 +97,7 @@ describe('UsersTable', () => {
     render(<UsersTable users={mockUsers} />);
 
     // Check that action buttons are present
-    const editButtons = screen.getAllByText('Editar');
+    const editButtons = screen.getAllByText('Ver Perfil');
     const contactButtons = screen.getAllByText('Contactos');
 
     expect(editButtons.length).toBe(2);

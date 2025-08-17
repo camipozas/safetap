@@ -703,7 +703,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                             router.push(`/dashboard/users/${order.owner.id}`);
                           }}
                           className="text-xs"
-                          title="Ver información del usuario"
+                          title="Ver detalles completos del usuario"
                         >
                           Perfil
                         </Button>

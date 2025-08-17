@@ -198,8 +198,12 @@ describe('OrdersTable', () => {
     const profileButtons = screen.getAllByText('Perfil');
     expect(profileButtons.length).toBeGreaterThan(0);
 
-    // Check that button is clickable
+    // Check that button is clickable and has correct title
     expect(profileButtons[0]).toBeInTheDocument();
     expect(profileButtons[0]).not.toBeDisabled();
+    expect(profileButtons[0]).toHaveAttribute(
+      'title',
+      'Ver detalles completos del usuario'
+    );
   });
 });

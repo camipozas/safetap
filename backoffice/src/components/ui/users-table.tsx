@@ -3,6 +3,7 @@
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { Role } from '@/types/shared';
 import { Users } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from './button';
 import UserEditModal from './user-edit-modal';
@@ -35,10 +36,11 @@ interface UsersTableProps {
 export default function UsersTable({ users }: UsersTableProps) {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const router = useRouter();
 
   const handleEditUser = (user: User) => {
-    setSelectedUser(user);
-    setIsEditModalOpen(true);
+    // Navigate to user details page instead of opening modal
+    router.push(`/dashboard/users/${user.id}`);
   };
 
   const handleCloseModal = () => {
@@ -170,17 +172,15 @@ export default function UsersTable({ users }: UsersTableProps) {
                       size="sm"
                       onClick={() => handleEditUser(user)}
                       className="text-xs"
+                      title="Ver detalles completos del usuario"
                     >
-                      Editar
+                      Ver Perfil
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() =>
-                        window.open(
-                          `/dashboard/users/${user.id}/contacts`,
-                          '_blank'
-                        )
+                        router.push(`/dashboard/users/${user.id}/contacts`)
                       }
                       className="text-xs"
                     >
