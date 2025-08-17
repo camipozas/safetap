@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { hasPermission } from '@/types/shared';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
       where: { email },
     });
 
-    if (!user || user.role !== 'ADMIN') {
+    if (!user || !hasPermission(user.role, 'canAccessBackoffice')) {
       return NextResponse.json(
         { error: 'User not found or not an admin' },
         { status: 403 }

@@ -1,4 +1,4 @@
-import { type ClassValue, clsx } from 'clsx';
+import { clsx, type ClassValue } from 'clsx';
 
 export function cn(...inputs: ClassValue[]) {
   return clsx(inputs);
@@ -31,15 +31,18 @@ export function formatDateTime(date: Date | string) {
 
 export function getStatusColor(status: string) {
   const colors = {
+    // Payment statuses
     PENDING: 'bg-yellow-100 text-yellow-800',
     VERIFIED: 'bg-green-100 text-green-800',
     REJECTED: 'bg-red-100 text-red-800',
-    ORDERED: 'bg-blue-100 text-blue-800',
-    PAID: 'bg-green-100 text-green-800',
-    PRINTING: 'bg-purple-100 text-purple-800',
-    SHIPPED: 'bg-indigo-100 text-indigo-800',
-    ACTIVE: 'bg-green-100 text-green-800',
-    LOST: 'bg-red-100 text-red-800',
+
+    // Order workflow statuses (in logical progression order)
+    ORDERED: 'bg-slate-100 text-slate-800', // Inicial - gris neutro
+    PAID: 'bg-emerald-100 text-emerald-800', // Pagada - verde éxito
+    PRINTING: 'bg-amber-100 text-amber-800', // Imprimiendo - amarillo proceso
+    SHIPPED: 'bg-blue-100 text-blue-800', // Enviada - azul en tránsito
+    ACTIVE: 'bg-green-100 text-green-800', // Activa - verde final
+    LOST: 'bg-red-100 text-red-800', // Perdida - rojo error
   };
   return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
 }

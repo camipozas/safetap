@@ -1,7 +1,8 @@
 'use client';
 
 import { formatCurrency, formatDateTime, getStatusColor } from '@/lib/utils';
-import { ChevronRight, Download, Eye } from 'lucide-react';
+import { Download, Eye } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import QRCode from 'qrcode';
 import { useState } from 'react';
 import { Button } from './button';
@@ -47,9 +48,13 @@ interface OrdersTableProps {
 }
 
 export default function OrdersTable({ orders }: OrdersTableProps) {
+  const router = useRouter();
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>(
     {}
   );
+  const [optimisticUpdates, setOptimisticUpdates] = useState<
+    Record<string, Order['status']>
+  >({});
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState<Order['status'] | 'ALL'>(
     'ALL'
@@ -57,8 +62,30 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
   const [countryFilter, setCountryFilter] = useState<string>('ALL');
   const [showPreview, setShowPreview] = useState<Order | null>(null);
 
+  // Helper function to get the main app URL
+  const getMainAppUrl = () => {
+    if (typeof window === 'undefined') return '';
+
+    // In development, replace backoffice port (3002) with main app port (3000)
+    // In production, both should be on the same domain or configured properly
+    const currentOrigin = window.location.origin;
+
+    if (currentOrigin.includes(':3002')) {
+      return currentOrigin.replace(':3002', ':3000');
+    }
+
+    // In production, assume main app is on root domain
+    return currentOrigin.replace('/backoffice', '');
+  };
+
+  // Apply optimistic updates to orders
+  const ordersWithOptimisticUpdates = orders.map((order) => ({
+    ...order,
+    status: optimisticUpdates[order.id] || order.status,
+  }));
+
   // Filter orders based on selected filters
-  const filteredOrders = orders.filter((order) => {
+  const filteredOrders = ordersWithOptimisticUpdates.filter((order) => {
     if (statusFilter !== 'ALL' && order.status !== statusFilter) return false;
     if (countryFilter !== 'ALL' && order.owner.country !== countryFilter)
       return false;
@@ -73,6 +100,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
   const getNextStatus = (
     currentStatus: Order['status']
   ): Order['status'] | null => {
+    // Flujo lógico de transiciones (solo hacia adelante, excepto LOST)
     const flow: Record<string, Order['status']> = {
       ORDERED: 'PAID',
       PAID: 'PRINTING',
@@ -81,6 +109,22 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
     };
 
     return flow[currentStatus] || null;
+  };
+
+  const getPossibleTransitions = (
+    currentStatus: Order['status']
+  ): Order['status'][] => {
+    // Definir todas las transiciones posibles para cada estado
+    const transitions: Record<string, Order['status'][]> = {
+      ORDERED: ['PAID', 'LOST'], // Puede marcar como pagada o perdida
+      PAID: ['PRINTING', 'LOST'], // Puede enviar a imprimir o marcar perdida
+      PRINTING: ['SHIPPED', 'LOST'], // Puede enviar o marcar perdida
+      SHIPPED: ['ACTIVE', 'LOST'], // Puede activar o marcar perdida
+      ACTIVE: ['LOST'], // Solo puede marcar como perdida
+      LOST: [], // Estado final, no puede cambiar
+    };
+
+    return transitions[currentStatus] || [];
   };
 
   const getStatusLabel = (status: Order['status']) => {
@@ -101,6 +145,9 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
   ) => {
     setLoadingStates((prev) => ({ ...prev, [orderId]: true }));
 
+    // Optimistic update: immediately update the UI
+    setOptimisticUpdates((prev) => ({ ...prev, [orderId]: newStatus }));
+
     try {
       const response = await fetch(`/api/admin/orders/${orderId}`, {
         method: 'PUT',
@@ -111,13 +158,33 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
       });
 
       if (!response.ok) {
-        throw new Error('Error al actualizar el estado');
+        const errorData = await response.json();
+
+        // Revert optimistic update on error
+        setOptimisticUpdates((prev) => {
+          const updated = { ...prev };
+          delete updated[orderId];
+          return updated;
+        });
+
+        throw new Error(
+          `Error ${response.status}: ${errorData.error || 'Error al actualizar el estado de la orden'}`
+        );
       }
 
-      // Reload the page to reflect changes
-      window.location.reload();
+      // Clear optimistic update and refresh from server
+      setOptimisticUpdates((prev) => {
+        const updated = { ...prev };
+        delete updated[orderId];
+        return updated;
+      });
+
+      // Use Next.js router refresh to get fresh data from server
+      router.refresh();
     } catch (error) {
-      alert('Error al actualizar el estado de la orden');
+      alert(
+        `Error al actualizar el estado de la orden: ${error instanceof Error ? error.message : 'Error desconocido'}`
+      );
     } finally {
       setLoadingStates((prev) => ({ ...prev, [orderId]: false }));
     }
@@ -126,7 +193,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
   const downloadQR = async (order: Order) => {
     try {
       // Create URL for the QR
-      const qrUrl = `${window.location.origin.replace(':3002', '')}/s/${order.slug}`;
+      const qrUrl = `${getMainAppUrl()}/s/${order.slug}`;
 
       // Create canvas for the sticker
       const canvas = document.createElement('canvas');
@@ -225,7 +292,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
   const downloadStickerHighRes = async (order: Order) => {
     try {
       // Create URL for the QR
-      const qrUrl = `${window.location.origin.replace(':3002', '')}/s/${order.slug}`;
+      const qrUrl = `${getMainAppUrl()}/s/${order.slug}`;
 
       // Create canvas for the sticker
       const canvas = document.createElement('canvas');
@@ -322,9 +389,8 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
   };
 
   const viewStickerPreview = (order: Order) => {
-    // Open the sticker preview in a new tab
-    const previewUrl = `/s/${order.slug}`;
-    window.open(previewUrl, '_blank');
+    // Show the sticker preview modal
+    setShowPreview(order);
   };
 
   // Select/deselect all orders
@@ -347,14 +413,28 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
     setSelectedOrders(newSelected);
   };
 
-  // Bulk update selected orders to next status
+  // Bulk update selected orders to next status (only orders that have a linear next step)
   const bulkUpdateStatus = async () => {
     if (selectedOrders.size === 0) return;
 
     const selectedOrdersList = filteredOrders.filter((o) =>
       selectedOrders.has(o.id)
     );
-    const promises = selectedOrdersList.map((order) => {
+
+    // Solo actualizar ordenes que tienen un siguiente estado claro (no LOST)
+    const ordersToUpdate = selectedOrdersList.filter((order) => {
+      const nextStatus = getNextStatus(order.status);
+      return nextStatus !== null;
+    });
+
+    if (ordersToUpdate.length === 0) {
+      alert(
+        'Las órdenes seleccionadas no pueden avanzar automáticamente al siguiente estado'
+      );
+      return;
+    }
+
+    const promises = ordersToUpdate.map((order) => {
       const nextStatus = getNextStatus(order.status);
       if (nextStatus) {
         return updateOrderStatus(order.id, nextStatus);
@@ -381,7 +461,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-full mx-auto">
       {/* Filters and Bulk Actions */}
       <div className="flex flex-wrap gap-4 items-center justify-between bg-white p-4 rounded-lg border">
         <div className="flex flex-wrap gap-4 items-center">
@@ -484,7 +564,6 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
             </thead>
             <tbody>
               {filteredOrders.map((order) => {
-                const nextStatus = getNextStatus(order.status);
                 const totalPaid = order.payments.reduce(
                   (sum, p) => sum + p.amountCents,
                   0
@@ -501,26 +580,13 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                       />
                     </td>
                     <td className="p-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="flex-shrink-0">
-                          <StickerPreview sticker={order} size={80} />
-                        </div>
-                        <div>
-                          <div className="font-medium">
-                            {order.nameOnSticker}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {order.serial}
-                          </div>
-                          <div className="text-xs text-gray-400">
-                            /{order.slug}
-                          </div>
-                        </div>
+                      <div className="flex justify-center">
+                        <StickerPreview sticker={order} size={120} />
                       </div>
                     </td>
                     <td className="p-4">
                       <div>
-                        <div className="font-medium">
+                        <div className="font-medium text-sm">
                           {order.owner.name || 'Sin nombre'}
                         </div>
                         <div className="text-xs text-gray-500">
@@ -535,19 +601,33 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                         >
                           {getStatusLabel(order.status)}
                         </span>
-                        {nextStatus && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              updateOrderStatus(order.id, nextStatus)
-                            }
-                            disabled={loadingStates[order.id]}
-                            className="text-xs flex items-center space-x-1"
-                          >
-                            <ChevronRight className="w-3 h-3" />
-                            <span>{getStatusLabel(nextStatus)}</span>
-                          </Button>
+
+                        {/* Dropdown para transiciones posibles */}
+                        {getPossibleTransitions(order.status).length > 0 && (
+                          <div className="relative">
+                            <select
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  updateOrderStatus(
+                                    order.id,
+                                    e.target.value as Order['status']
+                                  );
+                                  e.target.value = ''; // Reset dropdown
+                                }
+                              }}
+                              disabled={loadingStates[order.id]}
+                              className="text-xs border rounded px-2 py-1 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                            >
+                              <option value="">Cambiar a...</option>
+                              {getPossibleTransitions(order.status).map(
+                                (status) => (
+                                  <option key={status} value={status}>
+                                    {getStatusLabel(status)}
+                                  </option>
+                                )
+                              )}
+                            </select>
+                          </div>
                         )}
                       </div>
                     </td>
@@ -603,7 +683,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                       </div>
                     </td>
                     <td className="p-4">
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-1">
                         <Button
                           variant="outline"
                           size="sm"
@@ -612,6 +692,18 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                         >
                           <Eye className="w-3 h-3 mr-1" />
                           Ver
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const previewUrl = `${getMainAppUrl()}/s/${order.slug}`;
+                            window.open(previewUrl, '_blank');
+                          }}
+                          className="text-xs"
+                          title="Ver perfil público"
+                        >
+                          Perfil
                         </Button>
                         <Button
                           variant="outline"
@@ -655,7 +747,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
               </button>
             </div>
             <div className="flex justify-center">
-              <StickerPreview sticker={showPreview} size={300} />
+              <StickerPreview sticker={showPreview} size={400} />
             </div>
           </div>
         </div>

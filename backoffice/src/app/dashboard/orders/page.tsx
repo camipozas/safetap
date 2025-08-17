@@ -2,6 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { prisma } from '@/lib/prisma';
 import OrdersTable from '../../../components/ui/orders-table';
 
+// Revalidate this page every time it's accessed
+export const revalidate = 0;
+
 async function getOrders() {
   return await prisma.sticker.findMany({
     include: {

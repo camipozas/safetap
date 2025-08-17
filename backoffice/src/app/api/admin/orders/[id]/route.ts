@@ -9,17 +9,124 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    console.log(
+      `🔄 PUT /api/admin/orders/${params.id} - Iniciando actualización`
+    );
 
-    if (
-      !session?.user ||
-      !hasPermission(session.user.role, 'canManageOrders')
-    ) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const session = await getServerSession(authOptions);
+    console.log('🔐 Sesión:', {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      userRole: session?.user?.role,
+      env: process.env.NODE_ENV,
+    });
+
+    // Development bypass - allow operations without session for testing
+    if (process.env.NODE_ENV === 'development' && !session) {
+      console.log('🚀 Development mode: Bypassing authentication for testing');
+
+      // Continue with the operation without authentication check
+      const { status } = await request.json();
+      const orderId = params.id;
+
+      console.log(
+        `📝 Datos recibidos: orderId=${orderId}, newStatus=${status}`
+      );
+
+      const validStatuses = [
+        'ORDERED',
+        'PAID',
+        'PRINTING',
+        'SHIPPED',
+        'ACTIVE',
+        'LOST',
+      ];
+
+      if (!validStatuses.includes(status)) {
+        console.log(`❌ Estado inválido: ${status}`);
+        return NextResponse.json({ error: 'Invalid state' }, { status: 400 });
+      }
+
+      console.log(`💾 Actualizando sticker en BD...`);
+      const updatedSticker = await prisma.sticker.update({
+        where: { id: orderId },
+        data: { status },
+        include: {
+          owner: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      console.log(`✅ Sticker actualizado exitosamente:`, {
+        id: updatedSticker.id,
+        oldStatus: 'unknown',
+        newStatus: updatedSticker.status,
+      });
+
+      return NextResponse.json({
+        success: true,
+        sticker: updatedSticker,
+        devBypass: true,
+      });
+    }
+
+    // Normal authentication flow
+    if (!session) {
+      return NextResponse.json(
+        {
+          error: 'No session found',
+          debug: 'User is not authenticated',
+        },
+        { status: 401 }
+      );
+    }
+
+    if (!session.user) {
+      return NextResponse.json(
+        {
+          error: 'No user in session',
+          debug: 'Session exists but no user data',
+        },
+        { status: 401 }
+      );
+    }
+
+    if (!session.user.role) {
+      return NextResponse.json(
+        {
+          error: 'No role found',
+          debug: 'User has no role assigned',
+        },
+        { status: 401 }
+      );
+    }
+
+    const canManage = hasPermission(session.user.role, 'canManageOrders');
+    if (!canManage) {
+      return NextResponse.json(
+        {
+          error: 'Insufficient permissions',
+          debug: {
+            userRole: session.user.role,
+            canManageOrders: canManage,
+            userEmail: session.user.email,
+          },
+        },
+        { status: 403 }
+      );
     }
 
     const { status } = await request.json();
     const orderId = params.id;
+
+    console.log(
+      `📝 Datos recibidos (autenticado): orderId=${orderId}, newStatus=${status}`
+    );
 
     const validStatuses = [
       'ORDERED',
@@ -31,9 +138,11 @@ export async function PUT(
     ];
 
     if (!validStatuses.includes(status)) {
+      console.log(`❌ Estado inválido: ${status}`);
       return NextResponse.json({ error: 'Invalid state' }, { status: 400 });
     }
 
+    console.log(`💾 Actualizando sticker en BD (autenticado)...`);
     const updatedSticker = await prisma.sticker.update({
       where: { id: orderId },
       data: { status },
@@ -48,13 +157,30 @@ export async function PUT(
       },
     });
 
+    console.log(`✅ Sticker actualizado exitosamente (autenticado):`, {
+      id: updatedSticker.id,
+      newStatus: updatedSticker.status,
+    });
+
     return NextResponse.json({
       success: true,
       sticker: updatedSticker,
     });
   } catch (error) {
+    console.error('💥 Error en PUT /api/admin/orders/[id]:', error);
+
+    // Si es un error de Prisma, proporcionar más detalles
+    if (error instanceof Error) {
+      if (error.message.includes('Record to update not found')) {
+        return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      }
+    }
+
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
