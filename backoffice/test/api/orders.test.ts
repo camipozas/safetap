@@ -25,7 +25,9 @@ vi.mock('@/lib/auth', () => ({
 describe('/api/admin/orders/[id] PUT', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.NODE_ENV = 'development';
+
+    // Set NODE_ENV to development for bypassing auth
+    vi.stubEnv('NODE_ENV', 'development');
   });
 
   it('updates order status successfully in development mode without session', async () => {

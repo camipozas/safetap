@@ -7,11 +7,14 @@ const mockUsers = [
     id: 'user-1',
     email: 'john@example.com',
     name: 'John Doe',
+    image: null,
     country: 'US',
     role: 'USER' as const,
     createdAt: new Date('2024-01-01'),
+    totalSpent: 0,
     _count: {
       stickers: 2,
+      payments: 1,
     },
     stickers: [
       {
@@ -28,6 +31,9 @@ const mockUsers = [
     profiles: [
       {
         bloodType: 'O+',
+        allergies: [],
+        conditions: [],
+        medications: [],
       },
     ],
   },
@@ -35,11 +41,14 @@ const mockUsers = [
     id: 'user-2',
     email: 'jane@example.com',
     name: 'Jane Smith',
+    image: null,
     country: 'GB',
     role: 'ADMIN' as const,
     createdAt: new Date('2024-01-02'),
+    totalSpent: 0,
     _count: {
       stickers: 0,
+      payments: 0,
     },
     stickers: [],
     profiles: [],
@@ -67,7 +76,7 @@ describe('UsersTable', () => {
     render(<UsersTable users={mockUsers} />);
 
     expect(screen.getByText('2')).toBeInTheDocument();
-    expect(screen.getByText('0')).toBeInTheDocument();
+    expect(screen.getAllByText('0').length).toBeGreaterThan(0);
   });
 
   it('displays countries correctly', () => {

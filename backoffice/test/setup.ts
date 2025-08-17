@@ -1,9 +1,10 @@
 import '@testing-library/jest-dom';
+import { vi } from 'vitest';
 
 // Mock environment variables for testing
-process.env.NODE_ENV = 'test';
-process.env.NEXTAUTH_SECRET = 'test-secret';
-process.env.NEXTAUTH_URL = 'http://localhost:3002';
+vi.stubEnv('NODE_ENV', 'test');
+vi.stubEnv('NEXTAUTH_SECRET', 'test-secret');
+vi.stubEnv('NEXTAUTH_URL', 'http://localhost:3002');
 
 // Mock Next.js router
 vi.mock('next/navigation', () => ({

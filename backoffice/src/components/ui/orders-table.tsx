@@ -542,7 +542,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="text-left p-4">
+                <th className="text-center p-4">
                   <input
                     type="checkbox"
                     checked={
@@ -553,15 +553,15 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                     className="rounded border-gray-300"
                   />
                 </th>
-                <th className="text-left p-4 font-medium">Sticker</th>
-                <th className="text-left p-4 font-medium">Usuario</th>
-                <th className="text-left p-4 font-medium">Estado</th>
-                <th className="text-left p-4 font-medium">País</th>
-                <th className="text-left p-4 font-medium">Grupo Sang.</th>
-                <th className="text-left p-4 font-medium">Contactos</th>
-                <th className="text-left p-4 font-medium">Pago</th>
-                <th className="text-left p-4 font-medium">Fecha</th>
-                <th className="text-left p-4 font-medium">Acciones</th>
+                <th className="text-center p-4 font-medium">Sticker</th>
+                <th className="text-center p-4 font-medium">Usuario</th>
+                <th className="text-center p-4 font-medium">Estado</th>
+                <th className="text-center p-4 font-medium">País</th>
+                <th className="text-center p-4 font-medium">Grupo Sang.</th>
+                <th className="text-center p-4 font-medium">Contactos</th>
+                <th className="text-center p-4 font-medium">Pago</th>
+                <th className="text-center p-4 font-medium">Fecha</th>
+                <th className="text-center p-4 font-medium">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -699,11 +699,11 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            const previewUrl = `${getMainAppUrl()}/s/${order.slug}`;
-                            window.open(previewUrl, '_blank');
+                            // Navigate to user details page in backoffice
+                            router.push(`/dashboard/users/${order.owner.id}`);
                           }}
                           className="text-xs"
-                          title="Ver perfil público"
+                          title="Ver información del usuario"
                         >
                           Perfil
                         </Button>
