@@ -8,7 +8,8 @@
   },
   "scripts": {
     "dev": "next dev -p 3001",
-    "build": "prisma generate && next build",
+    "build": "next build",
+    "next:build": "next build",
     "start": "next start -p 3001",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -17,7 +18,7 @@
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate --schema=prisma/schema.prisma",
     "check-all": "npm run type-check && npm run lint && npm run format:check && npm run test"
   },
   "dependencies": {
