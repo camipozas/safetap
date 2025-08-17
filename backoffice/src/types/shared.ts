@@ -70,3 +70,13 @@ export const STATUS_COLORS = {
   ACTIVE: 'bg-green-100 text-green-800',
   LOST: 'bg-red-100 text-red-800',
 } as const;
+
+export const isAdmin = (role: string): boolean =>
+  role === USER_ROLES.ADMIN || role === USER_ROLES.SUPER_ADMIN;
+
+export const isSuperAdmin = (role: string): boolean =>
+  role === USER_ROLES.SUPER_ADMIN;
+
+export const canAccessBackoffice = (role: string): boolean => isAdmin(role);
+
+export const canManageAdmins = (role: string): boolean => isSuperAdmin(role);
