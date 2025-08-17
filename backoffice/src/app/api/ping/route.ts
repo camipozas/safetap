@@ -1,0 +1,34 @@
+import { NextResponse } from 'next/server';
+
+import { prisma } from '@/lib/prisma';
+
+export async function GET() {
+  const started = Date.now();
+  try {
+    const rows = await prisma.$queryRawUnsafe('SELECT 1 as ok');
+    return NextResponse.json({
+      ok: true,
+      timestamp: new Date().toISOString(),
+      database: Array.isArray(rows) && rows.length > 0 ? 'connected' : 'error',
+      responseTime: `${Date.now() - started}ms`,
+      version: process.env.npm_package_version || '0.1.0',
+      environment: process.env.NODE_ENV || 'development',
+    });
+  } catch (error) {
+    // Log error for debugging
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.error('Health check failed:', error);
+    }
+    return NextResponse.json(
+      {
+        ok: false,
+        timestamp: new Date().toISOString(),
+        database: 'error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        responseTime: `${Date.now() - started}ms`,
+      },
+      { status: 500 }
+    );
+  }
+}
