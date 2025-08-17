@@ -22,43 +22,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let finalProfileId = profileId;
+    // Wrap profile creation, preferred update, and contact creation in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      let finalProfileId = profileId;
 
-    if (!finalProfileId) {
-      const profile = await prisma.emergencyProfile.create({
+      if (!finalProfileId) {
+        const profile = await tx.emergencyProfile.create({
+          data: {
+            userId,
+            consentPublic: true,
+          },
+        });
+        finalProfileId = profile.id;
+      }
+
+      if (preferred) {
+        await tx.emergencyContact.updateMany({
+          where: {
+            profileId: finalProfileId,
+          },
+          data: {
+            preferred: false,
+          },
+        });
+      }
+
+      const contact = await tx.emergencyContact.create({
         data: {
-          userId,
-          consentPublic: true,
-        },
-      });
-      finalProfileId = profile.id;
-    }
-
-    if (preferred) {
-      await prisma.emergencyContact.updateMany({
-        where: {
           profileId: finalProfileId,
-        },
-        data: {
-          preferred: false,
+          name,
+          relation,
+          phone,
+          country,
+          preferred,
         },
       });
-    }
 
-    const contact = await prisma.emergencyContact.create({
-      data: {
-        profileId: finalProfileId,
-        name,
-        relation,
-        phone,
-        country,
-        preferred,
-      },
+      return contact;
     });
 
     return NextResponse.json({
       success: true,
-      contact,
+      contact: result,
     });
   } catch (error) {
     return NextResponse.json(
