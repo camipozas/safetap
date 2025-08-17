@@ -502,7 +502,6 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center space-x-3">
-                        {/* Little preview of the sticker */}{' '}
                         <div className="flex-shrink-0">
                           <StickerPreview sticker={order} size={80} />
                         </div>
@@ -516,11 +515,6 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                           <div className="text-xs text-gray-400">
                             /{order.slug}
                           </div>
-                          {order.profile?.bloodType && (
-                            <div className="text-xs text-red-600 font-medium">
-                              🩸 {order.profile.bloodType}
-                            </div>
-                          )}
                         </div>
                       </div>
                     </td>
@@ -532,16 +526,6 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                         <div className="text-xs text-gray-500">
                           {order.owner.email}
                         </div>
-                        {order.owner.country && (
-                          <div className="text-xs text-gray-400">
-                            {order.owner.country}
-                          </div>
-                        )}
-                        {order.profile?.contacts?.[0] && (
-                          <div className="text-xs text-green-600 mt-1">
-                            📞 {order.profile.contacts[0].name}
-                          </div>
-                        )}
                       </div>
                     </td>
                     <td className="p-4">
@@ -564,6 +548,40 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                             <ChevronRight className="w-3 h-3" />
                             <span>{getStatusLabel(nextStatus)}</span>
                           </Button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="text-xs">
+                        {order.owner.country ? (
+                          <span>{order.owner.country}</span>
+                        ) : (
+                          <span className="text-gray-400">Sin país</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="text-xs">
+                        {order.profile?.bloodType ? (
+                          <span className="text-red-600 font-medium">
+                            🩸 {order.profile.bloodType}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="text-xs">
+                        {order.profile?.contacts?.[0] ? (
+                          <div>
+                            <div>{order.profile.contacts[0].name}</div>
+                            <div className="text-gray-500">
+                              {order.profile.contacts[0].phone}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">Sin contacto</span>
                         )}
                       </div>
                     </td>
