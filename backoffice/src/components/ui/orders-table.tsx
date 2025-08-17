@@ -4,7 +4,7 @@ import { formatCurrency, formatDateTime, getStatusColor } from '@/lib/utils';
 import { Download, Eye } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import QRCode from 'qrcode';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from './button';
 import StickerPreview from './sticker-preview';
 
@@ -85,12 +85,14 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
   }));
 
   // Filter orders based on selected filters
-  const filteredOrders = ordersWithOptimisticUpdates.filter((order) => {
-    if (statusFilter !== 'ALL' && order.status !== statusFilter) return false;
-    if (countryFilter !== 'ALL' && order.owner.country !== countryFilter)
-      return false;
-    return true;
-  });
+  const filteredOrders = useMemo(() => {
+    return ordersWithOptimisticUpdates.filter((order) => {
+      if (statusFilter !== 'ALL' && order.status !== statusFilter) return false;
+      if (countryFilter !== 'ALL' && order.owner.country !== countryFilter)
+        return false;
+      return true;
+    });
+  }, [ordersWithOptimisticUpdates, statusFilter, countryFilter]);
 
   // Get unique countries for filter
   const countries = Array.from(
