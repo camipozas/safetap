@@ -1,6 +1,6 @@
+/* eslint-disable no-console */
 import nodemailer from 'nodemailer';
 
-// Email message configuration for invitations
 const invitationEmailMessages = {
   subject: 'Invitación para unirse al Panel de Administración - SafeTap',
   text: (inviteUrl: string, role: string) =>
@@ -52,6 +52,7 @@ export interface EmailConfig {
   user: string;
   password: string;
   from: string;
+  rejectUnauthorized: boolean;
 }
 
 export class EmailService {
@@ -71,7 +72,7 @@ export class EmailService {
       },
       secure: false,
       tls: {
-        rejectUnauthorized: false,
+        rejectUnauthorized: this.config.rejectUnauthorized,
       },
     });
   }
@@ -106,12 +107,13 @@ export class EmailService {
   }
 }
 
-// Utility function to create email service instance from environment variables
 export function createEmailService(): EmailService | null {
   const host = process.env.EMAIL_SERVER_HOST;
   const user = process.env.EMAIL_SERVER_USER;
   const password = process.env.EMAIL_SERVER_PASSWORD;
   const from = process.env.EMAIL_FROM;
+
+  const rejectUnauthorized = process.env.EMAIL_REJECT_UNAUTHORIZED !== 'false';
 
   if (!host || !user || !password || !from) {
     console.error(
@@ -121,8 +123,17 @@ export function createEmailService(): EmailService | null {
     console.error('- EMAIL_SERVER_USER');
     console.error('- EMAIL_SERVER_PASSWORD');
     console.error('- EMAIL_FROM');
+    console.error('Optional:');
+    console.error('- EMAIL_REJECT_UNAUTHORIZED (default: true)');
     return null;
   }
 
-  return new EmailService({ host, user, password, from });
+  if (!rejectUnauthorized) {
+    console.warn(
+      '⚠️ SECURITY WARNING: TLS certificate validation is disabled (EMAIL_REJECT_UNAUTHORIZED=false). ' +
+        'This should only be used in development environments.'
+    );
+  }
+
+  return new EmailService({ host, user, password, from, rejectUnauthorized });
 }

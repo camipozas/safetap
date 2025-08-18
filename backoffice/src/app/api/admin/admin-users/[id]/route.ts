@@ -11,7 +11,10 @@ export async function PUT(
   try {
     let currentUser: { role: string; id: string } | null = null;
 
-    if (process.env.NODE_ENV === 'development') {
+    if (
+      process.env.NODE_ENV === 'development' &&
+      process.env.ENABLE_DEV_SUPER_ADMIN === 'true'
+    ) {
       currentUser = { role: USER_ROLES.SUPER_ADMIN, id: 'dev-user' };
     } else {
       const session = await getServerSession(authOptions);
@@ -88,10 +91,13 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    if (process.env.NODE_ENV === 'development') {
-      // En desarrollo, permitir eliminación directa
+    if (
+      process.env.NODE_ENV === 'development' &&
+      process.env.ENABLE_DEV_SUPER_ADMIN === 'true'
+    ) {
+      // En desarrollo, permitir eliminación directa solo si está explícitamente habilitado
       console.log(
-        '🚀 Development mode: Bypassing authentication for user deletion'
+        '🚀 Development mode: Bypassing authentication for user deletion (ENABLE_DEV_SUPER_ADMIN=true)'
       );
     } else {
       const session = await getServerSession(authOptions);

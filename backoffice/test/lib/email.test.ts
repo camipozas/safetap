@@ -19,6 +19,7 @@ describe('EmailService', () => {
     user: 'test@example.com',
     password: 'testpassword',
     from: 'Test <test@example.com>',
+    rejectUnauthorized: true,
   };
 
   beforeEach(() => {
