@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 import QRCode from 'qrcode';
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 
 // QR Code generation constants
 const QR_IMAGE_QUALITY = 0.92;
@@ -16,7 +16,7 @@ interface QrCanvasProps {
   foregroundColor?: string;
 }
 
-export function QrCanvas({
+const QrCanvasComponent = function QrCanvas({
   url,
   alt = 'Código QR',
   size = 200,
@@ -28,6 +28,7 @@ export function QrCanvas({
   const [dataUrl, setDataUrl] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!url || url.trim() === '') {
@@ -36,27 +37,33 @@ export function QrCanvas({
       return;
     }
 
+    // Cancel previous request if it exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    abortControllerRef.current = new AbortController();
     let active = true;
     setIsLoading(true);
     setError(null);
 
-    // Calculate final QR size
-    const qrSize = highResolution ? size * 4 : size;
+    // Calculate final QR size with optimization for mobile
+    const qrSize = highResolution ? size * 2 : size;
 
-    // Configure QR options with error handling
+    // Configure QR options with error handling and performance optimization
     const qrOptions = {
       width: qrSize,
       height: qrSize,
-      margin: 2,
+      margin: 1,
       color: {
         dark: foregroundColor || '#000000',
         light: backgroundColor || '#ffffff',
       },
       errorCorrectionLevel: 'M' as const,
       type: 'image/png' as const,
-      quality: QR_IMAGE_QUALITY,
+      quality: size <= 64 ? 0.8 : QR_IMAGE_QUALITY, // Lower quality for small QRs
       rendererOpts: {
-        quality: QR_IMAGE_QUALITY,
+        quality: size <= 64 ? 0.8 : QR_IMAGE_QUALITY,
       },
     };
 
@@ -76,6 +83,9 @@ export function QrCanvas({
 
     return () => {
       active = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
     };
   }, [url, size, highResolution, backgroundColor, foregroundColor]);
 
@@ -125,7 +135,11 @@ export function QrCanvas({
 
   return (
     <div
-      style={{ position: 'relative', width: displaySize, height: displaySize }}
+      style={{
+        position: 'relative',
+        width: displaySize,
+        height: displaySize,
+      }}
       className={className}
     >
       <Image
@@ -137,7 +151,10 @@ export function QrCanvas({
         style={{ width: displaySize, height: displaySize }}
         loading="lazy"
         unoptimized
+        priority={size > 100} // Priority for larger QRs only
       />
     </div>
   );
-}
+};
+
+export const QrCanvas = memo(QrCanvasComponent);

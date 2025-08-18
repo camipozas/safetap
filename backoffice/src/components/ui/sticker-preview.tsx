@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { StickerQrCode } from './sticker-qr-code';
 
 interface StickerPreviewProps {
@@ -48,7 +49,7 @@ const FLAGS = {
   GB: '🇬🇧',
 } as const;
 
-export default function StickerPreview({
+const StickerPreview = memo(function StickerPreview({
   sticker,
   size = 200,
 }: StickerPreviewProps) {
@@ -59,7 +60,7 @@ export default function StickerPreview({
   // Always prioritize owner.name from database for consistency with table
   const displayName = sticker.owner?.name || sticker.nameOnSticker || 'Usuario';
 
-  // Calculate dimensions based on size
+  // Calculate dimensions based on size with mobile optimization
   const width = size;
   const height = size;
 
@@ -67,7 +68,7 @@ export default function StickerPreview({
     <div className="relative">
       {/* Sticker container */}
       <div
-        className="rounded-xl shadow-md border border-gray-200 p-3 flex flex-col justify-between"
+        className="rounded-xl shadow-md border border-gray-200 p-2 sm:p-3 flex flex-col justify-between"
         style={{
           backgroundColor: sticker.stickerColor,
           width: `${width}px`,
@@ -88,7 +89,7 @@ export default function StickerPreview({
         </div>
 
         {/* Personal info */}
-        <div className="flex items-center justify-center gap-2 mb-3">
+        <div className="flex items-center justify-center gap-1 sm:gap-2 mb-2 sm:mb-3">
           <span style={{ fontSize: `${Math.max(size * 0.12, 16)}px` }}>
             {flag}
           </span>
@@ -155,4 +156,6 @@ export default function StickerPreview({
       </div>
     </div>
   );
-}
+});
+
+export default StickerPreview;

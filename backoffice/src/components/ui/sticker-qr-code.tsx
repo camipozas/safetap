@@ -1,7 +1,7 @@
 'use client';
 
 import QRCode from 'qrcode';
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 
 interface StickerQrCodeProps {
   slug?: string;
@@ -34,15 +34,22 @@ const getBaseUrl = () => {
   return `${protocol}//${hostname}`;
 };
 
-export function StickerQrCode({
+export const StickerQrCode = memo(function StickerQrCode({
   slug,
   size = 64,
   isPreview = false,
   className = '',
 }: StickerQrCodeProps) {
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
+    // Cancel previous request if it exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    abortControllerRef.current = new AbortController();
     let isMounted = true;
 
     const generateQR = async () => {
@@ -53,14 +60,20 @@ export function StickerQrCode({
 
       try {
         const qrUrl = `${getBaseUrl()}/s/${slug}`;
-        const dataUrl = await QRCode.toDataURL(qrUrl, {
-          width: size * 2, // Generate at 2x for better quality
+        const qrOptions = {
+          width: size <= 64 ? size * 1.5 : size * 2, // Optimized scaling for small QRs
           margin: 1,
           color: {
             dark: '#000000',
             light: '#FFFFFF',
           },
-        });
+          quality: size <= 64 ? 0.8 : 0.92, // Lower quality for small QRs
+          rendererOpts: {
+            quality: size <= 64 ? 0.8 : 0.92,
+          },
+        };
+
+        const dataUrl = await QRCode.toDataURL(qrUrl, qrOptions);
 
         // Only update state if component is still mounted
         if (isMounted) {
@@ -79,6 +92,9 @@ export function StickerQrCode({
     // Cleanup function to prevent state updates after unmount
     return () => {
       isMounted = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
     };
   }, [slug, size, isPreview]);
 
@@ -170,7 +186,8 @@ export function StickerQrCode({
         alt="QR Code"
         className="rounded"
         style={{ width: `${size}px`, height: `${size}px` }}
+        loading="lazy"
       />
     </div>
   );
-}
+});

@@ -161,4 +161,27 @@ describe('StickerCustomizer', () => {
       })
     );
   });
+
+  it('displays mobile-optimized layout', () => {
+    render(<StickerCustomizer />);
+
+    // Check that the preview appears first on mobile using order classes
+    const previewContainer = screen
+      .getByTestId('sticker-preview')
+      .closest('.order-1');
+    expect(previewContainer).toBeInTheDocument();
+    expect(previewContainer).toHaveClass('lg:order-2');
+
+    // Check mobile-responsive grid layout for color presets
+    const neutralColorsGrid = screen.getByText('Neutros').nextSibling;
+    expect(neutralColorsGrid).toHaveClass('grid-cols-2', 'sm:grid-cols-3');
+  });
+
+  it('has touch-optimized buttons for mobile', () => {
+    render(<StickerCustomizer />);
+
+    // Find a color preset button and check for touch optimization classes
+    const colorButton = screen.getByTitle(/blanco/i);
+    expect(colorButton).toHaveClass('touch-manipulation', 'active:scale-95');
+  });
 });

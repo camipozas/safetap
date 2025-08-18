@@ -58,6 +58,79 @@ describe('QrCanvas', () => {
     expect(image).toHaveAttribute('alt', 'Test QR');
   });
 
+  it('optimizes quality for small QR codes', async () => {
+    const mockDataUrl = 'data:image/png;base64,mockdata';
+    (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
+
+    render(<QrCanvas url="https://example.com" size={48} />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('qr-image')).toBeInTheDocument();
+    });
+
+    // Verify that QRCode.toDataURL was called with optimized options for small size
+    expect(QRCode.toDataURL).toHaveBeenCalledWith(
+      'https://example.com',
+      expect.objectContaining({
+        quality: 0.8, // Lower quality for small QRs
+        rendererOpts: expect.objectContaining({
+          quality: 0.8,
+        }),
+      })
+    );
+  });
+
+  it('uses standard quality for large QR codes', async () => {
+    const mockDataUrl = 'data:image/png;base64,mockdata';
+    (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
+
+    render(<QrCanvas url="https://example.com" size={200} />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('qr-image')).toBeInTheDocument();
+    });
+
+    // Verify that QRCode.toDataURL was called with standard quality for large size
+    expect(QRCode.toDataURL).toHaveBeenCalledWith(
+      'https://example.com',
+      expect.objectContaining({
+        quality: 0.92, // Standard quality for large QRs
+        rendererOpts: expect.objectContaining({
+          quality: 0.92,
+        }),
+      })
+    );
+  });
+
+  it('optimizes rendering for different sizes', async () => {
+    const mockDataUrl = 'data:image/png;base64,mockdata';
+    (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
+
+    // Test large image
+    const { rerender } = render(
+      <QrCanvas url="https://example.com" size={200} />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('qr-image')).toBeInTheDocument();
+    });
+
+    // Test that large images are rendered successfully
+    expect(screen.getByTestId('qr-image')).toHaveAttribute('width', '200');
+    expect(screen.getByTestId('qr-image')).toHaveAttribute('height', '200');
+
+    // Test small image
+    rerender(<QrCanvas url="https://example.com" size={64} />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('qr-image')).toBeInTheDocument();
+    });
+
+    // Test that small images are rendered successfully
+    expect(screen.getByTestId('qr-image')).toHaveAttribute('width', '64');
+    expect(screen.getByTestId('qr-image')).toHaveAttribute('height', '64');
+  });
+
   it('handles QR generation error', async () => {
     vi.mocked(QRCode.toDataURL).mockRejectedValue(
       new Error('QR generation failed')

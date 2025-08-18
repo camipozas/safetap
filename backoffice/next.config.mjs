@@ -5,8 +5,14 @@ const nextConfig = {
       allowedOrigins: ['localhost:3001', 'admin.safetap.com'],
     },
   },
+  compress: true,
+  poweredByHeader: false,
+  reactStrictMode: true,
+  swcMinify: true,
   images: {
     domains: ['localhost', 'admin.safetap.com'],
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 60,
     remotePatterns: [
       {
         protocol: 'https',
@@ -14,8 +20,6 @@ const nextConfig = {
       },
     ],
   },
-  // Configuración específica para el admin dashboard
-  poweredByHeader: false,
 
   // Configuración para subdominio
   async rewrites() {
@@ -52,6 +56,36 @@ const nextConfig = {
         ],
       },
     ];
+  },
+
+  webpack: (config, { isServer }) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': './src',
+    };
+
+    // Optimize bundle size
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+
+    // Bundle analyzer in development
+    if (process.env.ANALYZE === 'true') {
+      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+      config.plugins.push(
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'server',
+          openAnalyzer: true,
+        })
+      );
+    }
+
+    return config;
   },
 };
 
