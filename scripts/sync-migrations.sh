@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script to sync migrations between main app and backoffice
-# Uso: ./scripts/sync-migrations.sh
+# Usage: ./scripts/sync-migrations.sh
 
 set -e
 
@@ -28,9 +28,9 @@ echo -e "${YELLOW}📁 Copying migrations from main app to backoffice...${NC}"
 
 cp -r prisma/migrations/* backoffice/prisma/migrations/
 
-echo -e "${GREEN}✅ Migraciones copiadas exitosamente${NC}"
+echo -e "${GREEN}✅ Migrations copied successfully${NC}"
 
-echo -e "${YELLOW}🔍 Verificando sincronización...${NC}"
+echo -e "${YELLOW}🔍 Checking synchronization...${NC}"
 
 MAIN_COUNT=$(find prisma/migrations -name "*.sql" | wc -l)
 BACKOFFICE_COUNT=$(find backoffice/prisma/migrations -name "*.sql" | wc -l)
