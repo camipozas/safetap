@@ -10,7 +10,7 @@ const mockUsers = [
     image: null,
     country: 'US',
     role: 'USER' as const,
-    createdAt: new Date('2024-01-01'),
+    createdAt: new Date('2023-12-15T10:00:00.000Z'), // Fixed UTC date
     totalSpent: 0,
     _count: {
       stickers: 2,
@@ -20,12 +20,12 @@ const mockUsers = [
       {
         id: 'sticker-1',
         status: 'ACTIVE' as const,
-        createdAt: new Date('2024-01-01'),
+        createdAt: new Date('2024-01-01T10:00:00.000Z'),
       },
       {
         id: 'sticker-2',
         status: 'ORDERED' as const,
-        createdAt: new Date('2024-01-02'),
+        createdAt: new Date('2024-01-02T10:00:00.000Z'),
       },
     ],
     profiles: [
@@ -44,7 +44,7 @@ const mockUsers = [
     image: null,
     country: 'GB',
     role: 'ADMIN' as const,
-    createdAt: new Date('2024-01-02'),
+    createdAt: new Date('2024-03-20T15:30:00.000Z'), // Fixed UTC date
     totalSpent: 0,
     _count: {
       stickers: 0,
@@ -107,13 +107,14 @@ describe('UsersTable', () => {
   it('displays creation dates correctly', () => {
     render(<UsersTable users={mockUsers} />);
 
-    // Check that dates are displayed - handles both local (with timezone) and CI (without timezone) environments
-    // Local: "31 dic 2023, 21:00" and "1 ene 2024, 21:00"
-    // CI: "1 ene 2024, 00:00" and "2 ene 2024, 00:00"
+    // Check that dates are displayed using fixed UTC dates
+    // User 1: 2023-12-15T10:00:00.000Z should render as "15 dic 2023"
+    // User 2: 2024-03-20T15:30:00.000Z should render as "20 mar 2024"
     const dateTexts = screen.getAllByText(/\d{1,2} \w{3} \d{4}/);
     expect(dateTexts.length).toBeGreaterThanOrEqual(2);
 
-    // Check that some form of date is displayed for both users
-    expect(screen.getByText(/ene 2024/)).toBeInTheDocument();
+    // Check for specific dates that should be consistent across environments
+    expect(screen.getByText(/15 dic 2023/)).toBeInTheDocument();
+    expect(screen.getByText(/20 mar 2024/)).toBeInTheDocument();
   });
 });
