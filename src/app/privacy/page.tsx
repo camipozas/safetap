@@ -32,7 +32,7 @@ export default function PrivacyPage() {
               <p>
                 <strong>Información técnica:</strong> Dirección IP, tipo de
                 navegador, y datos de acceso a tu perfil público cuando alguien
-                escanea tu código QR o utiliza NFC.
+                escanea tu código QR o acerca su teléfono (NFC).
               </p>
             </div>
           </section>
@@ -63,8 +63,8 @@ export default function PrivacyPage() {
               <p>
                 <strong>Tu perfil público:</strong> La información de emergencia
                 que configures en tu perfil será visible para cualquier persona
-                que escanee tu código QR o use NFC en tu sticker. Tú controlas
-                qué información incluir.
+                que escanee tu código QR o acerque su teléfono (NFC) a tu
+                sticker. Tú controlas qué información incluir.
               </p>
               <p>
                 <strong>Proveedores de servicios:</strong> Compartimos
