@@ -77,5 +77,39 @@ vi.mock('@/lib/prisma', () => ({
       update: vi.fn(),
       delete: vi.fn(),
     },
+    adminInvitation: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
   },
 }));
+
+// Mock global fetch with default responses
+global.fetch = vi.fn((url: string) => {
+  // Check the URL to return appropriate response
+  if (typeof url === 'string' && url.includes('/api/admin/admin-users')) {
+    // For admin users API, return array directly
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve([]),
+    });
+  } else if (
+    typeof url === 'string' &&
+    url.includes('/api/admin/invitations')
+  ) {
+    // For invitations API, return object with invitations array
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ invitations: [] }),
+    });
+  } else {
+    // Default response for other endpoints
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ success: true }),
+    });
+  }
+}) as any;

@@ -6,6 +6,32 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(_request: NextRequest) {
   try {
+    // Bypass authentication in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log(
+        '🚀 Development mode: Bypassing authentication for admin users list'
+      );
+      const adminUsers = await prisma.user.findMany({
+        where: {
+          role: {
+            in: ['ADMIN', 'SUPER_ADMIN'],
+          },
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      return NextResponse.json(adminUsers);
+    }
+
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
