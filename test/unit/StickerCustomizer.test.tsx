@@ -1,9 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import StickerCustomizer, {
-  type StickerCustomization,
-} from '@/components/StickerCustomizerNew';
+import StickerCustomizer from '@/components/StickerCustomizerNew';
 
 // Mock child components
 vi.mock('@/components/CountrySelect', () => ({
@@ -32,7 +30,12 @@ vi.mock('@/components/StickerPreview', () => ({
     flagCode,
     stickerColor,
     textColor,
-  }: StickerCustomization) => (
+  }: {
+    name: string;
+    flagCode: string;
+    stickerColor: string;
+    textColor: string;
+  }) => (
     <div
       data-testid="sticker-preview"
       data-name={name}
@@ -97,32 +100,28 @@ describe('StickerCustomizer', () => {
       expect.objectContaining({
         name: 'Test Name',
         flagCode: 'CL',
+        colorPresetId: 'light-gray',
         stickerColor: '#f1f5f9',
         textColor: '#000000',
       })
     );
   });
 
-  it('updates custom sticker color', () => {
-    render(<StickerCustomizer />);
+  it('updates color preset when selected', () => {
+    const mockCallback = vi.fn();
+    render(<StickerCustomizer onCustomizationChange={mockCallback} />);
 
-    const colorInput = screen.getByLabelText(
-      /color del sticker personalizado/i
+    // Find a preset color button by title attribute - negro (black)
+    const blackButton = screen.getByTitle(/negro/i);
+    fireEvent.click(blackButton);
+
+    expect(mockCallback).toHaveBeenCalledWith(
+      expect.objectContaining({
+        colorPresetId: 'black',
+        stickerColor: '#000000',
+        textColor: '#ffffff',
+      })
     );
-    fireEvent.change(colorInput, { target: { value: '#ff0000' } });
-
-    const preview = screen.getByTestId('sticker-preview');
-    expect(preview).toHaveAttribute('data-sticker-color', '#ff0000');
-  });
-
-  it('updates custom text color', () => {
-    render(<StickerCustomizer />);
-
-    const textColorInput = screen.getByLabelText(/color del texto/i);
-    fireEvent.change(textColorInput, { target: { value: '#00ff00' } });
-
-    const preview = screen.getByTestId('sticker-preview');
-    expect(preview).toHaveAttribute('data-text-color', '#00ff00');
   });
 
   it('shows all preset color options', () => {
@@ -156,6 +155,9 @@ describe('StickerCustomizer', () => {
       expect.objectContaining({
         name: 'John',
         flagCode: 'US',
+        colorPresetId: 'light-gray',
+        stickerColor: '#f1f5f9',
+        textColor: '#000000',
       })
     );
   });

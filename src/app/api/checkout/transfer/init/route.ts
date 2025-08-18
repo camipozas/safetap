@@ -50,6 +50,7 @@ export async function POST(req: Request) {
           ownerId: user.id,
           nameOnSticker: data.nameOnSticker,
           flagCode: data.flagCode,
+          colorPresetId: data.colorPresetId || 'light-gray',
           stickerColor: data.stickerColor || '#f1f5f9',
           textColor: data.textColor || '#000000',
           status: 'ORDERED',
@@ -85,7 +86,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ reference, paymentId: result.payment.id });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('❌ Checkout initialization failed:', e);
     if (e instanceof z.ZodError) {
       console.log('📋 Validation error details:', e.issues);
@@ -94,6 +95,7 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-    return NextResponse.json({ error: e.message ?? 'Error' }, { status: 400 });
+    const errorMessage = e instanceof Error ? e.message : 'Error desconocido';
+    return NextResponse.json({ error: errorMessage }, { status: 400 });
   }
 }

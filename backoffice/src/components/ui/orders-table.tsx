@@ -1,5 +1,6 @@
 'use client';
 
+import { getColorPresetById } from '@/lib/color-presets';
 import { formatCurrency, formatDateTime, getStatusColor } from '@/lib/utils';
 import { Download, Eye } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -14,6 +15,7 @@ type Order = {
   serial: string;
   nameOnSticker: string;
   flagCode: string;
+  colorPresetId: string;
   stickerColor: string;
   textColor: string;
   status: 'ORDERED' | 'PAID' | 'PRINTING' | 'SHIPPED' | 'ACTIVE' | 'LOST';
@@ -582,8 +584,12 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                       />
                     </td>
                     <td className="p-4">
-                      <div className="flex justify-center">
+                      <div className="flex flex-col items-center">
                         <StickerPreview sticker={order} size={120} />
+                        <div className="text-xs text-gray-500 mt-1">
+                          {getColorPresetById(order.colorPresetId)?.name ||
+                            'Color personalizado'}
+                        </div>
                       </div>
                     </td>
                     <td className="p-4">

@@ -9,6 +9,7 @@ interface StickerPreviewProps {
     serial: string;
     nameOnSticker: string;
     flagCode: string;
+    colorPresetId?: string;
     stickerColor: string;
     textColor: string;
     owner?: {
@@ -25,6 +26,7 @@ interface StickerPreviewProps {
     } | null;
   };
   size?: number;
+  showRealQR?: boolean; // Whether to show real QR or preview placeholder
 }
 
 // Available flags
@@ -49,6 +51,7 @@ const FLAGS = {
 export default function StickerPreview({
   sticker,
   size = 200,
+  showRealQR = false, // Default to preview mode in admin
 }: StickerPreviewProps) {
   // Always prioritize owner data from database for consistency
   const country = sticker.owner?.country || sticker.flagCode || 'CL';

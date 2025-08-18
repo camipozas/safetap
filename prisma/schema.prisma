@@ -67,6 +67,7 @@ model Sticker {
     owner         User              @relation(fields: [ownerId], references: [id])
     nameOnSticker String
     flagCode      String
+    colorPresetId String            @default("light-gray") // ID of the color preset
     stickerColor  String            @default("#f1f5f9") // Background color
     textColor     String            @default("#000000") // Text color
     status        StickerStatus     @default(ORDERED)
@@ -194,6 +195,7 @@ model StickerDesign {
     name         String   // User-defined name for the design
     nameOnSticker String  // Name to appear on sticker
     flagCode     String   // Country flag code
+    colorPresetId String  @default("light-gray") // ID of the color preset
     stickerColor String   @default("#f1f5f9") // Background color
     textColor    String   @default("#000000") // Text color
     isTemplate   Boolean  @default(false) // If true, can be used by other users

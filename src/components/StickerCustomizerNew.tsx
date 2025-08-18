@@ -4,6 +4,11 @@ import { useState } from 'react';
 
 import { CountrySelect } from '@/components/CountrySelect';
 import StickerPreview from '@/components/StickerPreview';
+import {
+  COLOR_PRESETS,
+  DEFAULT_COLOR_PRESET,
+  getColorPresetById,
+} from '@/lib/color-presets';
 
 interface StickerCustomizerProps {
   onCustomizationChange?: (data: StickerCustomization) => void;
@@ -12,22 +17,10 @@ interface StickerCustomizerProps {
 export interface StickerCustomization {
   name: string;
   flagCode: string;
+  colorPresetId: string;
   stickerColor: string;
   textColor: string;
 }
-
-const PRESET_COLORS = [
-  { name: 'Blanco', value: '#ffffff', text: '#000000' },
-  { name: 'Gris claro', value: '#f1f5f9', text: '#000000' },
-  { name: 'Azul claro', value: '#dbeafe', text: '#1e40af' },
-  { name: 'Verde claro', value: '#dcfce7', text: '#166534' },
-  { name: 'Amarillo claro', value: '#fef3c7', text: '#92400e' },
-  { name: 'Rosa claro', value: '#fce7f3', text: '#be185d' },
-  { name: 'Negro', value: '#000000', text: '#ffffff' },
-  { name: 'Azul oscuro', value: '#1e40af', text: '#ffffff' },
-  { name: 'Verde oscuro', value: '#166534', text: '#ffffff' },
-  { name: 'Rojo', value: '#dc2626', text: '#ffffff' },
-];
 
 export default function StickerCustomizer({
   onCustomizationChange,
@@ -35,8 +28,9 @@ export default function StickerCustomizer({
   const [customization, setCustomization] = useState<StickerCustomization>({
     name: '',
     flagCode: 'CL',
-    stickerColor: '#f1f5f9',
-    textColor: '#000000',
+    colorPresetId: DEFAULT_COLOR_PRESET.id,
+    stickerColor: DEFAULT_COLOR_PRESET.stickerColor,
+    textColor: DEFAULT_COLOR_PRESET.textColor,
   });
 
   const updateCustomization = (updates: Partial<StickerCustomization>) => {
@@ -45,11 +39,15 @@ export default function StickerCustomizer({
     onCustomizationChange?.(newCustomization);
   };
 
-  const selectPresetColor = (preset: (typeof PRESET_COLORS)[0]) => {
-    updateCustomization({
-      stickerColor: preset.value,
-      textColor: preset.text,
-    });
+  const selectColorPreset = (presetId: string) => {
+    const preset = getColorPresetById(presetId);
+    if (preset) {
+      updateCustomization({
+        colorPresetId: preset.id,
+        stickerColor: preset.stickerColor,
+        textColor: preset.textColor,
+      });
+    }
   };
 
   return (
@@ -96,93 +94,86 @@ export default function StickerCustomizer({
             />
           </div>
 
-          {/* Colores predefinidos */}
+          {/* Esquemas de colores predefinidos */}
           <div className="mb-6">
-            <label
-              htmlFor="preset-colors"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Colores predefinidos
-            </label>
-            <div id="preset-colors" className="grid grid-cols-5 gap-2">
-              {PRESET_COLORS.map((preset) => (
-                <button
-                  key={preset.name}
-                  onClick={() => selectPresetColor(preset)}
-                  className={`w-12 h-12 rounded-lg border-2 flex items-center justify-center text-xs font-medium transition-all ${
-                    customization.stickerColor === preset.value
-                      ? 'border-blue-500 ring-2 ring-blue-200'
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                  style={{
-                    backgroundColor: preset.value,
-                    color: preset.text,
-                  }}
-                  title={preset.name}
-                >
-                  Aa
-                </button>
-              ))}
+            <div className="block text-sm font-medium text-gray-700 mb-4">
+              Esquema de colores *
             </div>
-          </div>
 
-          {/* Color personalizado del sticker */}
-          <div className="mb-4">
-            <label
-              htmlFor="custom-sticker-color"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Color del sticker personalizado
-            </label>
-            <div className="flex items-center gap-3">
-              <input
-                id="custom-sticker-color"
-                type="color"
-                value={customization.stickerColor}
-                onChange={(e) =>
-                  updateCustomization({ stickerColor: e.target.value })
-                }
-                className="w-12 h-12 rounded border border-gray-300"
-              />
-              <input
-                type="text"
-                value={customization.stickerColor}
-                onChange={(e) =>
-                  updateCustomization({ stickerColor: e.target.value })
-                }
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-                placeholder="#f1f5f9"
-              />
+            {/* Neutral colors */}
+            <div className="mb-4">
+              <h4 className="text-sm font-medium text-gray-600 mb-2">
+                Neutros
+              </h4>
+              <div className="grid grid-cols-3 gap-2">
+                {COLOR_PRESETS.filter(
+                  (preset) => preset.category === 'neutral'
+                ).map((preset) => (
+                  <button
+                    key={preset.id}
+                    onClick={() => selectColorPreset(preset.id)}
+                    className={`p-3 rounded-lg border-2 flex flex-col items-center justify-center text-xs font-medium transition-all hover:scale-105 ${
+                      customization.colorPresetId === preset.id
+                        ? 'border-blue-500 ring-2 ring-blue-200'
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                    style={{
+                      backgroundColor: preset.stickerColor,
+                      color: preset.textColor,
+                    }}
+                    title={preset.name}
+                  >
+                    <div
+                      className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold mb-1"
+                      style={{
+                        backgroundColor: preset.textColor,
+                        color: preset.stickerColor,
+                      }}
+                    >
+                      Aa
+                    </div>
+                    <span className="text-xs">{preset.name}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Color del texto */}
-          <div className="mb-6">
-            <label
-              htmlFor="custom-text-color"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Color del texto
-            </label>
-            <div className="flex items-center gap-3">
-              <input
-                id="custom-text-color"
-                type="color"
-                value={customization.textColor}
-                onChange={(e) =>
-                  updateCustomization({ textColor: e.target.value })
-                }
-                className="w-12 h-12 rounded border border-gray-300"
-              />
-              <input
-                type="text"
-                value={customization.textColor}
-                onChange={(e) =>
-                  updateCustomization({ textColor: e.target.value })
-                }
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-                placeholder="#000000"
-              />
+            {/* Colors */}
+            <div className="mb-4">
+              <h4 className="text-sm font-medium text-gray-600 mb-2">
+                Con color
+              </h4>
+              <div className="grid grid-cols-4 gap-2">
+                {COLOR_PRESETS.filter(
+                  (preset) => preset.category === 'colors'
+                ).map((preset) => (
+                  <button
+                    key={preset.id}
+                    onClick={() => selectColorPreset(preset.id)}
+                    className={`p-3 rounded-lg border-2 flex flex-col items-center justify-center text-xs font-medium transition-all hover:scale-105 ${
+                      customization.colorPresetId === preset.id
+                        ? 'border-blue-500 ring-2 ring-blue-200'
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                    style={{
+                      backgroundColor: preset.stickerColor,
+                      color: preset.textColor,
+                    }}
+                    title={preset.name}
+                  >
+                    <div
+                      className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold mb-1"
+                      style={{
+                        backgroundColor: preset.textColor,
+                        color: preset.stickerColor,
+                      }}
+                    >
+                      Aa
+                    </div>
+                    <span className="text-xs">{preset.name}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -218,7 +209,7 @@ export default function StickerCustomizer({
       <div className="flex flex-col items-center justify-center">
         <h3 className="text-lg font-semibold mb-4">Vista previa</h3>
         <StickerPreview
-          key={`${customization.name}-${customization.flagCode}-${customization.stickerColor}-${customization.textColor}`}
+          key={`${customization.name}-${customization.flagCode}-${customization.colorPresetId}`}
           name={customization.name}
           flagCode={customization.flagCode}
           stickerColor={customization.stickerColor}

@@ -11,6 +11,7 @@ export default function BuyPage() {
   const [customization, setCustomization] = useState<StickerCustomization>({
     name: '',
     flagCode: 'CL',
+    colorPresetId: 'light-gray',
     stickerColor: '#f1f5f9',
     textColor: '#000000',
   });

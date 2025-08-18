@@ -67,18 +67,69 @@ export function StickerQrCode({
   }, [slug, size, isPreview]);
 
   if (isPreview) {
-    // Show placeholder for preview mode
+    // Show a fake QR code pattern for preview mode
     return (
       <div
-        className={`bg-gray-200 border border-gray-300 flex items-center justify-center rounded ${className}`}
+        className={`bg-white border border-gray-300 rounded ${className}`}
         style={{ width: `${size}px`, height: `${size}px` }}
       >
-        <div className="text-gray-500 text-xs text-center">
-          <div className="w-4 h-4 bg-gray-400 mx-auto mb-1 rounded-sm flex items-center justify-center">
-            <span className="text-white text-xs">QR</span>
-          </div>
-          <span className="text-xs">Preview</span>
-        </div>
+        <svg
+          width="100%"
+          height="100%"
+          viewBox="0 0 100 100"
+          className="rounded"
+        >
+          {/* QR-like pattern */}
+          <rect fill="#000" x="0" y="0" width="7" height="7" />
+          <rect fill="#000" x="9" y="0" width="2" height="7" />
+          <rect fill="#000" x="14" y="0" width="7" height="7" />
+          <rect fill="#000" x="0" y="9" width="7" height="2" />
+          <rect fill="#000" x="14" y="9" width="7" height="2" />
+          <rect fill="#000" x="0" y="14" width="7" height="7" />
+          <rect fill="#000" x="9" y="14" width="2" height="7" />
+          <rect fill="#000" x="14" y="14" width="7" height="7" />
+
+          {/* Random pattern for middle */}
+          <rect fill="#000" x="25" y="5" width="2" height="2" />
+          <rect fill="#000" x="30" y="8" width="3" height="2" />
+          <rect fill="#000" x="28" y="12" width="2" height="3" />
+          <rect fill="#000" x="35" y="6" width="2" height="2" />
+          <rect fill="#000" x="38" y="10" width="3" height="2" />
+          <rect fill="#000" x="25" y="16" width="2" height="2" />
+          <rect fill="#000" x="30" y="19" width="2" height="2" />
+
+          {/* Bottom corners */}
+          <rect fill="#000" x="0" y="79" width="7" height="7" />
+          <rect fill="#000" x="9" y="86" width="2" height="7" />
+          <rect fill="#000" x="79" y="79" width="7" height="7" />
+          <rect fill="#000" x="86" y="86" width="2" height="7" />
+
+          {/* More random pattern */}
+          <rect fill="#000" x="50" y="25" width="2" height="2" />
+          <rect fill="#000" x="55" y="28" width="3" height="2" />
+          <rect fill="#000" x="60" y="32" width="2" height="3" />
+          <rect fill="#000" x="45" y="35" width="2" height="2" />
+
+          {/* Semi-transparent overlay to show it's preview */}
+          <rect
+            fill="rgba(255,255,255,0.7)"
+            x="0"
+            y="0"
+            width="100"
+            height="100"
+          />
+          <text
+            x="50"
+            y="50"
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill="#666"
+            fontSize="8"
+            fontWeight="bold"
+          >
+            PREVIEW
+          </text>
+        </svg>
       </div>
     );
   }
