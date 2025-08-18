@@ -35,16 +35,13 @@ export async function GET(req: Request) {
       );
     }
 
-    console.log('Dev login successful for user:', session.user.email);
-
     // Crear respuesta que redirige a /account con parámetro especial
     const response = NextResponse.redirect(
       `${baseUrl}/account?dev-auth=${sessionToken}`
     );
 
     return response;
-  } catch (error: any) {
-    console.error('Dev login error:', error);
+  } catch {
     return NextResponse.redirect(`${baseUrl}/login?error=Login+failed`);
   }
 }

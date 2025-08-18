@@ -9,29 +9,16 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    console.log(
-      `🔄 PUT /api/admin/orders/${params.id} - Iniciando actualización`
-    );
-
     const session = await getServerSession(authOptions);
-    console.log('🔐 Sesión:', {
-      hasSession: !!session,
-      hasUser: !!session?.user,
-      userRole: session?.user?.role,
-      env: process.env.NODE_ENV,
-    });
 
     // Development bypass - allow operations without session for testing
     if (process.env.NODE_ENV === 'development' && !session) {
+      // eslint-disable-next-line no-console
       console.log('🚀 Development mode: Bypassing authentication for testing');
 
       // Continue with the operation without authentication check
       const { status } = await request.json();
       const orderId = params.id;
-
-      console.log(
-        `📝 Datos recibidos: orderId=${orderId}, newStatus=${status}`
-      );
 
       const validStatuses = [
         'ORDERED',
@@ -43,11 +30,9 @@ export async function PUT(
       ];
 
       if (!validStatuses.includes(status)) {
-        console.log(`❌ Estado inválido: ${status}`);
         return NextResponse.json({ error: 'Invalid state' }, { status: 400 });
       }
 
-      console.log(`💾 Actualizando sticker en BD...`);
       const updatedSticker = await prisma.sticker.update({
         where: { id: orderId },
         data: { status },
@@ -60,12 +45,6 @@ export async function PUT(
             },
           },
         },
-      });
-
-      console.log(`✅ Sticker actualizado exitosamente:`, {
-        id: updatedSticker.id,
-        oldStatus: 'unknown',
-        newStatus: updatedSticker.status,
       });
 
       return NextResponse.json({
@@ -124,10 +103,6 @@ export async function PUT(
     const { status } = await request.json();
     const orderId = params.id;
 
-    console.log(
-      `📝 Datos recibidos (autenticado): orderId=${orderId}, newStatus=${status}`
-    );
-
     const validStatuses = [
       'ORDERED',
       'PAID',
@@ -138,11 +113,9 @@ export async function PUT(
     ];
 
     if (!validStatuses.includes(status)) {
-      console.log(`❌ Estado inválido: ${status}`);
       return NextResponse.json({ error: 'Invalid state' }, { status: 400 });
     }
 
-    console.log(`💾 Actualizando sticker en BD (autenticado)...`);
     const updatedSticker = await prisma.sticker.update({
       where: { id: orderId },
       data: { status },
@@ -157,18 +130,11 @@ export async function PUT(
       },
     });
 
-    console.log(`✅ Sticker actualizado exitosamente (autenticado):`, {
-      id: updatedSticker.id,
-      newStatus: updatedSticker.status,
-    });
-
     return NextResponse.json({
       success: true,
       sticker: updatedSticker,
     });
   } catch (error) {
-    console.error('💥 Error en PUT /api/admin/orders/[id]:', error);
-
     // Si es un error de Prisma, proporcionar más detalles
     if (error instanceof Error) {
       if (error.message.includes('Record to update not found')) {

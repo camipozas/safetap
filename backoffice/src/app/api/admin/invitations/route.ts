@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
 
     if (process.env.NODE_ENV === 'development') {
       // En desarrollo, permitir creación directa
+      // eslint-disable-next-line no-console
       console.log(
         '🚀 Development mode: Bypassing authentication for invitation creation'
       );
@@ -155,7 +156,6 @@ export async function POST(request: NextRequest) {
       process.env.NEXTAUTH_BACKOFFICE_URL || 'http://localhost:3001';
     const inviteUrl = `${baseUrl}/auth/accept-invitation?token=${token}`;
 
-    // Enviar email de invitación
     const emailService = createEmailService();
     let emailSent = false;
     let emailError: string | null = null;
@@ -206,7 +206,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(responseData);
   } catch (error) {
-    console.error('Error creating invitation:', error);
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

@@ -1,85 +1,91 @@
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
-import NextAuth, {
-  getServerSession,
-  type Account,
-  type NextAuthOptions,
-  type Profile,
-  type Session,
-  type User,
-} from 'next-auth';
-import EmailProvider from 'next-auth/providers/email';
+import { NextAuthOptions, getServerSession } from 'next-auth';
+import GoogleProvider from 'next-auth/providers/google';
 
-import { prisma } from './prisma';
-
-console.log('🔧 [AUTH CONFIG] Loading authOptions...');
+import { prisma } from '@/lib/prisma';
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma as any),
-  session: { strategy: 'database' },
+  adapter: PrismaAdapter(prisma),
   providers: [
-    EmailProvider({
-      server: {
-        host: process.env.EMAIL_SERVER_HOST,
-        port: parseInt(process.env.EMAIL_SERVER_PORT || '587'),
-        auth: {
-          user: process.env.EMAIL_SERVER_USER,
-          pass: process.env.EMAIL_SERVER_PASSWORD || process.env.EMAIL_PASSWORD,
-        },
-        secure: false,
-        tls: {
-          rejectUnauthorized: false,
-        },
-      },
-      from: process.env.EMAIL_FROM!,
-      maxAge: 24 * 60 * 60,
-      // Note: The default sendVerificationRequest is still used;
-      // /api/custom-login is used alongside the default provider.
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true,
     }),
   ],
-  callbacks: {
-    async session({ session, user }: { session: Session; user: User }) {
-      if (session.user) {
-        (session.user as User & { id: string; role?: string }).id = user.id;
-        (session.user as User & { id: string; role?: string }).role =
-          (user as User & { role?: string }).role ?? 'USER';
-      }
-      return session;
-    },
-  },
-  events: {
-    async signIn({
-      user,
-    }: {
-      user: User;
-      account: Account | null;
-      profile?: Profile;
-      isNewUser?: boolean;
-    }) {
-      console.log('✅ User signed in:', user.email);
-    },
-    async createUser({ user }: { user: User }) {
-      console.log('👤 New user created:', user.email);
-    },
-  },
-  logger: {
-    error(code: string, metadata?: unknown) {
-      console.error('🔴 NextAuth Error:', code, metadata);
-    },
-    warn(code: string) {
-      console.warn('🟡 NextAuth Warning:', code);
-    },
-    debug(code: string, metadata?: unknown) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔵 NextAuth Debug:', code, metadata);
-      }
-    },
-  },
   pages: {
     signIn: '/login',
     error: '/login',
   },
+  callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === 'google') {
+        console.warn('Google sign-in attempt for:', user.email);
+        return true;
+      }
+      return false;
+    },
+    async redirect({ url, baseUrl }) {
+      // If user is trying to go to a callback URL
+      if (url.startsWith('/')) {
+        return `${baseUrl}${url}`;
+      }
+      // If URL is from same origin
+      if (new URL(url).origin === baseUrl) {
+        return url;
+      }
+      // Default to /account page after successful login
+      return `${baseUrl}/account`;
+    },
+    async session({ session, user }) {
+      if (session.user && user) {
+        // Get additional user info from database
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: session.user.email! },
+            select: {
+              id: true,
+              role: true,
+              country: true,
+              totalSpent: true,
+              emailVerified: true,
+            },
+          });
+
+          if (dbUser) {
+            session.user.id = dbUser.id;
+            session.user.role = dbUser.role;
+            session.user.country = dbUser.country || undefined;
+            session.user.totalSpent = dbUser.totalSpent;
+            session.user.emailVerified = dbUser.emailVerified || undefined;
+          } else {
+            // Fallback to basic user info
+            session.user.id = user.id;
+            session.user.role = 'USER';
+            session.user.totalSpent = 0;
+          }
+        } catch (error) {
+          console.warn('Error fetching user from database:', error);
+          // Fallback to basic user info
+          session.user.id = user.id;
+          session.user.role = 'USER';
+          session.user.totalSpent = 0;
+        }
+      }
+      return session;
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+      }
+      return token;
+    },
+  },
+  session: {
+    strategy: 'database',
+  },
+  secret: process.env.NEXTAUTH_SECRET,
 };
 
 export const auth = () => getServerSession(authOptions);
-
-export default NextAuth(authOptions);

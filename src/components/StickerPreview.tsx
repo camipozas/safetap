@@ -1,6 +1,6 @@
 'use client';
 
-import { StickerQrCode } from './StickerQrCode';
+import { StickerQrCode } from '@/components/StickerQrCode';
 
 interface StickerPreviewProps {
   name: string;

@@ -1,8 +1,7 @@
 import { redirect } from 'next/navigation';
 
+import ProfileForm from '@/app/perfil/ui/ProfileForm';
 import { auth } from '@/lib/auth';
-
-import ProfileForm from '../ui/ProfileForm';
 
 export default async function NuevoPerfilPage({
   searchParams,

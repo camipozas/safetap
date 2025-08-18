@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 
-import { CountrySelect } from './CountrySelect';
-import StickerPreview from './StickerPreview';
+import { CountrySelect } from '@/components/CountrySelect';
+import StickerPreview from '@/components/StickerPreview';
 
 interface StickerCustomizerProps {
   onCustomizationChange?: (data: StickerCustomization) => void;
