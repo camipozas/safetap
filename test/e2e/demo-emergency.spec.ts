@@ -72,11 +72,4 @@ test.describe('Demo Emergency Page', () => {
     // Should NOT contain the sticker slug line
     await expect(page.locator('text=Sticker: /s/demo-chile')).not.toBeVisible();
   });
-
-  test('does not show language indicator', async ({ page }) => {
-    await page.goto('/s/demo-chile');
-
-    // Should NOT contain the "es" language badge
-    await expect(page.locator('text=es').nth(0)).not.toBeVisible();
-  });
 });

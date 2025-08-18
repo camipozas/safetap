@@ -20,9 +20,9 @@ test.describe('Homepage', () => {
     ).toBeVisible();
 
     // Check for main action buttons - should only have "Comprar ahora" now
-    const buyButton = page.locator('a[href="/buy"]');
+    const buyButton = page.getByRole('link', { name: 'Comprar ahora' });
     await expect(buyButton).toBeVisible();
-    await expect(buyButton).toContainText('Comprar ahora');
+    await expect(buyButton).toHaveAttribute('href', '/buy');
 
     // Verify the "Ver ejemplo" button is NOT present in hero section
     const heroSection = page.locator('section').first();
@@ -80,5 +80,20 @@ test.describe('Homepage', () => {
 
     // Should show Carlos Herrera profile
     await expect(page.locator('h1')).toContainText('🇨🇱 Carlos Herrera');
+  });
+
+  test('footer contains privacy and terms links', async ({ page }) => {
+    await page.goto('/');
+
+    // Check for footer links
+    const footer = page.locator('footer');
+
+    const privacyLink = footer.locator('a[href="/privacy"]');
+    await expect(privacyLink).toBeVisible();
+    await expect(privacyLink).toContainText('Privacidad');
+
+    const termsLink = footer.locator('a[href="/terms"]');
+    await expect(termsLink).toBeVisible();
+    await expect(termsLink).toContainText('Términos y Condiciones');
   });
 });
