@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { USER_ROLES } from '@/types/shared';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
@@ -9,7 +10,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Token requerido' }, { status: 400 });
     }
 
-    // Buscar la invitación
     const invitation = await prisma.adminInvitation.findUnique({
       where: { token },
     });
@@ -21,7 +21,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar si ya fue usada
     if (invitation.usedAt) {
       return NextResponse.json(
         { error: 'Esta invitación ya ha sido utilizada' },
@@ -29,7 +28,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar si ha expirado
     if (invitation.expiresAt < new Date()) {
       return NextResponse.json(
         { error: 'Esta invitación ha expirado' },
@@ -37,30 +35,55 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar si el usuario ya existe
     const existingUser = await prisma.user.findUnique({
       where: { email: invitation.email },
     });
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: 'El usuario ya existe en el sistema' },
-        { status: 400 }
-      );
+      if (
+        existingUser.role === USER_ROLES.ADMIN ||
+        existingUser.role === USER_ROLES.SUPER_ADMIN
+      ) {
+        return NextResponse.json(
+          { error: 'El usuario ya es administrador en el sistema' },
+          { status: 400 }
+        );
+      }
+
+      const result = await prisma.$transaction(async (tx) => {
+        const updatedUser = await tx.user.update({
+          where: { email: invitation.email },
+          data: { role: invitation.role },
+        });
+
+        await tx.adminInvitation.update({
+          where: { id: invitation.id },
+          data: { usedAt: new Date() },
+        });
+
+        return updatedUser;
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `Rol de administrador asignado exitosamente a ${result.email}`,
+        user: {
+          id: result.id,
+          email: result.email,
+          role: result.role,
+        },
+      });
     }
 
-    // Crear el usuario y marcar la invitación como usada en una transacción
     const result = await prisma.$transaction(async (tx) => {
-      // Crear el nuevo usuario administrador
       const newUser = await tx.user.create({
         data: {
           email: invitation.email,
           role: invitation.role,
-          name: invitation.email.split('@')[0], // Nombre temporal basado en el email
+          name: invitation.email.split('@')[0],
         },
       });
 
-      // Marcar la invitación como usada
       await tx.adminInvitation.update({
         where: { id: invitation.id },
         data: { usedAt: new Date() },

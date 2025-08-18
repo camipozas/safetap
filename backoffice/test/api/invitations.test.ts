@@ -1,7 +1,7 @@
+import { USER_ROLES } from '@/types/shared';
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// Mock Prisma BEFORE importing modules that use it
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     adminInvitation: {
@@ -20,7 +20,6 @@ vi.mock('@/lib/prisma', () => ({
   },
 }));
 
-// NOW import the modules that use Prisma
 import { DELETE as revokeInvitation } from '@/app/api/admin/invitations/[id]/route';
 import { POST as acceptInvitation } from '@/app/api/admin/invitations/accept/route';
 import {
@@ -29,12 +28,10 @@ import {
 } from '@/app/api/admin/invitations/route';
 import { GET as validateInvitation } from '@/app/api/admin/invitations/validate/route';
 
-// Get reference to mocked prisma and cast to MockedObject
 import { EmailService } from '@/lib/email';
 import { prisma as _mockPrisma } from '@/lib/prisma';
 const mockPrisma = _mockPrisma as any;
 
-// Mock NextAuth
 vi.mock('next-auth', () => ({
   getServerSession: vi.fn(),
 }));
@@ -43,7 +40,6 @@ vi.mock('@/lib/auth', () => ({
   authOptions: {},
 }));
 
-// Mock email service
 const mockEmailService = {
   sendInvitationEmail: vi.fn(),
   testConnection: vi.fn(),
@@ -54,7 +50,6 @@ vi.mock('@/lib/email', () => ({
   EmailService: vi.fn(() => mockEmailService),
 }));
 
-// Mock crypto
 vi.mock('crypto', async (importOriginal) => {
   const actual = await importOriginal<typeof import('crypto')>();
   return {
@@ -68,9 +63,7 @@ vi.mock('crypto', async (importOriginal) => {
 describe('Invitations API', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Set NODE_ENV to development for bypassing auth
-    vi.stubEnv('NODE_ENV', 'development');
-    // Reset email service mock
+    vi.stubEnv('NODE_ENV', 'test');
     mockEmailService.sendInvitationEmail.mockResolvedValue('mock-message-id');
     mockEmailService.testConnection.mockResolvedValue(true);
   });
@@ -81,7 +74,7 @@ describe('Invitations API', () => {
         {
           id: 'invite-1',
           email: 'test@example.com',
-          role: 'ADMIN',
+          role: USER_ROLES.ADMIN,
           createdAt: new Date(),
           expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
           token: 'token-123',
@@ -129,7 +122,7 @@ describe('Invitations API', () => {
       const mockInvitation = {
         id: 'invite-1',
         email: 'newadmin@example.com',
-        role: 'ADMIN',
+        role: USER_ROLES.ADMIN,
         token: 'mocked-token-123',
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
         createdAt: new Date(),
@@ -146,7 +139,7 @@ describe('Invitations API', () => {
           method: 'POST',
           body: JSON.stringify({
             email: 'newadmin@example.com',
-            role: 'ADMIN',
+            role: USER_ROLES.ADMIN,
           }),
         }
       );
@@ -159,7 +152,7 @@ describe('Invitations API', () => {
       expect(data.invitation).toMatchObject({
         id: 'invite-1',
         email: 'newadmin@example.com',
-        role: 'ADMIN',
+        role: USER_ROLES.ADMIN,
         usedAt: null,
       });
       expect(data.invitation.createdAt).toBeDefined();
@@ -174,7 +167,7 @@ describe('Invitations API', () => {
         expect.stringContaining(
           'http://localhost:3001/auth/accept-invitation?token='
         ),
-        'ADMIN'
+        USER_ROLES.ADMIN
       );
     });
 
@@ -185,7 +178,7 @@ describe('Invitations API', () => {
           method: 'POST',
           body: JSON.stringify({
             email: '',
-            role: 'ADMIN',
+            role: USER_ROLES.ADMIN,
           }),
         }
       );
@@ -216,10 +209,88 @@ describe('Invitations API', () => {
       expect(data.error).toBe('Rol inválido');
     });
 
-    it('rejects existing user', async () => {
+    it('allows re-invitation for existing non-admin user', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({
         id: 'user-1',
         email: 'existing@example.com',
+        role: USER_ROLES.USER,
+      });
+
+      const mockInvitation = {
+        id: 'invite-1',
+        email: 'existing@example.com',
+        role: USER_ROLES.ADMIN,
+        token: 'mocked-token-123',
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        createdAt: new Date(),
+        usedAt: null,
+      };
+
+      mockPrisma.adminInvitation.findFirst.mockResolvedValue(null);
+      mockPrisma.adminInvitation.create.mockResolvedValue(mockInvitation);
+
+      const request = new NextRequest(
+        'http://localhost:3001/api/admin/invitations',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            email: 'existing@example.com',
+            role: USER_ROLES.ADMIN,
+          }),
+        }
+      );
+
+      const response = await createInvitation(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+    });
+
+    it('allows re-invitation for previously deleted admin user', async () => {
+      // Simulate a user who was previously an admin but was deleted (converted to USER)
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'user-1',
+        email: 'deleted-admin@example.com',
+        role: USER_ROLES.USER,
+      });
+
+      const mockInvitation = {
+        id: 'invite-1',
+        email: 'deleted-admin@example.com',
+        role: USER_ROLES.ADMIN,
+        token: 'mocked-token-456',
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        createdAt: new Date(),
+        usedAt: null,
+      };
+
+      mockPrisma.adminInvitation.findFirst.mockResolvedValue(null);
+      mockPrisma.adminInvitation.create.mockResolvedValue(mockInvitation);
+
+      const request = new NextRequest(
+        'http://localhost:3001/api/admin/invitations',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            email: 'deleted-admin@example.com',
+            role: USER_ROLES.ADMIN,
+          }),
+        }
+      );
+
+      const response = await createInvitation(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+    });
+
+    it('rejects invitation for existing admin user', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'user-1',
+        email: 'existing@example.com',
+        role: USER_ROLES.ADMIN,
       });
 
       const request = new NextRequest(
@@ -228,7 +299,7 @@ describe('Invitations API', () => {
           method: 'POST',
           body: JSON.stringify({
             email: 'existing@example.com',
-            role: 'ADMIN',
+            role: USER_ROLES.ADMIN,
           }),
         }
       );
@@ -237,7 +308,7 @@ describe('Invitations API', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('El usuario ya existe en el sistema');
+      expect(data.error).toBe('El usuario ya es administrador en el sistema');
     });
 
     it('rejects duplicate invitation', async () => {
@@ -254,7 +325,7 @@ describe('Invitations API', () => {
           method: 'POST',
           body: JSON.stringify({
             email: 'test@example.com',
-            role: 'ADMIN',
+            role: USER_ROLES.ADMIN,
           }),
         }
       );
@@ -272,7 +343,7 @@ describe('Invitations API', () => {
       const mockInvitation = {
         id: 'invite-1',
         email: 'newadmin@example.com',
-        role: 'ADMIN',
+        role: USER_ROLES.ADMIN,
         token: 'mocked-token-123',
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
         createdAt: new Date(),
@@ -283,7 +354,6 @@ describe('Invitations API', () => {
       mockPrisma.adminInvitation.findFirst.mockResolvedValue(null);
       mockPrisma.adminInvitation.create.mockResolvedValue(mockInvitation);
 
-      // Mock email service to fail
       mockEmailService.sendInvitationEmail.mockRejectedValue(
         new Error('SMTP connection failed')
       );
@@ -294,7 +364,7 @@ describe('Invitations API', () => {
           method: 'POST',
           body: JSON.stringify({
             email: 'newadmin@example.com',
-            role: 'ADMIN',
+            role: USER_ROLES.ADMIN,
           }),
         }
       );
@@ -309,14 +379,14 @@ describe('Invitations API', () => {
       expect(data.warning).toContain(
         'Invitación creada pero el email no pudo ser enviado'
       );
-      expect(data.inviteUrl).toBeDefined(); // Should include manual link when email fails
+      expect(data.inviteUrl).toBeDefined();
     });
 
     it('handles email service not configured', async () => {
       const mockInvitation = {
         id: 'invite-1',
         email: 'newadmin@example.com',
-        role: 'ADMIN',
+        role: USER_ROLES.ADMIN,
         token: 'mocked-token-123',
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
         createdAt: new Date(),
@@ -327,7 +397,6 @@ describe('Invitations API', () => {
       mockPrisma.adminInvitation.findFirst.mockResolvedValue(null);
       mockPrisma.adminInvitation.create.mockResolvedValue(mockInvitation);
 
-      // Mock email service to return null (not configured)
       const { createEmailService } = await import('@/lib/email');
       vi.mocked(createEmailService).mockReturnValue(null);
 
@@ -337,7 +406,7 @@ describe('Invitations API', () => {
           method: 'POST',
           body: JSON.stringify({
             email: 'newadmin@example.com',
-            role: 'ADMIN',
+            role: USER_ROLES.ADMIN,
           }),
         }
       );
@@ -348,9 +417,8 @@ describe('Invitations API', () => {
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
       expect(data.emailSent).toBe(false);
-      expect(data.inviteUrl).toBeDefined(); // Should include manual link
+      expect(data.inviteUrl).toBeDefined();
 
-      // Reset mock for other tests
       vi.mocked(createEmailService).mockReturnValue(
         mockEmailService as unknown as EmailService
       );
@@ -362,7 +430,7 @@ describe('Invitations API', () => {
       const mockInvitation = {
         id: 'invite-1',
         email: 'test@example.com',
-        role: 'ADMIN',
+        role: USER_ROLES.ADMIN,
       };
 
       mockPrisma.adminInvitation.findUnique.mockResolvedValue(mockInvitation);
@@ -410,14 +478,14 @@ describe('Invitations API', () => {
       const mockInvitation = {
         id: 'invite-1',
         email: 'test@example.com',
-        role: 'ADMIN',
+        role: USER_ROLES.ADMIN,
         token: 'valid-token',
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Future date
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
         usedAt: null,
       };
 
       mockPrisma.adminInvitation.findUnique.mockResolvedValue(mockInvitation);
-      mockPrisma.user.findUnique.mockResolvedValue(null); // User doesn't exist
+      mockPrisma.user.findUnique.mockResolvedValue(null);
 
       const request = new NextRequest(
         'http://localhost:3001/api/admin/invitations/validate?token=valid-token'
@@ -461,7 +529,7 @@ describe('Invitations API', () => {
       const mockInvitation = {
         id: 'invite-1',
         email: 'test@example.com',
-        usedAt: new Date(), // Already used
+        usedAt: new Date(),
       };
 
       mockPrisma.adminInvitation.findUnique.mockResolvedValue(mockInvitation);
@@ -481,7 +549,7 @@ describe('Invitations API', () => {
       const mockInvitation = {
         id: 'invite-1',
         email: 'test@example.com',
-        expiresAt: new Date(Date.now() - 1000), // Past date
+        expiresAt: new Date(Date.now() - 1000),
         usedAt: null,
       };
 
@@ -504,7 +572,7 @@ describe('Invitations API', () => {
       const mockInvitation = {
         id: 'invite-1',
         email: 'newadmin@example.com',
-        role: 'ADMIN',
+        role: USER_ROLES.ADMIN,
         token: 'valid-token',
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
         usedAt: null,
@@ -513,7 +581,7 @@ describe('Invitations API', () => {
       const mockNewUser = {
         id: 'user-1',
         email: 'newadmin@example.com',
-        role: 'ADMIN',
+        role: USER_ROLES.ADMIN,
         name: 'newadmin',
       };
 
@@ -554,10 +622,11 @@ describe('Invitations API', () => {
       expect(data.error).toBe('Token requerido');
     });
 
-    it('rejects if user already exists', async () => {
+    it('updates existing non-admin user role when accepting invitation', async () => {
       const mockInvitation = {
         id: 'invite-1',
         email: 'existing@example.com',
+        role: USER_ROLES.ADMIN,
         usedAt: null,
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       };
@@ -565,6 +634,95 @@ describe('Invitations API', () => {
       const mockExistingUser = {
         id: 'user-1',
         email: 'existing@example.com',
+        role: USER_ROLES.USER,
+      };
+
+      const mockUpdatedUser = {
+        id: 'user-1',
+        email: 'existing@example.com',
+        role: USER_ROLES.ADMIN,
+      };
+
+      mockPrisma.adminInvitation.findUnique.mockResolvedValue(mockInvitation);
+      mockPrisma.user.findUnique.mockResolvedValue(mockExistingUser);
+      mockPrisma.$transaction.mockResolvedValue(mockUpdatedUser);
+
+      const request = new NextRequest(
+        'http://localhost:3001/api/admin/invitations/accept',
+        {
+          method: 'POST',
+          body: JSON.stringify({ token: 'valid-token' }),
+        }
+      );
+
+      const response = await acceptInvitation(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+      expect(data.message).toBe(
+        'Rol de administrador asignado exitosamente a existing@example.com'
+      );
+      expect(data.user.role).toBe(USER_ROLES.ADMIN);
+    });
+
+    it('updates previously deleted admin user role when accepting invitation', async () => {
+      const mockInvitation = {
+        id: 'invite-1',
+        email: 'deleted-admin@example.com',
+        role: USER_ROLES.ADMIN,
+        usedAt: null,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      };
+
+      const mockExistingUser = {
+        id: 'user-1',
+        email: 'deleted-admin@example.com',
+        role: USER_ROLES.USER,
+      };
+
+      const mockUpdatedUser = {
+        id: 'user-1',
+        email: 'deleted-admin@example.com',
+        role: USER_ROLES.ADMIN,
+      };
+
+      mockPrisma.adminInvitation.findUnique.mockResolvedValue(mockInvitation);
+      mockPrisma.user.findUnique.mockResolvedValue(mockExistingUser);
+      mockPrisma.$transaction.mockResolvedValue(mockUpdatedUser);
+
+      const request = new NextRequest(
+        'http://localhost:3001/api/admin/invitations/accept',
+        {
+          method: 'POST',
+          body: JSON.stringify({ token: 'valid-token' }),
+        }
+      );
+
+      const response = await acceptInvitation(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+      expect(data.message).toBe(
+        'Rol de administrador asignado exitosamente a deleted-admin@example.com'
+      );
+      expect(data.user.role).toBe(USER_ROLES.ADMIN);
+    });
+
+    it('rejects if user is already an admin', async () => {
+      const mockInvitation = {
+        id: 'invite-1',
+        email: 'existing@example.com',
+        role: USER_ROLES.ADMIN,
+        usedAt: null,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      };
+
+      const mockExistingUser = {
+        id: 'user-1',
+        email: 'existing@example.com',
+        role: USER_ROLES.ADMIN,
       };
 
       mockPrisma.adminInvitation.findUnique.mockResolvedValue(mockInvitation);
@@ -582,7 +740,7 @@ describe('Invitations API', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('El usuario ya existe en el sistema');
+      expect(data.error).toBe('El usuario ya es administrador en el sistema');
     });
   });
 });

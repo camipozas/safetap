@@ -31,11 +31,10 @@ vi.mock('nodemailer', async () => {
 globalThis.React = React;
 
 // Set test environment variables to prevent real email sending
-Object.assign(process.env, {
-  NODE_ENV: 'test',
-  EMAIL_SERVER_HOST: 'mock-smtp.test.localhost',
-  EMAIL_SERVER_USER: 'test@mock.localhost',
-  EMAIL_SERVER_PASSWORD: 'mock-password-123',
-  EMAIL_FROM: 'SafeTap Test <test@mock.localhost>',
-  NEXTAUTH_SECRET: 'test-secret-key-for-testing-only',
-});
+// Use vi.stubEnv to ensure these override any .env files
+vi.stubEnv('NODE_ENV', 'test');
+vi.stubEnv('EMAIL_SERVER_HOST', 'mock-smtp.test.localhost');
+vi.stubEnv('EMAIL_SERVER_USER', 'test@mock.localhost');
+vi.stubEnv('EMAIL_SERVER_PASSWORD', 'mock-password-123');
+vi.stubEnv('EMAIL_FROM', 'SafeTap Test <test@mock.localhost>');
+vi.stubEnv('NEXTAUTH_SECRET', 'test-secret-key-for-testing-only');
