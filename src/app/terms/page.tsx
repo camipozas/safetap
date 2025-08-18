@@ -248,12 +248,7 @@ export default function TermsPage() {
 
           <div className="mt-12 pt-8 border-t border-slate-200">
             <p className="text-sm text-slate-500">
-              <strong>Última actualización:</strong>{' '}
-              {new Date().toLocaleDateString('es-CL', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
+              <strong>Última actualización:</strong> 18 de agosto de 2025
             </p>
           </div>
         </div>
