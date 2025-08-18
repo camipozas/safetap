@@ -38,7 +38,7 @@ const mockOrder = {
   },
   payments: [
     {
-      amountCents: 699000,
+      amountCents: 699000, // $6,990 CLP in cents
       currency: 'CLP',
       createdAt: new Date('2024-01-01'),
     },

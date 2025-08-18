@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
 
 import { CountrySelect } from '@/components/CountrySelect';
+import { DEFAULT_LOCALE, PRICE_PER_STICKER_CLP } from '@/lib/constants';
 import { checkoutSchema } from '@/lib/validators';
 
 export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
@@ -52,7 +53,7 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
   }
 
   const qty = watch('quantity');
-  const price = 6990;
+  const price = PRICE_PER_STICKER_CLP;
   const total = qty * price;
 
   return (
@@ -163,9 +164,9 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
           <div className="flex justify-between text-slate-600">
             <span>
               {qty} sticker{qty > 1 ? 's' : ''} × $
-              {price.toLocaleString('es-CL')}
+              {price.toLocaleString(DEFAULT_LOCALE)}
             </span>
-            <span>${(qty * price).toLocaleString('es-CL')}</span>
+            <span>${(qty * price).toLocaleString(DEFAULT_LOCALE)}</span>
           </div>
           <div className="flex justify-between text-slate-600">
             <span>Envío</span>
@@ -174,7 +175,7 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
           <div className="border-t border-slate-300 pt-2 mt-2">
             <div className="flex justify-between font-semibold text-slate-900 text-lg">
               <span>Total</span>
-              <span>${total.toLocaleString('es-CL')}</span>
+              <span>${total.toLocaleString(DEFAULT_LOCALE)}</span>
             </div>
           </div>
         </div>
@@ -264,7 +265,7 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
           </>
         ) : (
           <>
-            Confirmar pedido - ${total.toLocaleString('es-CL')}
+            Confirmar pedido - ${total.toLocaleString(DEFAULT_LOCALE)}
             <svg
               className="w-5 h-5 ml-2"
               fill="none"

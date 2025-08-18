@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
+import {
+  DEFAULT_CURRENCY,
+  PAYMENT_METHOD,
+  PRICE_PER_STICKER_CLP,
+  toCents,
+} from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 import { generateSlug } from '@/lib/slug';
 import { checkoutSchema } from '@/lib/validators';
@@ -57,12 +63,12 @@ export async function POST(req: Request) {
         },
       });
 
-      const amountCents = 699000 * data.quantity; // $6,990 CLP in cents
+      const amountCents = toCents(PRICE_PER_STICKER_CLP) * data.quantity;
       console.log('💰 Creating payment:', {
         amount: amountCents,
-        currency: 'CLP',
+        currency: DEFAULT_CURRENCY,
         reference,
-        method: 'BANK_TRANSFER',
+        method: PAYMENT_METHOD,
       });
 
       const payment = await tx.payment.create({
@@ -70,8 +76,8 @@ export async function POST(req: Request) {
           userId: user.id,
           stickerId: sticker.id,
           amountCents,
-          currency: 'CLP',
-          method: 'BANK_TRANSFER',
+          currency: DEFAULT_CURRENCY,
+          method: PAYMENT_METHOD,
           reference,
           status: 'PENDING',
         },

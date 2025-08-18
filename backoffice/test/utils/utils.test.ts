@@ -18,7 +18,7 @@ describe('Utils', () => {
     });
 
     it('defaults to CLP', () => {
-      const result = formatCurrency(699000);
+      const result = formatCurrency(699000); // Using raw value to test function directly
       expect(result).toContain('6.990');
       expect(result).toContain('$');
     });
