@@ -39,8 +39,8 @@ const mockOrders = [
     },
     payments: [
       {
-        amountCents: 2500,
-        currency: 'EUR',
+        amountCents: 699000, // $6,990 CLP in cents
+        currency: 'CLP',
         createdAt: new Date('2024-01-01'),
       },
     ],
@@ -163,7 +163,7 @@ describe('OrdersTable', () => {
     render(<OrdersTable orders={mockOrders} />);
 
     // Check payment amount exists
-    expect(screen.getByText('25,00 €')).toBeInTheDocument();
+    expect(screen.getByText('$6.990')).toBeInTheDocument();
     // Check for no payment text
     expect(screen.getAllByText('Sin pago')).toHaveLength(1);
   });

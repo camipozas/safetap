@@ -43,8 +43,13 @@ export function StickerQrCode({
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
 
   useEffect(() => {
+    let isMounted = true;
+
     const generateQR = async () => {
       if (!slug || isPreview) return;
+
+      // Check if running in browser environment
+      if (typeof window === 'undefined') return;
 
       try {
         const qrUrl = `${getBaseUrl()}/s/${slug}`;
@@ -56,14 +61,25 @@ export function StickerQrCode({
             light: '#FFFFFF',
           },
         });
-        setQrDataUrl(dataUrl);
+
+        // Only update state if component is still mounted
+        if (isMounted) {
+          setQrDataUrl(dataUrl);
+        }
       } catch (error) {
         // Silent error handling - show loading state instead
-        setQrDataUrl('');
+        if (isMounted) {
+          setQrDataUrl('');
+        }
       }
     };
 
     generateQR();
+
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
   }, [slug, size, isPreview]);
 
   if (isPreview) {

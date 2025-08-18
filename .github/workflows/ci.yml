@@ -44,7 +44,7 @@ jobs:
         run: npm run test
 
       - name: Build application
-        run: npm run build
+        run: npm run build:vercel
         env:
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'fallback-secret-for-ci-testing-only' }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
@@ -79,7 +79,7 @@ jobs:
         run: npx prisma generate
 
       - name: Build application
-        run: npm run build
+        run: npm run build:vercel
         env:
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'fallback-secret-for-ci-testing-only' }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}

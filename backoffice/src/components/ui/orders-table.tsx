@@ -678,7 +678,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                         <div className="text-sm font-medium text-green-600">
                           {formatCurrency(
                             totalPaid,
-                            order.payments[0]?.currency || 'EUR'
+                            order.payments[0]?.currency || 'CLP'
                           )}
                         </div>
                       ) : (

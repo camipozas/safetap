@@ -141,7 +141,7 @@ model Payment {
     stickerId   String?
     sticker     Sticker?      @relation(fields: [stickerId], references: [id])
     amountCents Int
-    currency    String        @default("EUR")
+    currency    String        @default("CLP")
     method      String        @default("BANK_TRANSFER")
     reference   String        @unique
     status      PaymentStatus @default(PENDING)

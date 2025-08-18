@@ -56,4 +56,17 @@ test.describe('Purchase Flow', () => {
     // Should have either payment form or checkout process
     expect(hasPaymentForm || hasCheckoutButton).toBeTruthy();
   });
+
+  test('displays CLP pricing correctly', async ({ page }) => {
+    await page.goto('/buy');
+
+    // Should display Chilean peso pricing
+    await expect(page.locator('text=/\\$6\\.990/').first()).toBeVisible();
+
+    // Check for total pricing display
+    await expect(page.locator('text=/Total/i')).toBeVisible();
+
+    // Should not display Euro symbols
+    await expect(page.locator('text=/€/')).not.toBeVisible();
+  });
 });

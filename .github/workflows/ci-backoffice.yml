@@ -1,0 +1,60 @@
+name: CI Backoffice
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backoffice/**'
+      - '.github/workflows/ci-cd.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backoffice/**'
+      - '.github/workflows/ci-cd.yml'
+
+jobs:
+  ci-backoffice:
+    name: CI Backoffice
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backoffice
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'backoffice/package-lock.json'
+
+      - name: Use latest npm (mitiga bug optional deps)
+        run: npm i -g npm@latest
+
+      - name: Clean install deps (regenera lock en Linux)
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install
+
+      - name: Generate Prisma client
+        run: npx prisma generate --schema=prisma/schema.prisma
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Test
+        run: npm run test:ci
+        env:
+          DATABASE_URL: 'postgresql://user:password@localhost:5432/test'
+          NEXTAUTH_SECRET: 'test-secret-key'
+          NEXTAUTH_URL: 'http://localhost:3001'
+          NEXTAUTH_BACKOFFICE_URL: 'http://localhost:3001'
+
+      - name: Build check
+        run: npm run build:vercel
