@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { hasPermission } from '@/types/shared';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { NextAuthOptions } from 'next-auth';
@@ -11,9 +12,36 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true,
     }),
   ],
   callbacks: {
+    signIn: async ({ user, account }) => {
+      if (account?.provider === 'google') {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email! },
+        });
+
+        if (dbUser) {
+          if (hasPermission(dbUser.role, 'canAccessBackoffice')) {
+            try {
+              await prisma.user.update({
+                where: { email: user.email! },
+                data: { lastLoginAt: new Date() },
+              });
+            } catch {
+              return false;
+            }
+            return true;
+          } else {
+            return false;
+          }
+        } else {
+          return false;
+        }
+      }
+      return false;
+    },
     session: async ({ session, user }) => {
       if (session?.user?.email) {
         const dbUser = await prisma.user.findUnique({
@@ -36,7 +64,7 @@ export const authOptions: NextAuthOptions = {
       if (new URL(url).origin === baseUrl) {
         return url;
       }
-      return baseUrl;
+      return `${baseUrl}/dashboard`;
     },
   },
   pages: {
