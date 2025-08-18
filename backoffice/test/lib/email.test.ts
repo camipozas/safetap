@@ -1,5 +1,5 @@
+import { EmailService, createEmailService } from '@/lib/email';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createEmailService, EmailService } from '@/lib/email';
 
 // Mock nodemailer
 const mockTransporter = {
