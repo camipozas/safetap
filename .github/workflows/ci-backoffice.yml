@@ -50,13 +50,13 @@ jobs:
       - name: Verify migrations sync with main project
         run: |
           echo "Checking if backoffice migrations are in sync with main project..."
-          if [ ! -d "../prisma/migrations" ]; then
+          if [ ! -d "$GITHUB_WORKSPACE/prisma/migrations" ]; then
             echo "❌ Main project migrations directory not found"
             exit 1
           fi
 
           # Compare migration directories
-          MAIN_MIGRATIONS=$(find ../prisma/migrations -name "*.sql" | sort)
+          MAIN_MIGRATIONS=$(find "$GITHUB_WORKSPACE/prisma/migrations" -name "*.sql" | sort)
           BACKOFFICE_MIGRATIONS=$(find prisma/migrations -name "*.sql" | sort)
 
           # Get just the filenames for comparison

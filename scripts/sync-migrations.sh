@@ -12,7 +12,8 @@ NC='\033[0m' # No Color
 
 echo -e "${YELLOW}🔄 Syncing migrations between main app and backoffice...${NC}"
 
-if [ ! -f "package.json" ] || [ ! -d "prisma" ] || [ ! -d "backoffice" ]; then
+# Check for project root: require package.json, prisma, backoffice, .git, and correct project name in package.json
+if [ ! -f "package.json" ] || [ ! -d "prisma" ] || [ ! -d "backoffice" ] || [ ! -d ".git" ] || ! grep -q '"name": *"safetap"' package.json; then
     echo -e "${RED}❌ Error: You must run this script from the root of the safetap project${NC}"
     exit 1
 fi
