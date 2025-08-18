@@ -97,21 +97,30 @@ describe('StickerQrCode', () => {
     expect(qrCanvas).toHaveAttribute('data-size', '128');
   });
 
-  it('shows HD indicator for high quality QR codes', () => {
+  it('renders high quality QR codes without HD indicator', () => {
     render(<StickerQrCode isPreview={false} highQuality={true} />);
 
-    expect(screen.getByText('HD')).toBeInTheDocument();
+    // HD indicator should no longer be shown
+    expect(screen.queryByText('HD')).not.toBeInTheDocument();
+
+    // But QR Canvas should still be rendered
+    expect(screen.getByTestId('qr-canvas')).toBeInTheDocument();
   });
 
-  it('shows HD indicator for small QR codes', () => {
+  it('renders small QR codes without HD indicator', () => {
     render(<StickerQrCode isPreview={false} size={64} />);
 
-    expect(screen.getByText('HD')).toBeInTheDocument();
+    // HD indicator should no longer be shown for small QR codes
+    expect(screen.queryByText('HD')).not.toBeInTheDocument();
+
+    // But QR Canvas should still be rendered
+    expect(screen.getByTestId('qr-canvas')).toBeInTheDocument();
   });
 
-  it('does not show HD indicator for large, normal quality QR codes', () => {
+  it('does not show HD indicator for any QR codes', () => {
     render(<StickerQrCode isPreview={false} size={200} highQuality={false} />);
 
+    // HD indicator should never be shown anymore
     expect(screen.queryByText('HD')).not.toBeInTheDocument();
   });
 

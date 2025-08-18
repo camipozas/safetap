@@ -19,9 +19,14 @@ test.describe('Homepage', () => {
       page.locator('header').getByRole('link', { name: 'Inicio safetap' })
     ).toBeVisible();
 
-    // Check for main action buttons
-    const ctaButtons = page.locator('a[href*="buy"], a[href*="login"]');
-    await expect(ctaButtons.first()).toBeVisible();
+    // Check for main action buttons - should only have "Comprar ahora" now
+    const buyButton = page.locator('a[href="/buy"]');
+    await expect(buyButton).toBeVisible();
+    await expect(buyButton).toContainText('Comprar ahora');
+
+    // Verify the "Ver ejemplo" button is NOT present in hero section
+    const heroSection = page.locator('section').first();
+    await expect(heroSection.locator('text=Ver ejemplo')).not.toBeVisible();
   });
 
   test('has accessible content', async ({ page }) => {
@@ -40,5 +45,40 @@ test.describe('Homepage', () => {
       const alt = await img.getAttribute('alt');
       expect(alt).toBeTruthy();
     }
+  });
+
+  test('displays demo sticker with Chilean data', async ({ page }) => {
+    await page.goto('/');
+
+    // Check that the demo sticker section is visible
+    const productSection = page.locator('section').nth(1); // Second section should be product preview
+
+    // Should contain Chilean flag and Carlos Herrera name in the sticker
+    await expect(productSection).toBeVisible();
+
+    // Check for the contact info link below the sticker
+    const contactLink = page.locator(
+      'text=Ver ejemplo información de contacto →'
+    );
+    await expect(contactLink).toBeVisible();
+
+    // Verify the link points to the demo page
+    await expect(contactLink).toHaveAttribute('href', '/s/demo-chile');
+  });
+
+  test('sticker demo link navigates correctly', async ({ page }) => {
+    await page.goto('/');
+
+    // Click on the contact info link
+    const contactLink = page.locator(
+      'text=Ver ejemplo información de contacto →'
+    );
+    await contactLink.click();
+
+    // Should navigate to demo emergency page
+    await expect(page).toHaveURL('/s/demo-chile');
+
+    // Should show Carlos Herrera profile
+    await expect(page.locator('h1')).toContainText('🇨🇱 Carlos Herrera');
   });
 });
