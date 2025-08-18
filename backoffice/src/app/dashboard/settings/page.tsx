@@ -2,52 +2,73 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import ConfirmationModal from '@/components/ui/confirmation-modal';
+import { USER_ROLES, UserRole } from '@/types/shared';
 import { Mail, Settings, Shield, Trash2, UserPlus, Users } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
+type AdminRole = Exclude<UserRole, 'USER'>;
+type FilterRole = AdminRole | 'ALL';
 interface AdminUser {
   id: string;
   email: string;
   name: string | null;
-  role: 'ADMIN' | 'SUPER_ADMIN';
+  role: AdminRole;
   createdAt: Date;
 }
 
 interface PendingInvitation {
   id: string;
   email: string;
-  role: 'ADMIN' | 'SUPER_ADMIN';
+  role: AdminRole;
   createdAt: Date;
   token: string;
 }
 
-const isSuperAdmin = (role: string | undefined): boolean => {
-  return role === 'SUPER_ADMIN';
-};
-
 export default function SettingsPage() {
   const { data: session } = useSession();
+
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [pendingInvitations, setPendingInvitations] = useState<
     PendingInvitation[]
   >([]);
   const [newUserEmail, setNewUserEmail] = useState('');
-  const [newUserRole, setNewUserRole] = useState<'ADMIN' | 'SUPER_ADMIN'>(
-    'ADMIN'
-  );
+  const [newUserRole, setNewUserRole] = useState<AdminRole>('ADMIN');
   const [loading, setLoading] = useState(true);
   const [inviteLoading, setInviteLoading] = useState(false);
 
   // Filter states
   const [emailFilter, setEmailFilter] = useState('');
-  const [roleFilter, setRoleFilter] = useState<'ALL' | 'ADMIN' | 'SUPER_ADMIN'>(
-    'ALL'
-  );
+  const [roleFilter, setRoleFilter] = useState<FilterRole>('ALL');
   const [invitationEmailFilter, setInvitationEmailFilter] = useState('');
-  const [invitationRoleFilter, setInvitationRoleFilter] = useState<
-    'ALL' | 'ADMIN' | 'SUPER_ADMIN'
-  >('ALL');
+  const [invitationRoleFilter, setInvitationRoleFilter] =
+    useState<FilterRole>('ALL');
+
+  // Confirmation modal states
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showRevokeModal, setShowRevokeModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [inviteToRevoke, setInviteToRevoke] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Notification state
+  const [notification, setNotification] = useState<{
+    show: boolean;
+    message: string;
+    type: 'success' | 'error' | 'warning';
+  }>({ show: false, message: '', type: 'success' });
+
+  // Show notification function
+  const showNotification = (
+    message: string,
+    type: 'success' | 'error' | 'warning' = 'success'
+  ) => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => {
+      setNotification({ show: false, message: '', type: 'success' });
+    }, 5000);
+  };
 
   // Filter functions
   const filteredAdminUsers = adminUsers.filter((user) => {
@@ -84,12 +105,10 @@ export default function SettingsPage() {
         if (Array.isArray(data)) {
           setAdminUsers(data);
         } else {
-          console.error('API response is not an array:', data);
           setAdminUsers([]);
         }
       }
     } catch (error) {
-      console.error('Error fetching admin users:', error);
       setAdminUsers([]); // Asegurar que siempre sea un array
     } finally {
       setLoading(false);
@@ -105,12 +124,10 @@ export default function SettingsPage() {
         if (Array.isArray(data.invitations)) {
           setPendingInvitations(data.invitations);
         } else {
-          console.error('API invitations response is not an array:', data);
           setPendingInvitations([]);
         }
       }
     } catch (error) {
-      console.error('Error fetching pending invitations:', error);
       setPendingInvitations([]); // Asegurar que siempre sea un array
     }
   };
@@ -145,63 +162,113 @@ export default function SettingsPage() {
           message += ` Link de invitación: ${data.inviteUrl}`;
         }
 
-        alert(message);
+        showNotification(message, 'success');
         setNewUserEmail('');
         setNewUserRole('ADMIN');
         fetchPendingInvitations();
       } else {
         const error = await response.json();
-        alert(error.error || 'Error al enviar invitación');
+        showNotification(error.error || 'Error al enviar invitación', 'error');
       }
     } catch (error) {
-      console.error('Error sending invitation:', error);
-      alert('Error al enviar invitación');
+      showNotification('Error al enviar invitación', 'error');
     } finally {
       setInviteLoading(false);
     }
   };
 
-  const deleteUser = async (userId: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este administrador?')) {
-      return;
-    }
+  const handleDeleteUser = (userId: string) => {
+    setUserToDelete(userId);
+    setShowDeleteModal(true);
+  };
 
+  const deleteUser = async () => {
+    if (!userToDelete) return;
+
+    setDeleteLoading(true);
     try {
-      const response = await fetch(`/api/admin/admin-users/${userId}`, {
+      const response = await fetch(`/api/admin/admin-users/${userToDelete}`, {
         method: 'DELETE',
       });
-
       if (response.ok) {
         fetchAdminUsers();
-        alert('Administrador eliminado exitosamente');
+        showNotification(
+          'Permisos de administrador removidos exitosamente (usuario convertido a USER)',
+          'success'
+        );
+        setShowDeleteModal(false);
+        setUserToDelete(null);
       } else {
-        alert('Error al eliminar administrador');
+        const errorData = await response.json();
+        showNotification(
+          errorData.error || 'Error al eliminar administrador',
+          'error'
+        );
       }
     } catch (error) {
-      console.error('Error deleting user:', error);
-      alert('Error al eliminar administrador');
+      showNotification('Error al eliminar administrador', 'error');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
-  const revokeInvitation = async (inviteId: string) => {
-    if (!confirm('¿Estás seguro de que quieres revocar esta invitación?')) {
-      return;
-    }
+  const handleRevokeInvitation = (inviteId: string) => {
+    setInviteToRevoke(inviteId);
+    setShowRevokeModal(true);
+  };
 
+  const revokeInvitation = async () => {
+    if (!inviteToRevoke) return;
+
+    setDeleteLoading(true);
     try {
-      const response = await fetch(`/api/admin/invitations/${inviteId}`, {
+      const response = await fetch(`/api/admin/invitations/${inviteToRevoke}`, {
         method: 'DELETE',
       });
 
       if (response.ok) {
         fetchPendingInvitations();
-        alert('Invitación revocada exitosamente');
+        showNotification('Invitación revocada exitosamente', 'success');
+        setShowRevokeModal(false);
+        setInviteToRevoke(null);
       } else {
-        alert('Error al revocar invitación');
+        showNotification('Error al revocar invitación', 'error');
       }
     } catch (error) {
-      console.error('Error revoking invitation:', error);
-      alert('Error al revocar invitación');
+      showNotification('Error al revocar invitación', 'error');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const updateUserRole = async (userId: string, newRole: AdminRole) => {
+    try {
+      const response = await fetch(`/api/admin/admin-users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          role: newRole,
+        }),
+      });
+
+      if (response.ok) {
+        fetchAdminUsers(); // Refresh the list
+        showNotification(
+          `Rol actualizado a ${newRole} exitosamente`,
+          'success'
+        );
+      } else {
+        const errorData = await response.json();
+        showNotification(errorData.error || 'Error al actualizar rol', 'error');
+        // Refresh to revert the UI change
+        fetchAdminUsers();
+      }
+    } catch (error) {
+      showNotification('Error al actualizar rol', 'error');
+      // Refresh to revert the UI change
+      fetchAdminUsers();
     }
   };
 
@@ -252,15 +319,11 @@ export default function SettingsPage() {
                 <label className="block text-sm font-medium mb-1">Rol</label>
                 <select
                   value={newUserRole}
-                  onChange={(e) =>
-                    setNewUserRole(e.target.value as 'ADMIN' | 'SUPER_ADMIN')
-                  }
+                  onChange={(e) => setNewUserRole(e.target.value as AdminRole)}
                   className="border rounded px-3 py-2"
                 >
-                  <option value="ADMIN">Admin</option>
-                  {isSuperAdmin(session?.user?.role as string) && (
-                    <option value="SUPER_ADMIN">Super Admin</option>
-                  )}
+                  <option value={USER_ROLES.ADMIN}>Admin</option>
+                  <option value={USER_ROLES.SUPER_ADMIN}>Super Admin</option>
                 </select>
               </div>
               <Button type="submit" disabled={inviteLoading}>
@@ -271,6 +334,10 @@ export default function SettingsPage() {
             <p className="text-sm text-gray-600 mt-2">
               Se enviará un email con un link de invitación que expira en 24
               horas.
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              Nota: En desarrollo, ambas opciones están disponibles. En
+              producción, solo Super Admins pueden crear otros Super Admins.
             </p>
           </div>
 
@@ -303,15 +370,13 @@ export default function SettingsPage() {
                   <select
                     value={invitationRoleFilter}
                     onChange={(e) =>
-                      setInvitationRoleFilter(
-                        e.target.value as 'ALL' | 'ADMIN' | 'SUPER_ADMIN'
-                      )
+                      setInvitationRoleFilter(e.target.value as FilterRole)
                     }
                     className="border rounded px-3 py-2"
                   >
                     <option value="ALL">Todos los roles</option>
-                    <option value="ADMIN">Admin</option>
-                    <option value="SUPER_ADMIN">Super Admin</option>
+                    <option value={USER_ROLES.ADMIN}>Admin</option>
+                    <option value={USER_ROLES.SUPER_ADMIN}>Super Admin</option>
                   </select>
                 </div>
               </div>
@@ -351,7 +416,9 @@ export default function SettingsPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => revokeInvitation(invitation.id)}
+                              onClick={() =>
+                                handleRevokeInvitation(invitation.id)
+                              }
                               className="text-xs"
                             >
                               <Trash2 className="h-3 w-3 mr-1" />
@@ -393,16 +460,12 @@ export default function SettingsPage() {
                 </label>
                 <select
                   value={roleFilter}
-                  onChange={(e) =>
-                    setRoleFilter(
-                      e.target.value as 'ALL' | 'ADMIN' | 'SUPER_ADMIN'
-                    )
-                  }
+                  onChange={(e) => setRoleFilter(e.target.value as FilterRole)}
                   className="border rounded px-3 py-2"
                 >
                   <option value="ALL">Todos los roles</option>
-                  <option value="ADMIN">Admin</option>
-                  <option value="SUPER_ADMIN">Super Admin</option>
+                  <option value={USER_ROLES.ADMIN}>Admin</option>
+                  <option value={USER_ROLES.SUPER_ADMIN}>Super Admin</option>
                 </select>
               </div>
             </div>
@@ -432,15 +495,21 @@ export default function SettingsPage() {
                         </td>
                         <td className="p-3">{user.email}</td>
                         <td className="p-3">
-                          <span
-                            className={`inline-block px-2 py-1 text-xs rounded-full ${
-                              user.role === 'SUPER_ADMIN'
-                                ? 'bg-purple-100 text-purple-800'
-                                : 'bg-blue-100 text-blue-800'
-                            }`}
+                          <select
+                            value={user.role as string}
+                            onChange={(e) =>
+                              updateUserRole(
+                                user.id,
+                                e.target.value as AdminRole
+                              )
+                            }
+                            className="text-xs border rounded px-2 py-1 bg-white"
                           >
-                            {user.role}
-                          </span>
+                            <option value={USER_ROLES.ADMIN}>ADMIN</option>
+                            <option value={USER_ROLES.SUPER_ADMIN}>
+                              SUPER_ADMIN
+                            </option>
+                          </select>
                         </td>
                         <td className="p-3">
                           {new Date(user.createdAt).toLocaleDateString()}
@@ -450,11 +519,11 @@ export default function SettingsPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => deleteUser(user.id)}
+                              onClick={() => handleDeleteUser(user.id)}
                               className="text-xs text-red-600 hover:text-red-800"
                             >
                               <Trash2 className="h-3 w-3 mr-1" />
-                              Eliminar
+                              Remover Admin
                             </Button>
                           )}
                           {user.email === session?.user?.email && (
@@ -479,15 +548,70 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
           <div className="text-sm text-gray-600">
-            <p>
-              • Super Admins actuales: camila@safetap.cl, cpozasg1103@gmail.com
-            </p>
             <p>• Solo los Super Admins pueden crear otros Super Admins</p>
             <p>• Los links de invitación expiran en 24 horas</p>
             <p>• Se enviará un email automático con el link de invitación</p>
           </div>
         </CardContent>
       </Card>
+
+      {/* Confirmation Modals */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setUserToDelete(null);
+        }}
+        onConfirm={deleteUser}
+        title="Remover Permisos de Administrador"
+        message="¿Estás seguro de que quieres remover los permisos de administrador de este usuario? El usuario será convertido a USER normal y perderá acceso al panel de administración."
+        confirmText="Remover Permisos"
+        cancelText="Cancelar"
+        type="danger"
+        isLoading={deleteLoading}
+      />
+
+      <ConfirmationModal
+        isOpen={showRevokeModal}
+        onClose={() => {
+          setShowRevokeModal(false);
+          setInviteToRevoke(null);
+        }}
+        onConfirm={revokeInvitation}
+        title="Revocar Invitación"
+        message="¿Estás seguro de que quieres revocar esta invitación? El usuario no podrá usar el link de invitación."
+        confirmText="Revocar"
+        cancelText="Cancelar"
+        type="warning"
+        isLoading={deleteLoading}
+      />
+
+      {/* Notification Toast */}
+      {notification.show && (
+        <div
+          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-md ${
+            notification.type === 'success'
+              ? 'bg-green-100 border-green-500 text-green-800'
+              : notification.type === 'error'
+                ? 'bg-red-100 border-red-500 text-red-800'
+                : 'bg-yellow-100 border-yellow-500 text-yellow-800'
+          } border-l-4`}
+        >
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              <p className="text-sm font-medium">{notification.message}</p>
+            </div>
+            <button
+              onClick={() =>
+                setNotification({ show: false, message: '', type: 'success' })
+              }
+              className="ml-4 text-gray-400 hover:text-gray-600"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
