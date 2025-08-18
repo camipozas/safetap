@@ -126,7 +126,17 @@ export async function DELETE(
 
     const { id } = params;
 
-    // Set role back to USER instead of deleting
+    // First, delete associated accounts (Google OAuth)
+    await prisma.account.deleteMany({
+      where: { userId: id },
+    });
+
+    // Then, delete associated sessions
+    await prisma.session.deleteMany({
+      where: { userId: id },
+    });
+
+    // Finally, set role back to USER
     const updatedUser = await prisma.user.update({
       where: { id },
       data: { role: 'USER' },

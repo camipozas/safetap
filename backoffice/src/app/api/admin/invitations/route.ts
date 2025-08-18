@@ -136,6 +136,21 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('🔍 Checking for existing pending invitations:', email);
+
+    // Clean up any expired or used invitations for this email first
+    const cleanupResult = await prisma.adminInvitation.deleteMany({
+      where: {
+        email,
+        OR: [{ expiresAt: { lt: new Date() } }, { usedAt: { not: null } }],
+      },
+    });
+
+    if (cleanupResult.count > 0) {
+      console.log(
+        `🧹 Cleaned up ${cleanupResult.count} expired/used invitations for ${email}`
+      );
+    }
+
     const existingInvitation = await prisma.adminInvitation.findFirst({
       where: {
         email,
@@ -174,12 +189,14 @@ export async function POST(request: NextRequest) {
     console.log('✅ Invitation created with ID:', invitation.id);
 
     const baseUrl =
+      process.env.NEXTAUTH_URL ||
       process.env.NEXTAUTH_BACKOFFICE_URL ||
       process.env.NEXT_PUBLIC_BACKOFFICE_URL ||
       'https://backoffice.safetap.cl';
 
     console.log('🔧 Environment info for invitation URL:');
     console.log('- NODE_ENV:', process.env.NODE_ENV);
+    console.log('- NEXTAUTH_URL:', process.env.NEXTAUTH_URL);
     console.log(
       '- NEXTAUTH_BACKOFFICE_URL:',
       process.env.NEXTAUTH_BACKOFFICE_URL
