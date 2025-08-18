@@ -82,7 +82,7 @@ const eslintConfig = [
       // General JavaScript/TypeScript rules
       'prefer-const': 'error',
       'no-var': 'error',
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'no-console': 'off', // Allow console logs for debugging
       'no-debugger': 'error',
       'no-alert': 'error',
       'no-eval': 'error',

@@ -8,25 +8,45 @@ import { checkoutSchema } from '@/lib/validators';
 const bodySchema = checkoutSchema;
 
 export async function POST(req: Request) {
+  console.log('💳 Starting checkout transfer initialization');
   try {
     const json = await req.json();
+    console.log('📥 Received checkout data:', {
+      email: json.email,
+      nameOnSticker: json.nameOnSticker,
+      flagCode: json.flagCode,
+      quantity: json.quantity,
+    });
+
     const data = bodySchema.parse(json);
+    console.log('✅ Checkout data validation passed');
 
     // Create or find user by email
+    console.log('🔍 Creating or finding user:', data.email);
     const user = await prisma.user.upsert({
       where: { email: data.email },
       create: { email: data.email },
       update: {},
     });
+    console.log('✅ User ready:', { id: user.id, email: user.email });
 
     // Create Sticker (ORDERED) and Payment (PENDING) with reference
     const reference = `SAFETAP-${generateSlug(6)}`;
+    console.log('🔖 Generated reference:', reference);
 
+    console.log('💾 Starting database transaction...');
     const result = await prisma.$transaction(async (tx) => {
+      const stickerSlug = generateSlug(7);
+      const stickerSerial = `STK-${generateSlug(8)}`;
+
+      console.log('🏷️ Creating sticker:', {
+        slug: stickerSlug,
+        serial: stickerSerial,
+      });
       const sticker = await tx.sticker.create({
         data: {
-          slug: generateSlug(7),
-          serial: `STK-${generateSlug(8)}`,
+          slug: stickerSlug,
+          serial: stickerSerial,
           ownerId: user.id,
           nameOnSticker: data.nameOnSticker,
           flagCode: data.flagCode,
@@ -35,11 +55,20 @@ export async function POST(req: Request) {
           status: 'ORDERED',
         },
       });
+
+      const amountCents = 1500 * data.quantity;
+      console.log('💰 Creating payment:', {
+        amount: amountCents,
+        currency: 'EUR',
+        reference,
+        method: 'BANK_TRANSFER',
+      });
+
       const payment = await tx.payment.create({
         data: {
           userId: user.id,
           stickerId: sticker.id,
-          amountCents: 1500 * data.quantity, // example price
+          amountCents,
           currency: 'EUR',
           method: 'BANK_TRANSFER',
           reference,
@@ -49,9 +78,17 @@ export async function POST(req: Request) {
       return { sticker, payment };
     });
 
+    console.log('✅ Transaction completed successfully:', {
+      stickerId: result.sticker.id,
+      paymentId: result.payment.id,
+      reference,
+    });
+
     return NextResponse.json({ reference, paymentId: result.payment.id });
   } catch (e: any) {
+    console.error('❌ Checkout initialization failed:', e);
     if (e instanceof z.ZodError) {
+      console.log('📋 Validation error details:', e.issues);
       return NextResponse.json(
         { error: e.issues[0]?.message ?? 'Datos inválidos' },
         { status: 400 }

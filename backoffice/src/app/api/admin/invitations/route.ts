@@ -63,8 +63,10 @@ export async function GET() {
 
 // POST - Crear nueva invitación
 export async function POST(request: NextRequest) {
+  console.log('📨 Starting invitation creation process');
   try {
     const { email, role } = await request.json();
+    console.log('📥 Invitation request data:', { email, role });
 
     if (!email || !role) {
       return NextResponse.json(
@@ -98,7 +100,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Sin permisos' }, { status: 403 });
       }
 
-      // Solo SUPER_ADMIN puede crear otros SUPER_ADMIN
       if (role === 'SUPER_ADMIN' && user.role !== 'SUPER_ADMIN') {
         return NextResponse.json(
           { error: 'Solo Super Admins pueden crear otros Super Admins' },
@@ -107,7 +108,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Verificar si el usuario ya existe
+    console.log('🔍 Checking if user already exists:', email);
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
@@ -118,8 +119,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    console.log('✅ User does not exist, proceeding with invitation');
 
-    // Verificar si ya hay una invitación pendiente
+    console.log('🔍 Checking for existing pending invitations:', email);
     const existingInvitation = await prisma.adminInvitation.findFirst({
       where: {
         email,
@@ -131,17 +133,22 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingInvitation) {
+      console.log('❌ Pending invitation already exists:', email);
       return NextResponse.json(
         { error: 'Ya existe una invitación pendiente para este email' },
         { status: 400 }
       );
     }
+    console.log('✅ No pending invitations found');
 
-    // Generar token único
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
+    console.log('🔑 Generated invitation token and expiry:', {
+      tokenLength: token.length,
+      expiresAt: expiresAt.toISOString(),
+    });
 
-    // Crear la invitación
+    console.log('💾 Creating invitation in database');
     const invitation = await prisma.adminInvitation.create({
       data: {
         email,
@@ -150,10 +157,25 @@ export async function POST(request: NextRequest) {
         expiresAt,
       },
     });
+    console.log('✅ Invitation created with ID:', invitation.id);
 
-    // Generar URL de invitación
     const baseUrl =
-      process.env.NEXTAUTH_BACKOFFICE_URL || 'http://localhost:3001';
+      process.env.NEXTAUTH_BACKOFFICE_URL ||
+      process.env.NEXT_PUBLIC_BACKOFFICE_URL ||
+      'https://backoffice.safetap.cl';
+
+    console.log('🔧 Environment info for invitation URL:');
+    console.log('- NODE_ENV:', process.env.NODE_ENV);
+    console.log(
+      '- NEXTAUTH_BACKOFFICE_URL:',
+      process.env.NEXTAUTH_BACKOFFICE_URL
+    );
+    console.log(
+      '- NEXT_PUBLIC_BACKOFFICE_URL:',
+      process.env.NEXT_PUBLIC_BACKOFFICE_URL
+    );
+    console.log('- Final baseUrl:', baseUrl);
+
     const inviteUrl = `${baseUrl}/auth/accept-invitation?token=${token}`;
 
     const emailService = createEmailService();
@@ -172,7 +194,6 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         console.error('❌ Failed to send invitation email:', error);
         emailError = error instanceof Error ? error.message : 'Unknown error';
-        // Don't fail the invitation creation if email fails
       }
     } else {
       console.warn(
@@ -181,7 +202,6 @@ export async function POST(request: NextRequest) {
       emailError = 'Email service not configured';
     }
 
-    // Log invitation details for development/debugging
     console.log(`📧 Invitación para ${email}:`);
     console.log(`🔗 Link: ${inviteUrl}`);
     console.log(`⏰ Expira: ${expiresAt.toISOString()}`);
@@ -194,7 +214,6 @@ export async function POST(request: NextRequest) {
       emailSent,
     };
 
-    // Include invite URL for development or if email failed
     if (process.env.NODE_ENV === 'development' || !emailSent) {
       responseData.inviteUrl = inviteUrl;
       if (!emailSent && emailError) {

@@ -21,18 +21,33 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
   });
 
   async function onSubmit(data: z.infer<typeof checkoutSchema>) {
+    console.log('🛒 Starting checkout process with data:', {
+      nameOnSticker: data.nameOnSticker,
+      flagCode: data.flagCode,
+      quantity: data.quantity,
+      userEmail,
+    });
+
     setServerError(null);
     const res = await fetch('/api/checkout/transfer/init', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ ...data, email: userEmail }),
     });
+
+    console.log('📥 Checkout API response status:', res.status);
+
     if (!res.ok) {
       const j = await res.json().catch(() => ({}));
+      console.log('❌ Checkout failed:', j.error ?? 'Error al crear el pedido');
       setServerError(j.error ?? 'Error al crear el pedido');
       return;
     }
     const result = await res.json();
+    console.log(
+      '✅ Checkout successful, redirecting to account with reference:',
+      result.reference
+    );
     window.location.href = `/account?ref=${encodeURIComponent(result.reference)}`;
   }
 
