@@ -39,16 +39,3 @@ Object.assign(process.env, {
   EMAIL_FROM: 'SafeTap Test <test@mock.localhost>',
   NEXTAUTH_SECRET: 'test-secret-key-for-testing-only',
 });
-
-// Mock the Prisma client
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
-    user: {
-      findUnique: vi.fn(),
-      create: vi.fn(),
-    },
-    verificationToken: {
-      create: vi.fn(),
-    },
-  },
-}));
