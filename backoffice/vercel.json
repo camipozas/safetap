@@ -3,6 +3,7 @@
   "installCommand": "npm ci",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
+  "rootDirectory": ".",
   "functions": {
     "src/app/api/**": {
       "maxDuration": 30
