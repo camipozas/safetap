@@ -10,5 +10,13 @@
   },
   "env": {
     "PRISMA_GENERATE_SKIP_AUTOINSTALL": "true"
+  },
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "feature/*": false,
+      "fix/*": false,
+      "hotfix/*": true
+    }
   }
 }
