@@ -63,7 +63,7 @@ export default function StickerPreview({
           <span className="text-2xl">{flag}</span>
           <div className="text-center">
             <p
-              className="text-sm font-semibold leading-tight"
+              className="text-base font-semibold leading-tight"
               style={{ color: textColor }}
             >
               {name || 'Tu Nombre'}

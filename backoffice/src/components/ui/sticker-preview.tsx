@@ -95,7 +95,7 @@ export default function StickerPreview({
               className="font-semibold leading-tight"
               style={{
                 color: sticker.textColor,
-                fontSize: `${Math.max(size * 0.06, 10)}px`,
+                fontSize: `${Math.max(size * 0.09, 14)}px`,
               }}
             >
               {displayName}
