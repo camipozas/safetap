@@ -19,14 +19,17 @@ export default function TermsPage() {
             <div className="space-y-4 text-slate-700">
               <p>
                 safetap es un servicio que proporciona stickers inteligentes con
-                códigos QR y tecnología NFC que permiten acceso rápido a
-                información de emergencia personalizada.
+                códigos QR y tecnología de proximidad (NFC) que permiten acceso
+                rápido a información de emergencia personalizada.
               </p>
               <p>El servicio incluye:</p>
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li>Stickers físicos personalizados con tu nombre y bandera</li>
                 <li>Plataforma web para gestionar tu perfil de emergencia</li>
-                <li>Página pública accesible mediante QR o NFC</li>
+                <li>
+                  Página pública accesible mediante QR o acercando el teléfono
+                  (NFC)
+                </li>
                 <li>Actualizaciones gratuitas de tu información</li>
               </ul>
             </div>
@@ -117,8 +120,8 @@ export default function TermsPage() {
               <p>
                 <strong>Importante:</strong> La información que incluyas en tu
                 perfil público será visible para cualquier persona que escanee
-                tu código QR o use NFC. Incluye solo la información que estés
-                cómodo compartiendo en emergencias.
+                tu código QR o acerque su teléfono (NFC). Incluye solo la
+                información que estés cómodo compartiendo en emergencias.
               </p>
             </div>
           </section>
