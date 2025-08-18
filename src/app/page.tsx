@@ -224,7 +224,7 @@ export default function LandingPage() {
         </div>
         <div className="text-center mt-8">
           <p className="text-slate-600">
-            <strong>NFC</strong> significa &quot;Near Field Communication&quot;
+            <strong>NFC</strong> significa «Near Field Communication»
             (comunicación de campo cercano). Es la misma tecnología que usas
             para pagar con el teléfono en las tiendas.
           </p>
