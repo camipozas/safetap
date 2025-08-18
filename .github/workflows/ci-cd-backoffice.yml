@@ -94,9 +94,13 @@ jobs:
         working-directory: ./backoffice
         run: npx prisma generate --schema=prisma/schema.prisma
 
+      - name: Prebuild with project script (avoids ENOENT)
+        working-directory: ./backoffice
+        run: |
+          npm run build:vercel
       - name: Build Project Artifacts
         working-directory: ./backoffice
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel build --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_BACKOFFICE }}
@@ -143,9 +147,13 @@ jobs:
         working-directory: ./backoffice
         run: npx prisma generate --schema=prisma/schema.prisma
 
+      - name: Prebuild Preview with project script (avoids ENOENT)
+        working-directory: ./backoffice
+        run: |
+          npm run build:vercel
       - name: Build Preview Artifacts
         working-directory: ./backoffice
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel build --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_BACKOFFICE }}
