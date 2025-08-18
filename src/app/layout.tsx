@@ -101,14 +101,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                       Comprar sticker
                     </Link>
                   </li>
-                  <li>
-                    <Link
-                      href="/s/demo"
-                      className="hover:text-white transition-colors"
-                    >
-                      Ver ejemplo
-                    </Link>
-                  </li>
                 </ul>
               </div>
 
@@ -141,20 +133,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 reservados.
               </p>
               <div className="flex space-x-6 mt-4 md:mt-0">
-                <button
-                  type="button"
-                  className="text-slate-400 hover:text-white transition-colors bg-transparent border-none p-0 cursor-pointer"
-                  aria-label="Privacidad"
+                <Link
+                  href="/privacy"
+                  className="text-slate-400 hover:text-white transition-colors"
                 >
                   Privacidad
-                </button>
-                <button
-                  type="button"
-                  className="text-slate-400 hover:text-white transition-colors bg-transparent border-none p-0 cursor-pointer"
-                  aria-label="Términos"
+                </Link>
+                <Link
+                  href="/terms"
+                  className="text-slate-400 hover:text-white transition-colors"
                 >
-                  Términos
-                </button>
+                  Términos y Condiciones
+                </Link>
               </div>
             </div>
           </div>
