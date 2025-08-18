@@ -100,6 +100,31 @@ export async function POST(req: Request) {
     }
 
     // 5. Send email with login link
+    // In test environment, don't send real emails
+    if (process.env.NODE_ENV === 'test') {
+      console.log('🚫 Test mode: Skipping real email send');
+      const result = {
+        messageId: `test-mock-${Date.now()}`,
+        accepted: [email],
+        rejected: [],
+        pending: [],
+        response: '250 Mock OK - Test mode, no real email sent',
+      };
+
+      // Return early with mock response
+      const responseData: Record<string, unknown> = {
+        success: true,
+        messageId: result.messageId,
+        message: `Email de login enviado a ${email}`,
+        loginUrl,
+        testInfo:
+          'Test mode - no real email sent, loginUrl provided for testing',
+      };
+
+      return NextResponse.json(responseData);
+    }
+
+    // Production email sending
     const transporter = nodemailer.createTransport({
       host: EMAIL_SERVER_HOST,
       port: 587,

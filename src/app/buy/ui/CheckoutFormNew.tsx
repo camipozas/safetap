@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { StickerCustomization } from '@/components/StickerCustomizerNew';
+import { getColorPresetById } from '@/lib/color-presets';
 
 // Simplified schema for checkout form (quantity + optional email if not logged in)
 const checkoutSchema = z.object({
@@ -44,6 +45,7 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
       ...data,
       nameOnSticker: customization.name,
       flagCode: customization.flagCode,
+      colorPresetId: customization.colorPresetId,
       stickerColor: customization.stickerColor,
       textColor: customization.textColor,
     };
@@ -125,26 +127,19 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
             <span className="font-medium">{customization.flagCode}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-600">Color del sticker:</span>
+            <span className="text-slate-600">Esquema de colores:</span>
             <div className="flex items-center gap-2">
               <div
                 className="w-4 h-4 rounded border border-gray-300"
                 style={{ backgroundColor: customization.stickerColor }}
               />
-              <span className="font-mono text-xs">
-                {customization.stickerColor}
-              </span>
-            </div>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-slate-600">Color del texto:</span>
-            <div className="flex items-center gap-2">
               <div
                 className="w-4 h-4 rounded border border-gray-300"
                 style={{ backgroundColor: customization.textColor }}
               />
-              <span className="font-mono text-xs">
-                {customization.textColor}
+              <span className="font-medium text-xs">
+                {getColorPresetById(customization.colorPresetId)?.name ||
+                  'Personalizado'}
               </span>
             </div>
           </div>

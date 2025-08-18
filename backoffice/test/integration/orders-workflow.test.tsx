@@ -11,6 +11,7 @@ const mockOrder = {
   serial: 'ST999',
   nameOnSticker: 'Workflow Test',
   flagCode: '🇪🇸',
+  colorPresetId: 'classic-white',
   stickerColor: '#ffffff',
   textColor: '#000000',
   status: 'ORDERED' as const,

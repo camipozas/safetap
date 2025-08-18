@@ -28,18 +28,19 @@ export function StickerQrCode({
   const qrUrl = `${resolvedBaseUrl}/s/${identifier}`;
 
   if (isPreview) {
-    // Show placeholder for preview mode
+    // Generate a real QR code for preview, but it won't work in this context
+    // This will look exactly like a real QR but won't be functional
     return (
-      <div
-        className={`bg-gray-200 border border-gray-300 flex items-center justify-center rounded ${className}`}
-        style={{ width: `${size}px`, height: `${size}px` }}
-      >
-        <div className="text-gray-500 text-xs text-center">
-          <div className="w-4 h-4 bg-gray-400 mx-auto mb-1 rounded-sm flex items-center justify-center">
-            <span className="text-white text-xs">QR</span>
-          </div>
-          <span className="text-xs">Preview</span>
-        </div>
+      <div className={`relative ${className}`}>
+        <QrCanvas
+          url="https://safetap.cl/s/preview-demo"
+          size={size}
+          className=""
+          highResolution={size <= 64}
+          alt="QR Code Preview"
+          backgroundColor="#ffffff"
+          foregroundColor="#000000"
+        />
       </div>
     );
   }

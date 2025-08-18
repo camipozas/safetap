@@ -39,15 +39,24 @@ describe('StickerQrCode', () => {
   it('renders preview mode when isPreview is true', () => {
     render(<StickerQrCode isPreview={true} />);
 
-    expect(screen.getByText('Preview')).toBeInTheDocument();
-    expect(screen.queryByTestId('qr-canvas')).not.toBeInTheDocument();
+    // In preview mode, it still renders a QR canvas but with a preview URL
+    const qrCanvas = screen.getByTestId('qr-canvas');
+    expect(qrCanvas).toBeInTheDocument();
+    expect(qrCanvas).toHaveAttribute(
+      'data-url',
+      'https://safetap.cl/s/preview-demo'
+    );
   });
 
   it('renders real QR code when isPreview is false', () => {
     render(<StickerQrCode isPreview={false} stickerId="test-123" />);
 
-    expect(screen.queryByText('Preview')).not.toBeInTheDocument();
-    expect(screen.getByTestId('qr-canvas')).toBeInTheDocument();
+    const qrCanvas = screen.getByTestId('qr-canvas');
+    expect(qrCanvas).toBeInTheDocument();
+    expect(qrCanvas).toHaveAttribute(
+      'data-url',
+      'https://safetap.cl/s/test-123'
+    );
   });
 
   it('uses serial for URL when provided', () => {
@@ -127,7 +136,7 @@ describe('StickerQrCode', () => {
   it('applies custom className to preview', () => {
     render(<StickerQrCode isPreview={true} className="custom-class" />);
 
-    const container = screen.getByText('Preview').closest('div')?.parentElement;
+    const container = screen.getByTestId('qr-canvas').parentElement;
     expect(container).toHaveClass('custom-class');
   });
 
@@ -148,7 +157,7 @@ describe('StickerQrCode', () => {
   it('renders preview with correct dimensions', () => {
     render(<StickerQrCode isPreview={true} size={100} />);
 
-    const preview = screen.getByText('Preview').closest('div')?.parentElement;
-    expect(preview).toHaveStyle({ width: '100px', height: '100px' });
+    const qrCanvas = screen.getByTestId('qr-canvas');
+    expect(qrCanvas).toHaveAttribute('data-size', '100');
   });
 });

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { isValidColorPreset } from './color-presets';
+
 export const bloodTypeEnum = z.enum([
   'A+',
   'A-',
@@ -44,6 +46,11 @@ export const checkoutSchema = z.object({
     .max(25, 'Maximum 25 characters')
     .regex(/^[\p{L}0-9 .'-]+$/u, 'Invalid characters'),
   flagCode: z.string().length(2, 'Invalid country code'),
+  colorPresetId: z
+    .string()
+    .refine(isValidColorPreset, 'Invalid color preset')
+    .optional()
+    .default('light-gray'),
   stickerColor: z
     .string()
     .regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color format')

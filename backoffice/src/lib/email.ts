@@ -82,6 +82,13 @@ export class EmailService {
     inviteUrl: string,
     role: string
   ): Promise<string> {
+    // In test environment, don't send real emails
+    if (process.env.NODE_ENV === 'test') {
+      console.log('🚫 Test mode: Skipping real invitation email send');
+      return `test-invitation-mock-${Date.now()}`;
+    }
+
+    // Production email sending
     const transporter = this.createTransporter();
 
     const result = await transporter.sendMail({
@@ -96,6 +103,13 @@ export class EmailService {
   }
 
   async testConnection(): Promise<boolean> {
+    // In test environment, always return true without real connection test
+    if (process.env.NODE_ENV === 'test') {
+      console.log('🚫 Test mode: Skipping real email connection test');
+      return true;
+    }
+
+    // Production connection test
     try {
       const transporter = this.createTransporter();
       await transporter.verify();

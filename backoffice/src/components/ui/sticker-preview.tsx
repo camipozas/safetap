@@ -9,6 +9,7 @@ interface StickerPreviewProps {
     serial: string;
     nameOnSticker: string;
     flagCode: string;
+    colorPresetId?: string;
     stickerColor: string;
     textColor: string;
     owner?: {
@@ -25,6 +26,7 @@ interface StickerPreviewProps {
     } | null;
   };
   size?: number;
+  showRealQR?: boolean; // Whether to show real QR or preview placeholder
 }
 
 // Available flags
