@@ -57,10 +57,10 @@ export async function POST(req: Request) {
         },
       });
 
-      const amountCents = 1500 * data.quantity;
+      const amountCents = 699000 * data.quantity; // $6,990 CLP in cents
       console.log('💰 Creating payment:', {
         amount: amountCents,
-        currency: 'EUR',
+        currency: 'CLP',
         reference,
         method: 'BANK_TRANSFER',
       });
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
           userId: user.id,
           stickerId: sticker.id,
           amountCents,
-          currency: 'EUR',
+          currency: 'CLP',
           method: 'BANK_TRANSFER',
           reference,
           status: 'PENDING',

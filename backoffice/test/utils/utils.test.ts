@@ -10,17 +10,17 @@ import { describe, expect, it } from 'vitest';
 describe('Utils', () => {
   describe('formatCurrency', () => {
     it('formats currency correctly', () => {
-      expect(formatCurrency(2500, 'EUR')).toContain('25,00');
-      expect(formatCurrency(2500, 'EUR')).toContain('€');
+      expect(formatCurrency(2500, 'CLP')).toContain('25');
+      expect(formatCurrency(2500, 'CLP')).toContain('$');
       expect(formatCurrency(1000, 'USD')).toContain('10,00');
       expect(formatCurrency(1000, 'USD')).toContain('US$');
-      expect(formatCurrency(0, 'EUR')).toContain('0,00');
+      expect(formatCurrency(0, 'CLP')).toContain('0');
     });
 
-    it('defaults to EUR', () => {
-      const result = formatCurrency(1500);
-      expect(result).toContain('15,00');
-      expect(result).toContain('€');
+    it('defaults to CLP', () => {
+      const result = formatCurrency(699000);
+      expect(result).toContain('6.990');
+      expect(result).toContain('$');
     });
   });
 
