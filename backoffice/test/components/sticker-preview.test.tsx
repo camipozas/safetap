@@ -92,8 +92,8 @@ describe('StickerPreview (Backoffice)', () => {
     const qrCode = screen.getByTestId('sticker-qr-code');
     expect(qrCode).toBeInTheDocument();
     expect(qrCode).toHaveAttribute('data-slug', 'test-slug');
-    // QR size should be 32% of sticker size with minimum of 32
-    expect(qrCode).toHaveAttribute('data-size', '48'); // Math.max(150 * 0.32, 32) = 48
+    // QR size should be 40% of sticker size with minimum of 40
+    expect(qrCode).toHaveAttribute('data-size', '60'); // Math.max(150 * 0.4, 40) = 60
   });
 
   it('prioritizes owner data over sticker data', () => {

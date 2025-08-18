@@ -3,8 +3,10 @@ import Image from 'next/image';
 import QRCode from 'qrcode';
 import { memo, useEffect, useRef, useState } from 'react';
 
-// QR Code generation constants
 const QR_IMAGE_QUALITY = 0.92;
+const QR_SMALL_SIZE_THRESHOLD = 64;
+const QR_SMALL_IMAGE_QUALITY = 0.8;
+const HIGH_RESOLUTION_SCALE_FACTOR = 2;
 
 interface QrCanvasProps {
   url: string;
@@ -37,6 +39,11 @@ const QrCanvasComponent = function QrCanvas({
       return;
     }
 
+    // Reset state for new URL
+    setIsLoading(true);
+    setError(null);
+    setDataUrl('');
+
     // Cancel previous request if it exists
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -44,11 +51,9 @@ const QrCanvasComponent = function QrCanvas({
 
     abortControllerRef.current = new AbortController();
     let active = true;
-    setIsLoading(true);
-    setError(null);
 
     // Calculate final QR size with optimization for mobile
-    const qrSize = highResolution ? size * 2 : size;
+    const qrSize = highResolution ? size * HIGH_RESOLUTION_SCALE_FACTOR : size;
 
     // Configure QR options with error handling and performance optimization
     const qrOptions = {
@@ -61,20 +66,36 @@ const QrCanvasComponent = function QrCanvas({
       },
       errorCorrectionLevel: 'M' as const,
       type: 'image/png' as const,
-      quality: size <= 64 ? 0.8 : QR_IMAGE_QUALITY, // Lower quality for small QRs
+      quality:
+        size <= QR_SMALL_SIZE_THRESHOLD
+          ? QR_SMALL_IMAGE_QUALITY
+          : QR_IMAGE_QUALITY, // Lower quality for small QRs
       rendererOpts: {
-        quality: size <= 64 ? 0.8 : QR_IMAGE_QUALITY,
+        quality:
+          size <= QR_SMALL_SIZE_THRESHOLD
+            ? QR_SMALL_IMAGE_QUALITY
+            : QR_IMAGE_QUALITY,
       },
     };
 
+    // Add timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      if (active) {
+        setError('Timeout: QR generation took too long');
+        setIsLoading(false);
+      }
+    }, 10000); // 10 second timeout
+
     QRCode.toDataURL(url, qrOptions)
       .then((generatedDataUrl) => {
+        clearTimeout(timeoutId);
         if (active) {
           setDataUrl(generatedDataUrl);
           setIsLoading(false);
         }
       })
       .catch((err) => {
+        clearTimeout(timeoutId);
         if (active) {
           setError(`Error: ${err.message || 'Code generation failed'}`);
           setIsLoading(false);
@@ -83,6 +104,7 @@ const QrCanvasComponent = function QrCanvas({
 
     return () => {
       active = false;
+      clearTimeout(timeoutId);
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }

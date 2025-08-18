@@ -102,7 +102,7 @@ describe('StickerPreview', () => {
     );
 
     const qrCode = screen.getByTestId('sticker-qr-code');
-    expect(qrCode).toHaveAttribute('data-size', '48'); // Optimized size for mobile
+    expect(qrCode).toHaveAttribute('data-size', '64'); // Optimized size for mobile
   });
   it('displays serial number when provided in real mode', () => {
     render(

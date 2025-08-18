@@ -82,7 +82,7 @@ const StickerPreviewComponent = ({
             <StickerQrCode
               stickerId={stickerId}
               serial={serial}
-              size={48}
+              size={64}
               isPreview={!showRealQR}
               className="mx-auto"
             />

@@ -3,6 +3,12 @@
 import QRCode from 'qrcode';
 import { memo, useEffect, useRef, useState } from 'react';
 
+const QR_SMALL_SIZE_THRESHOLD = 64;
+const QR_SMALL_IMAGE_QUALITY = 0.8;
+const QR_STANDARD_IMAGE_QUALITY = 0.92;
+const HIGH_RESOLUTION_SCALE_FACTOR = 2;
+const LOW_RESOLUTION_SCALE_FACTOR = 1.5;
+
 interface StickerQrCodeProps {
   slug?: string;
   size?: number;
@@ -61,15 +67,24 @@ export const StickerQrCode = memo(function StickerQrCode({
       try {
         const qrUrl = `${getBaseUrl()}/s/${slug}`;
         const qrOptions = {
-          width: size <= 64 ? size * 1.5 : size * 2, // Optimized scaling for small QRs
+          width:
+            size <= QR_SMALL_SIZE_THRESHOLD
+              ? size * LOW_RESOLUTION_SCALE_FACTOR
+              : size * HIGH_RESOLUTION_SCALE_FACTOR, // Optimized scaling for small QRs
           margin: 1,
           color: {
             dark: '#000000',
             light: '#FFFFFF',
           },
-          quality: size <= 64 ? 0.8 : 0.92, // Lower quality for small QRs
+          quality:
+            size <= QR_SMALL_SIZE_THRESHOLD
+              ? QR_SMALL_IMAGE_QUALITY
+              : QR_STANDARD_IMAGE_QUALITY, // Lower quality for small QRs
           rendererOpts: {
-            quality: size <= 64 ? 0.8 : 0.92,
+            quality:
+              size <= QR_SMALL_SIZE_THRESHOLD
+                ? QR_SMALL_IMAGE_QUALITY
+                : QR_STANDARD_IMAGE_QUALITY,
           },
         };
 

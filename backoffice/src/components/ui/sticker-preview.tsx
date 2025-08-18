@@ -111,7 +111,7 @@ const StickerPreview = memo(function StickerPreview({
           <div className="flex-1">
             <StickerQrCode
               slug={sticker.slug}
-              size={Math.max(size * 0.32, 32)}
+              size={Math.max(size * 0.4, 40)}
               isPreview={false}
               className="mx-auto"
             />
