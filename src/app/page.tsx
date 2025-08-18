@@ -12,8 +12,9 @@ export default function LandingPage() {
             Tu información vital, en un tap.
           </h1>
           <p className="mt-6 text-xl text-slate-600 max-w-2xl mx-auto">
-            Un sticker inteligente con QR y NFC que da acceso inmediato a tus
-            datos de emergencia cuando más los necesitas.
+            Un sticker inteligente con QR y tecnología de proximidad (NFC) que
+            da acceso inmediato a tus datos de emergencia cuando más los
+            necesitas.
           </p>
           <div className="mt-8 flex justify-center">
             <Link
@@ -49,7 +50,7 @@ export default function LandingPage() {
                   clipRule="evenodd"
                 />
               </svg>
-              Código QR y NFC integrados
+              Código QR y conexión por proximidad (NFC) integrados
             </li>
             <li className="flex items-center text-slate-700">
               <svg
@@ -148,9 +149,85 @@ export default function LandingPage() {
             </div>
             <h3 className="font-semibold text-slate-900 mb-2">¡Listo!</h3>
             <p className="text-slate-600 text-sm">
-              Usa QR o NFC para acceso instantáneo
+              Usa QR o acerca tu teléfono (NFC) para acceso instantáneo
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* Technology Explanation */}
+      <section className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-8 md:p-12">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-slate-900 mb-4">
+            Dos formas de acceder: QR y NFC
+          </h2>
+          <p className="text-lg text-slate-600 max-w-3xl mx-auto">
+            Tu sticker incluye dos tecnologías para que siempre puedas acceder a
+            la información de emergencia
+          </p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="bg-white rounded-2xl p-6 shadow-lg">
+            <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <svg
+                className="w-8 h-8 text-blue-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h2M5 8h2a1 1 0 001-1V6a1 1 0 00-1-1H5a1 1 0 00-1 1v1a1 1 0 001 1zm12 0h2a1 1 0 001-1V6a1 1 0 00-1-1h-2a1 1 0 00-1 1v1a1 1 0 001 1zM5 20h2a1 1 0 001-1v-1a1 1 0 00-1-1H5a1 1 0 00-1 1v1a1 1 0 001 1z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-slate-900 mb-3 text-center">
+              Código QR
+            </h3>
+            <p className="text-slate-600 text-center mb-4">
+              Abre la cámara de cualquier teléfono y apunta al código. Funciona
+              con todos los dispositivos.
+            </p>
+            <div className="text-sm text-slate-500 text-center">
+              ✓ Universal • ✓ No requiere apps especiales • ✓ Funciona siempre
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl p-6 shadow-lg">
+            <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <svg
+                className="w-8 h-8 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-slate-900 mb-3 text-center">
+              NFC (Proximidad)
+            </h3>
+            <p className="text-slate-600 text-center mb-4">
+              Simplemente acerca tu teléfono al sticker. La mayoría de teléfonos
+              modernos lo tienen activado.
+            </p>
+            <div className="text-sm text-slate-500 text-center">
+              ✓ Súper rápido • ✓ Sin cámara • ✓ Funciona en la oscuridad
+            </div>
+          </div>
+        </div>
+        <div className="text-center mt-8">
+          <p className="text-slate-600">
+            <strong>NFC</strong> significa &quot;Near Field Communication&quot;
+            (comunicación de campo cercano). Es la misma tecnología que usas
+            para pagar con el teléfono en las tiendas.
+          </p>
         </div>
       </section>
 
@@ -178,7 +255,8 @@ export default function LandingPage() {
             </div>
             <h3 className="font-semibold text-slate-900 mb-2">Acceso rápido</h3>
             <p className="text-slate-600">
-              Información de emergencia disponible en segundos con QR o NFC.
+              Información de emergencia disponible en segundos con QR o
+              acercando el teléfono (NFC).
             </p>
           </div>
           <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
