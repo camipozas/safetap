@@ -1,6 +1,6 @@
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { canManageAdmins } from '@/types/shared';
+import { USER_ROLES, canManageAdmins } from '@/types/shared';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -9,19 +9,30 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    let currentUser: { role: string; id: string } | null = null;
 
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
-    }
+    if (
+      process.env.NODE_ENV === 'development' &&
+      process.env.ENABLE_DEV_SUPER_ADMIN === 'true'
+    ) {
+      currentUser = { role: USER_ROLES.SUPER_ADMIN, id: 'dev-user' };
+    } else {
+      const session = await getServerSession(authOptions);
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { role: true, id: true },
-    });
+      if (!session?.user?.email) {
+        return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
+      }
 
-    if (!user || !canManageAdmins(user.role)) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+      const user = await prisma.user.findUnique({
+        where: { email: session.user.email },
+        select: { role: true, id: true },
+      });
+
+      if (!user || !canManageAdmins(user.role)) {
+        return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+      }
+
+      currentUser = user;
     }
 
     const { role } = await request.json();
@@ -33,13 +44,24 @@ export async function PUT(
 
     // Prevent self-demotion from SUPER_ADMIN
     if (
-      user.id === id &&
-      user.role === 'SUPER_ADMIN' &&
-      role !== 'SUPER_ADMIN'
+      currentUser.id === id &&
+      currentUser.role === USER_ROLES.SUPER_ADMIN &&
+      role !== USER_ROLES.SUPER_ADMIN
     ) {
       return NextResponse.json(
         { error: 'No puedes cambiar tu propio rol de SUPER_ADMIN' },
         { status: 400 }
+      );
+    }
+
+    // Only SUPER_ADMIN can promote to SUPER_ADMIN
+    if (
+      role === USER_ROLES.SUPER_ADMIN &&
+      currentUser.role !== USER_ROLES.SUPER_ADMIN
+    ) {
+      return NextResponse.json(
+        { error: 'Solo Super Admins pueden promover a otros a Super Admin' },
+        { status: 403 }
       );
     }
 
@@ -69,30 +91,40 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    if (
+      process.env.NODE_ENV === 'development' &&
+      process.env.ENABLE_DEV_SUPER_ADMIN === 'true'
+    ) {
+      // En desarrollo, permitir eliminación directa solo si está explícitamente habilitado
+      console.log(
+        '🚀 Development mode: Bypassing authentication for user deletion (ENABLE_DEV_SUPER_ADMIN=true)'
+      );
+    } else {
+      const session = await getServerSession(authOptions);
 
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
-    }
+      if (!session?.user?.email) {
+        return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
+      }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { role: true, id: true },
-    });
+      const user = await prisma.user.findUnique({
+        where: { email: session.user.email },
+        select: { role: true, id: true },
+      });
 
-    if (!user || !canManageAdmins(user.role)) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+      if (!user || !canManageAdmins(user.role)) {
+        return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+      }
+
+      // Prevent self-deletion
+      if (user.id === params.id) {
+        return NextResponse.json(
+          { error: 'No puedes eliminar tu propio acceso de admin' },
+          { status: 400 }
+        );
+      }
     }
 
     const { id } = params;
-
-    // Prevent self-deletion
-    if (user.id === id) {
-      return NextResponse.json(
-        { error: 'No puedes eliminar tu propio acceso de admin' },
-        { status: 400 }
-      );
-    }
 
     // Set role back to USER instead of deleting
     const updatedUser = await prisma.user.update({

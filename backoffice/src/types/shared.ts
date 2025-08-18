@@ -13,6 +13,13 @@ export const USER_ROLES = {
 
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
 
+// Role labels for UI
+export const ROLE_LABELS = {
+  [USER_ROLES.ADMIN]: 'Admin',
+  [USER_ROLES.SUPER_ADMIN]: 'Super Admin',
+  [USER_ROLES.USER]: 'Usuario',
+} as const;
+
 export const ROLE_PERMISSIONS = {
   [USER_ROLES.USER]: {
     canAccessApp: true,

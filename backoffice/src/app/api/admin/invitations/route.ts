@@ -1,4 +1,5 @@
 import { authOptions } from '@/lib/auth';
+import { createEmailService } from '@/lib/email';
 import { prisma } from '@/lib/prisma';
 import { hasPermission } from '@/types/shared';
 import crypto from 'crypto';
@@ -155,17 +156,55 @@ export async function POST(request: NextRequest) {
       process.env.NEXTAUTH_BACKOFFICE_URL || 'http://localhost:3001';
     const inviteUrl = `${baseUrl}/auth/accept-invitation?token=${token}`;
 
-    // TODO: Aquí se enviaría el email en un sistema real
-    `📧 Invitación para ${email}:`;
-    `🔗 Link: ${inviteUrl}`;
-    `⏰ Expira: ${expiresAt.toISOString()}`;
+    const emailService = createEmailService();
+    let emailSent = false;
+    let emailError: string | null = null;
 
-    return NextResponse.json({
+    if (emailService) {
+      try {
+        const messageId = await emailService.sendInvitationEmail(
+          email,
+          inviteUrl,
+          role
+        );
+        console.log(`✅ Invitation email sent successfully:`, messageId);
+        emailSent = true;
+      } catch (error) {
+        console.error('❌ Failed to send invitation email:', error);
+        emailError = error instanceof Error ? error.message : 'Unknown error';
+        // Don't fail the invitation creation if email fails
+      }
+    } else {
+      console.warn(
+        '⚠️ Email service not configured. Invitation created but email not sent.'
+      );
+      emailError = 'Email service not configured';
+    }
+
+    // Log invitation details for development/debugging
+    console.log(`📧 Invitación para ${email}:`);
+    console.log(`🔗 Link: ${inviteUrl}`);
+    console.log(`⏰ Expira: ${expiresAt.toISOString()}`);
+    console.log(`📮 Email enviado: ${emailSent ? 'Sí' : 'No'}`);
+
+    const responseData: Record<string, unknown> = {
       success: true,
       invitation,
-      inviteUrl,
       message: `Invitación creada para ${email}`,
-    });
+      emailSent,
+    };
+
+    // Include invite URL for development or if email failed
+    if (process.env.NODE_ENV === 'development' || !emailSent) {
+      responseData.inviteUrl = inviteUrl;
+      if (!emailSent && emailError) {
+        responseData.emailError = emailError;
+        responseData.warning =
+          'Invitación creada pero el email no pudo ser enviado. Usar el enlace de invitación manual.';
+      }
+    }
+
+    return NextResponse.json(responseData);
   } catch (error) {
     return NextResponse.json(
       { error: 'Error interno del servidor' },

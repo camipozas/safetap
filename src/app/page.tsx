@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import StickerPreview from '@/components/StickerPreview';
+
 export default function LandingPage() {
   return (
     <div className="space-y-16">
@@ -13,18 +15,12 @@ export default function LandingPage() {
             Un sticker inteligente con QR y NFC que da acceso inmediato a tus
             datos de emergencia cuando más los necesitas.
           </p>
-          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="mt-8 flex justify-center">
             <Link
               className="btn text-lg px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-200"
               href="/buy"
             >
               Comprar ahora
-            </Link>
-            <Link
-              className="inline-flex items-center justify-center px-8 py-3 text-lg font-medium text-brand border-2 border-brand rounded-md hover:bg-brand hover:text-white transition-all duration-200"
-              href="/s/demo"
-            >
-              Ver ejemplo →
             </Link>
           </div>
         </div>
@@ -87,26 +83,27 @@ export default function LandingPage() {
         </div>
         <div className="order-1 md:order-2">
           <div className="bg-gradient-to-br from-slate-100 to-slate-200 rounded-3xl p-8 shadow-2xl">
-            <div className="bg-white rounded-2xl p-8 shadow-lg">
-              <div className="w-32 h-32 bg-gradient-to-br from-brand to-blue-600 rounded-2xl mx-auto mb-4 flex items-center justify-center">
-                <svg
-                  className="w-16 h-16 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-              <div className="text-center">
-                <p className="font-semibold text-slate-900">safetap</p>
-                <p className="text-sm text-slate-600">Emergencias</p>
-              </div>
+            <div className="flex justify-center">
+              <Link href="/s/demo-chile" className="block">
+                <StickerPreview
+                  name="Carlos Herrera"
+                  flagCode="CL"
+                  stickerColor="#dbeafe"
+                  textColor="#1e40af"
+                  showRealQR={true}
+                  stickerId="demo-chile"
+                  serial="demo-chile"
+                  className="transform scale-125 hover:scale-130 transition-transform duration-200"
+                />
+              </Link>
+            </div>
+            <div className="text-center mt-6">
+              <Link
+                href="/s/demo-chile"
+                className="inline-flex items-center text-sm text-brand hover:text-blue-700 font-medium"
+              >
+                Ver ejemplo información de contacto →
+              </Link>
             </div>
           </div>
         </div>

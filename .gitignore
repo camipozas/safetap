@@ -143,4 +143,10 @@ vite.config.ts.timestamp-*
 
 # Playwright test artifacts
 playwright-report/
+
+# Vercel
 .vercel
+
+# Test results
+test/e2e/playwright-report/
+test-results/

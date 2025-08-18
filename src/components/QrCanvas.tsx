@@ -138,11 +138,6 @@ export function QrCanvas({
         loading="lazy"
         unoptimized
       />
-      {highResolution && (
-        <div className="absolute top-1 right-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded">
-          HD
-        </div>
-      )}
     </div>
   );
 }
