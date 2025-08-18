@@ -51,7 +51,6 @@ const FLAGS = {
 export default function StickerPreview({
   sticker,
   size = 200,
-  showRealQR = false, // Default to preview mode in admin
 }: StickerPreviewProps) {
   // Always prioritize owner data from database for consistency
   const country = sticker.owner?.country || sticker.flagCode || 'CL';
