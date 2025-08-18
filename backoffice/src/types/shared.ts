@@ -37,7 +37,8 @@ export const ROLE_PERMISSIONS = {
   },
 } as const;
 
-export type RolePermissions = keyof (typeof ROLE_PERMISSIONS)[UserRole];
+export type RolePermissions =
+  keyof (typeof ROLE_PERMISSIONS)[typeof USER_ROLES.USER];
 
 export const hasPermission = (
   role: UserRole,
