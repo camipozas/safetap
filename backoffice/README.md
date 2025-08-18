@@ -1,340 +1,499 @@
 # SafeTap Admin Dashboard 🚀
 
-Panel de administración (backoffice) para SafeTap, construido como una aplicación Next.js independiente.
+The administrative dashboard (backoffice) for SafeTap, built as an independent Next.js application.
 
-Este proyecto es privado y confidencial.
+This project is private and confidential.
 
-## 📄 Licencia
+## 📋 Table of Contents
 
-5. Abre un Pull Request
-6. Push a la rama (`git push origin feature/AmazingFeature`)
-7. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-8. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-9. Fork el proyecto
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Development](#development)
+- [Testing](#testing)
+- [Clean Code Conventions](#clean-code-conventions)
+- [Authentication & Security](#authentication--security)
+- [Analytics](#analytics)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
 
-## 🤝 Contribución
+## 🚀 Features
 
-- `npm run test` - Tests unitarios
-- `npm run type-check` - Verificación de tipos
-- `npm run lint` - Linting
-- `npm run start` - Servidor de producción
-- `npm run build` - Build de producción
-- `npm run dev` - Desarrollo (puerto 3001)
+- **Order Management**: View and manage all sticker orders
+- **User Management**: Administer users and their profiles
+- **Analytics Dashboard**: Engagement metrics and sales data
+- **Reporting**: Data export and custom reports
+- **Real-time Updates**: Live data synchronization
 
-## 📝 Scripts Disponibles
+## 🛠️ Tech Stack
 
-````md
-npx prisma db pull
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Authentication**: NextAuth.js with Google OAuth
+- **Database**: PostgreSQL with Prisma ORM
+- **UI Framework**: Tailwind CSS + Lucide Icons
+- **Charts**: Recharts & Chart.js
+- **Testing**: Vitest with Testing Library
 
-# Verificar conexión a base de datos
+## 📋 Requirements
 
-DEBUG=\* npm run dev
+- **Node.js**: 20+ (recommended LTS)
+- **npm**: 10+
+- **Database**: Access to SafeTap PostgreSQL database
+- **Google OAuth**: Configured OAuth application (required for admin access)
 
-# Ejecutar con logs detallados
+## 🚀 Installation
+
+1. **Install dependencies**
 
 ```bash
-Para debug en desarrollo:
-
-## 🐛 Debugging
-
-  - Uso por país
-  - Accesos a perfiles de emergencia
-  - Stickers activos vs inactivos
-- **Stickers**:
-
-  - Engagement metrics
-  - Distribución geográfica
-  - Usuarios activos
-  - Registros por período
-- **Usuarios**:
-
-  - Conversión de pagos
-  - Revenue por período
-  - Estado de órdenes (pending, paid, shipped, etc.)
-  - Total de órdenes por período
-- **Órdenes**:
-
-## 📊 Analytics Disponibles
-
-- Protección CSRF incluida
-- Sesiones seguras con JWT/database sessions
-- Autenticación manejada por NextAuth.js
-- Solo usuarios con rol `ADMIN` pueden acceder
-
-## 🔐 Autenticación y Seguridad
+npm install
 ```
-````
 
-````
+2. **Configure environment variables**
 
-└── tsconfig.json # Configuración de TypeScript
-├── tailwind.config.js # Configuración de Tailwind
-├── next.config.js # Configuración de Next.js
-├── .env.example # Ejemplo de variables de entorno
-├── public/ # Archivos estáticos
-├── prisma/ # Schema de Prisma (link simbólico)
-│ └── types/ # Tipos de TypeScript
-│ │ └── utils.ts # Funciones utilitarias
-│ │ ├── prisma.ts # Cliente de Prisma
-│ │ ├── auth.ts # Configuración de NextAuth
-│ ├── lib/ # Utilidades y configuración
-│ │ └── ui/ # Componentes base de UI
-│ │ ├── tables/ # Tablas de datos
-│ │ ├── charts/ # Componentes de gráficos
-│ ├── components/ # Componentes reutilizables
-│ │ └── layout.tsx # Layout principal
-│ │ ├── auth/ # Páginas de autenticación
-│ │ ├── api/ # API routes
-│ │ │ └── reports/ # Reportes
-│ │ │ ├── users/ # Gestión de usuarios
-│ │ │ ├── orders/ # Gestión de órdenes
-│ │ │ ├── analytics/ # Página de analytics
-│ │ ├── (dashboard)/ # Grupo de rutas del dashboard
-│ ├── app/ # App Router de Next.js
-├── src/
-admin-dashboard/
+```bash
+cp .env.example .env.local
+```
 
-```md
-## 📁 Estructura del Proyecto
+Edit `.env.local`:
 
-4. Configura el dominio como prefieras
-5. Conecta el nuevo repo a Vercel
-6. Copia el contenido de `admin-dashboard/` al nuevo repo
-7. Crea un nuevo repositorio solo para el admin dashboard
+```bash
+# Database (same as main SafeTap app)
+DATABASE_URL="postgresql://user:password@host:port/database"
 
-Si prefieres un proyecto completamente independiente:
+# NextAuth
+NEXTAUTH_URL="http://localhost:3001"
+NEXTAUTH_SECRET="your-secret-here"
 
-- Root Directory: `admin-dashboard`
-- Install Command: `npm install`
-- Output Directory: `.next`
-- Build Command: `npm run build`
+# Google OAuth (required for admin authentication)
+GOOGLE_CLIENT_ID="123456789-abc123.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="GOCSPX-abc123def456"
 
-4. **Build Settings**:
-````
+# Email configuration (optional - for admin notifications)
+SMTP_SERVER="smtp.gmail.com"
+SMTP_PORT="587"
+SMTP_USER="admin@yourdomain.com"
+SMTP_PASS="your-app-password"
+```
 
-GOOGLE_CLIENT_SECRET=tu-client-secret
-GOOGLE_CLIENT_ID=tu-client-id
-NEXTAUTH_SECRET=tu-production-secret
-NEXTAUTH_URL=https://admin.tusitio.com
-DATABASE_URL=tu-database-url
+3. **Generate Prisma client**
 
-````env
-3. **Variables de Entorno**:
+```bash
+npm run postinstall
+```
 
-- Configura DNS con un CNAME pointing a `cname.vercel-dns.com`
-- Agrega tu subdominio: `admin.tusitio.com`
-- En Project Settings > Domains
-2. **Configura el dominio**:
+4. **Run in development mode**
 
-- **Importante**: Configura el Root Directory como `admin-dashboard`
-- Conecta tu repositorio
-- Ve a [vercel.com](https://vercel.com)
-1. **Crea un nuevo proyecto en Vercel**:
+```bash
+npm run dev
+```
 
+Available at `http://localhost:3001`
 
-## 🚢 Deployment en Vercel
+### Google OAuth Configuration
 
-### Opción 1: Deployment via UI (Recomendado)
+The backoffice requires Google OAuth for admin authentication. Follow these steps:
 
-1. **Prepara el repositorio**:
-   ```bash
-   # Si no tienes un repo separado, crea uno
-   git init
-   git add .
-   git commit -m "Initial backoffice commit"
-   git remote add origin https://github.com/tu-usuario/safetap-admin.git
-   git push -u origin main
-````
+1. **Create Google Cloud Project** (if not already done):
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or use existing SafeTap project
 
-2. **Crea proyecto en Vercel**:
-   - Ve a [vercel.com](https://vercel.com) y haz login
-   - Click en "New Project"
-   - Conecta tu repositorio de GitHub
-   - Selecciona el repositorio del backoffice
+2. **Configure OAuth Consent Screen**:
+   - Navigate to "APIs & Services" > "OAuth consent screen"
+   - Choose "Internal" for organization users or "External" for broader access
+   - Fill required fields: App name, user support email, developer contact
 
-3. **Configura el proyecto**:
-   - **Root Directory**: Déjalo en blanco si es repo separado, o `backoffice` si es monorepo
-   - **Framework Preset**: Next.js
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `.next`
-   - **Install Command**: `npm install`
+3. **Create OAuth 2.0 Credentials**:
+   - Go to "APIs & Services" > "Credentials"
+   - Click "Create Credentials" > "OAuth 2.0 Client IDs"
+   - Application type: "Web application"
+   - Name: "SafeTap Admin Dashboard"
+   - Authorized redirect URIs:
+     - Development: `http://localhost:3001/api/auth/callback/google`
+     - Production: `https://admin.yourdomain.com/api/auth/callback/google`
 
-4. **Variables de Entorno**:
+4. **Copy Credentials**:
+   - Copy the Client ID and Client Secret
+   - Add them to your `.env.local` file
+
+5. **Restrict Access** (Production):
+   - In Google Cloud Console, configure user access restrictions
+   - Only allow admin email addresses to authenticate
+
+## 🔧 Development
+
+### Development Commands
+
+```bash
+# Start development server
+npm run dev
+
+# Type checking
+npm run type-check
+
+# Code quality
+npm run lint
+npm run format
+
+# Database operations
+npx prisma db pull
+
+# Run with detailed logs
+DEBUG=* npm run dev
+```
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run all quality checks
+npm run check-all
+```
+
+## 📐 Clean Code Conventions
+
+This project follows the same clean code principles as the main SafeTap application with additional guidelines for admin interfaces:
+
+### 🏗️ Component Architecture
+
+#### Dashboard Components
+
+```typescript
+// ✅ Well-structured dashboard component
+interface DashboardCardProps {
+  title: string;
+  value: string | number;
+  change?: {
+    value: number;
+    type: 'increase' | 'decrease';
+  };
+  icon?: React.ComponentType<{ className?: string }>;
+}
+
+export function DashboardCard({ title, value, change, icon: Icon }: DashboardCardProps) {
+  const changeColor = change?.type === 'increase' ? 'text-green-600' : 'text-red-600';
+
+  return (
+    <div className="dashboard-card p-6 bg-white rounded-lg shadow-sm">
+      <div className="dashboard-card__header flex items-center justify-between">
+        <h3 className="dashboard-card__title text-sm font-medium text-gray-500">
+          {title}
+        </h3>
+        {Icon && <Icon className="dashboard-card__icon h-5 w-5 text-gray-400" />}
+      </div>
+
+      <div className="dashboard-card__content mt-2">
+        <p className="dashboard-card__value text-3xl font-semibold text-gray-900">
+          {value}
+        </p>
+        {change && (
+          <p className={`dashboard-card__change text-sm ${changeColor}`}>
+            {change.type === 'increase' ? '+' : '-'}{Math.abs(change.value)}%
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+### 🎯 API Route Guidelines
+
+#### Error Handling
+
+```typescript
+// ✅ Consistent API error handling
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // 1. Authentication check
+    const session = await getServerSession(authOptions);
+    if (!session?.user || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // 2. Input validation
+    const body = await request.json();
+    const validatedData = updateOrderSchema.parse(body);
+
+    // 3. Business logic
+    const updatedOrder = await prisma.sticker.update({
+      where: { id: params.id },
+      data: validatedData,
+    });
+
+    // 4. Success response
+    return NextResponse.json(updatedOrder);
+  } catch (error) {
+    // 5. Error handling
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: error.errors },
+        { status: 400 }
+      );
+    }
+
+    console.error('Failed to update order:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+### 📊 Data Management Patterns
+
+#### Custom Hooks for Admin Operations
+
+```typescript
+// ✅ Custom hook for order management
+export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchOrders = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const searchParams = new URLSearchParams();
+      if (options.status) searchParams.set('status', options.status);
+      if (options.limit) searchParams.set('limit', options.limit.toString());
+
+      const response = await fetch(`/api/admin/orders?${searchParams}`);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch orders: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      setOrders(data.orders);
+    } catch (err) {
+      setError(err as Error);
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [options.status, options.limit]);
+
+  const updateOrderStatus = useCallback(
+    async (id: string, status: OrderStatus) => {
+      try {
+        const response = await fetch(`/api/admin/orders/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status }),
+        });
+
+        if (!response.ok) throw new Error('Failed to update order status');
+
+        // Optimistic update
+        setOrders((prev) =>
+          prev.map((order) => (order.id === id ? { ...order, status } : order))
+        );
+      } catch (err) {
+        setError(err as Error);
+        await fetchOrders(); // Revert optimistic update
+      }
+    },
+    [fetchOrders]
+  );
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+
+  return { orders, loading, error, refetch: fetchOrders, updateOrderStatus };
+}
+```
+
+### 🔒 Security Best Practices
+
+#### Role-Based Access Control
+
+```typescript
+// ✅ Middleware for admin routes
+import { withAuth } from 'next-auth/middleware';
+
+export default withAuth(
+  function middleware(req) {
+    // Additional logic if needed
+  },
+  {
+    callbacks: {
+      authorized: ({ token }) => {
+        return token?.role === 'ADMIN' || token?.role === 'SUPER_ADMIN';
+      },
+    },
+  }
+);
+
+export const config = {
+  matcher: ['/dashboard/:path*', '/api/admin/:path*'],
+};
+```
+
+### 📈 Performance Guidelines
+
+#### Chart Component Optimization
+
+```typescript
+// ✅ Optimized chart component
+export const AnalyticsChart = memo(function AnalyticsChart({
+  data,
+  title,
+  color = '#3B82F6'
+}: AnalyticsChartProps) {
+  const processedData = useMemo(() => {
+    return data.map(point => ({
+      ...point,
+      date: new Date(point.date).toLocaleDateString()
+    }));
+  }, [data]);
+
+  return (
+    <div className="analytics-chart p-6 bg-white rounded-lg shadow-sm">
+      <h3 className="analytics-chart__title text-lg font-medium text-gray-900 mb-4">
+        {title}
+      </h3>
+
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={processedData}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="date" />
+          <YAxis />
+          <Tooltip />
+          <Line type="monotone" dataKey="value" stroke={color} strokeWidth={2} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+});
+```
+
+## 🔐 Authentication & Security
+
+- **Authentication**: NextAuth.js handles secure authentication
+- **Authorization**: Only users with `ADMIN` role can access
+- **Session Management**: Secure sessions with JWT/database sessions
+- **CSRF Protection**: Built-in CSRF protection enabled
+
+## 📊 Analytics
+
+### Orders
+
+- Total orders by period
+- Order status distribution (pending, paid, shipped, etc.)
+- Revenue by period
+- Payment conversion rates
+
+### Users
+
+- User registrations by period
+- Active users
+- Geographic distribution
+- Engagement metrics
+
+### Stickers
+
+- Active vs inactive stickers
+- Profile access statistics
+- Usage by country
+
+## 🚢 Deployment
+
+### Vercel Deployment
+
+1. **Create Vercel project**:
+   - Connect your repository
+   - Configure root directory (leave blank for separate repo)
+   - Set framework preset to Next.js
+
+2. **Environment Variables**:
 
    ```env
    DATABASE_URL="postgresql://..."
-   NEXTAUTH_URL="https://admin.tusitio.com"
-   NEXTAUTH_SECRET="tu-production-secret-diferente"
-   GOOGLE_CLIENT_ID="tu-client-id"
-   GOOGLE_CLIENT_SECRET="tu-client-secret"
+   NEXTAUTH_URL="https://admin.yourdomain.com"
+   NEXTAUTH_SECRET="your-production-secret-different-from-dev"
+   GOOGLE_CLIENT_ID="123456789-production.apps.googleusercontent.com"
+   GOOGLE_CLIENT_SECRET="GOCSPX-production-secret"
    SMTP_SERVER="smtp.gmail.com"
    SMTP_PORT="587"
-   SMTP_USER="tu-email@gmail.com"
-   SMTP_PASS="tu-app-password"
+   SMTP_USER="admin@yourdomain.com"
+   SMTP_PASS="your-production-app-password"
    ```
 
-5. **Configura el dominio**:
-   - En Project Settings > Domains
-   - Agrega tu subdominio: `admin.tusitio.com`
-   - Configura DNS con un CNAME pointing a `cname.vercel-dns.com`
+   **Important**: Use different Google OAuth credentials for production than development.
 
-6. **Deploy**:
-   - Click "Deploy"
-   - Espera a que termine el build
+3. **Domain Configuration**:
+   - Add subdomain: `admin.yourdomain.com`
+   - Configure DNS CNAME to `cname.vercel-dns.com`
 
-### Opción 2: Deployment via CLI
-
-1. **Instala Vercel CLI**:
-
+4. **Post-Deployment**:
    ```bash
-   npm i -g vercel
-   vercel login
+   # Create super admin
+   node make-admin.js your-email@example.com SUPER_ADMIN
    ```
-
-2. **Configura el proyecto**:
-
-   ```bash
-   cd backoffice
-   vercel
-   # Sigue las instrucciones del wizard
-   ```
-
-3. **Configuración del `vercel.json`**:
-
-   ```json
-   {
-     "framework": "nextjs",
-     "buildCommand": "npm run build",
-     "outputDirectory": ".next",
-     "installCommand": "npm install",
-     "functions": {
-       "src/app/api/**": {
-         "maxDuration": 30
-       }
-     },
-     "env": {
-       "DATABASE_URL": "@database-url",
-       "NEXTAUTH_URL": "@nextauth-url",
-       "NEXTAUTH_SECRET": "@nextauth-secret"
-     }
-   }
-   ```
-
-4. **Deploy**:
-   ```bash
-   vercel --prod
-   ```
-
-### Configuración Post-Deployment
-
-1. **Crear Super Admin**:
-
-   ```bash
-   # En tu máquina local, conectado a la DB de producción
-   node make-admin.js tu-email@example.com SUPER_ADMIN
-   ```
-
-2. **Verificar configuración**:
-   - Accede a `https://admin.tusitio.com`
-   - Prueba el login con Google
-   - Verifica que los dashboards cargan correctamente
 
 ### Troubleshooting
 
-**Error de autenticación**:
+**Authentication Issues**:
 
-- Verifica que `NEXTAUTH_URL` sea correcto
-- Asegúrate que Google OAuth tiene la URL correcta en "Authorized redirect URIs"
+- Verify `NEXTAUTH_URL` matches your domain exactly
+- Check Google OAuth redirect URIs include your domain
+- Ensure Google OAuth credentials are for the correct environment
+- Verify the user's email is authorized for admin access
 
-**Error de base de datos**:
+**Google OAuth Specific**:
 
-- Confirma que `DATABASE_URL` sea accesible desde Vercel
-- Considera usar Prisma Accelerate para mejor performance
+- Check OAuth consent screen is properly configured
+- Verify the Google project has the necessary APIs enabled
+- Ensure redirect URIs match exactly (including http/https)
+- Check that the OAuth app is not in testing mode with restricted users
 
-**Error de build**:
+**Database Issues**:
 
-- Revisa los logs en Vercel Dashboard
-- Asegúrate que todas las dependencias estén en `package.json`
+- Confirm `DATABASE_URL` is accessible from Vercel
+- Check database connection limits and pooling
+- Verify Prisma schema is up to date
 
-### Monitoreo y Mantenimiento
+**Build/Deployment Issues**:
 
-1. **Logs**: Accesibles en Vercel Dashboard > Functions
-2. **Analytics**: Habilitados automáticamente
-3. **Alerts**: Configura notificaciones en Project Settings
-4. **Database**: Monitorea conexiones y performance
+- Check Vercel logs for specific error messages
+- Ensure all dependencies are in `package.json`
+- Verify environment variables are set correctly
+- Check that build commands match the configuration
 
-````
+## 🤝 Contributing
 
-npm run dev
+1. **Fork the project**
+2. **Create feature branch**: `git checkout -b feature/amazing-feature`
+3. **Follow coding conventions** outlined in this README
+4. **Write tests** for your changes
+5. **Run quality checks**: `npm run check-all`
+6. **Commit changes**: `git commit -m 'feat: add amazing feature'`
+7. **Push to branch**: `git push origin feature/amazing-feature`
+8. **Open Pull Request**
 
-```bash
-5. Ejecuta en modo desarrollo:
+### Review Guidelines
 
-````
+- Follow the same guidelines as the main SafeTap application
+- Ensure admin-specific security measures are in place
+- Test with different user roles and permissions
+- Verify responsive design on different screen sizes
+- Check that all analytics calculations are accurate
 
-npm run postinstall
+---
 
-```bash
-4. Genera el cliente de Prisma:
-
-```
-
-GOOGLE_CLIENT_SECRET="..."
-GOOGLE_CLIENT_ID="..."
-
-# Auth providers (si usas Google, GitHub, etc.)
-
-NEXTAUTH_SECRET="tu-secret-aqui"
-NEXTAUTH_URL="http://localhost:3001"
-
-# NextAuth
-
-DATABASE_URL="postgresql://..."
-
-# Base de datos (misma que la app principal)
-
-```env
-3. Edita `.env.local` con tus valores:
-
-```
-
-cp .env.example .env.local
-
-```bash
-2. Configura las variables de entorno:
-
-```
-
-npm install
-
-```bash
-1. Instala las dependencias:
-
-## 🔧 Instalación
-
-- Acceso a la base de datos PostgreSQL de SafeTap
-- npm >= 10.0.0
-- Node.js >= 20.0.0
-
-## 📋 Requisitos Previos
-
-- **TypeScript**: Para type safety
-- **Charts**: Recharts & Chart.js
-- **UI**: Tailwind CSS + Lucide Icons
-- **Autenticación**: NextAuth.js
-- **Base de Datos**: PostgreSQL con Prisma ORM
-- **Framework**: Next.js 14 (App Router)
-
-## 🛠️ Tecnologías
-
-- **Reportes**: Exportación de datos y reportes personalizados
-- **Dashboard**: Vista general con KPIs y gráficos
-- **Gestión de Usuarios**: Administra usuarios y sus perfiles
-- **Analytics**: Métricas de engagement de usuarios y ventas
-- **Gestión de Órdenes**: Visualiza y gestiona todos los pedidos de stickers
-
-## 🚀 Características
-
-Este es el panel de administración (backoffice) para SafeTap, construido como una aplicación Next.js independiente.
- SafeTap Admin Dashboard
-```
+Made with ❤️ by the SafeTap team
