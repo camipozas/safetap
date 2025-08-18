@@ -169,6 +169,38 @@ Since Accelerate doesn't support shadow databases, use local migrations:
 npx prisma migrate deploy
 ```
 
+### Migration Synchronization with Backoffice
+
+Since the main project and backoffice share the same database, their migrations must be synchronized:
+
+#### Manual Sync
+
+```bash
+# Run from project root
+./scripts/sync-migrations.sh
+```
+
+#### Automatic CI Checks
+
+Both CI pipelines now include:
+
+- **Migration Status Check**: Verifies all migrations are applied
+- **Sync Verification**: Ensures backoffice migrations match main project (backoffice only)
+
+#### When to Sync
+
+- ✅ After creating a new migration in the main project
+- ✅ Before deploying the backoffice
+- ✅ When getting migration-related errors in production
+
+#### Troubleshooting
+
+If you get "table does not exist" errors in the backoffice:
+
+1. Run `./scripts/sync-migrations.sh`
+2. Check that both projects have the same migration files
+3. Verify migrations are applied: `npx prisma migrate status`
+
 ## 📐 Clean Code Conventions
 
 This project follows strict clean code principles to ensure maintainability, readability, and team collaboration.

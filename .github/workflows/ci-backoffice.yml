@@ -42,6 +42,38 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate --schema=prisma/schema.prisma
 
+      - name: Check database migrations
+        run: npx prisma migrate status --schema=prisma/schema.prisma
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://user:password@localhost:5432/test' }}
+
+      - name: Verify migrations sync with main project
+        run: |
+          echo "Checking if backoffice migrations are in sync with main project..."
+          if [ ! -d "../prisma/migrations" ]; then
+            echo "❌ Main project migrations directory not found"
+            exit 1
+          fi
+
+          # Compare migration directories
+          MAIN_MIGRATIONS=$(find ../prisma/migrations -name "*.sql" | sort)
+          BACKOFFICE_MIGRATIONS=$(find prisma/migrations -name "*.sql" | sort)
+
+          # Get just the filenames for comparison
+          MAIN_FILES=$(echo "$MAIN_MIGRATIONS" | xargs -I {} basename {} | sort)
+          BACKOFFICE_FILES=$(echo "$BACKOFFICE_MIGRATIONS" | xargs -I {} basename {} | sort)
+
+          if [ "$MAIN_FILES" != "$BACKOFFICE_FILES" ]; then
+            echo "❌ Migration files are not synchronized!"
+            echo "Main project migrations:"
+            echo "$MAIN_FILES"
+            echo "Backoffice migrations:"
+            echo "$BACKOFFICE_FILES"
+            exit 1
+          fi
+
+          echo "✅ Migrations are synchronized between projects"
+
       - name: Lint
         run: npm run lint
 
