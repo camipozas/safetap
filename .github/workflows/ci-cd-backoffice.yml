@@ -64,8 +64,8 @@ jobs:
         run: npm install --global vercel@latest
 
       - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
         working-directory: ./backoffice
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_BACKOFFICE }}
@@ -94,15 +94,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'backoffice/package-lock.json'
+
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
-      - name: Deploy Backoffice to Preview
-        run: |
-          vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-          vercel build --token=${{ secrets.VERCEL_TOKEN }}
-          vercel deploy --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Pull Vercel Environment Information (Preview)
         working-directory: ./backoffice
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_BACKOFFICE }}
+
+      - name: Build Preview Artifacts
+        working-directory: ./backoffice
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_BACKOFFICE }}
+
+      - name: Deploy Preview to Vercel
+        working-directory: ./backoffice
+        run: vercel deploy --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_BACKOFFICE }}

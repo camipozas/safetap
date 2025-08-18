@@ -86,7 +86,7 @@ describe('Google SSO Authentication', () => {
 
       await waitFor(() => {
         expect(consoleErrorSpy).toHaveBeenCalledWith(
-          'Error signing in with Google:',
+          '❌ Error signing in with Google:',
           expect.any(Error)
         );
       });
