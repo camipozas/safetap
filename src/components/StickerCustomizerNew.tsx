@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 
 import { CountrySelect } from '@/components/CountrySelect';
 import StickerPreview from '@/components/StickerPreview';
@@ -22,9 +22,9 @@ export interface StickerCustomization {
   textColor: string;
 }
 
-export default function StickerCustomizer({
+const StickerCustomizerComponent = ({
   onCustomizationChange,
-}: StickerCustomizerProps) {
+}: StickerCustomizerProps) => {
   const [customization, setCustomization] = useState<StickerCustomization>({
     name: '',
     flagCode: 'CL',
@@ -33,27 +33,53 @@ export default function StickerCustomizer({
     textColor: DEFAULT_COLOR_PRESET.textColor,
   });
 
-  const updateCustomization = (updates: Partial<StickerCustomization>) => {
-    const newCustomization = { ...customization, ...updates };
-    setCustomization(newCustomization);
-    onCustomizationChange?.(newCustomization);
-  };
+  const updateCustomization = useCallback(
+    (updates: Partial<StickerCustomization>) => {
+      const newCustomization = { ...customization, ...updates };
+      setCustomization(newCustomization);
+      onCustomizationChange?.(newCustomization);
+    },
+    [customization, onCustomizationChange]
+  );
 
-  const selectColorPreset = (presetId: string) => {
-    const preset = getColorPresetById(presetId);
-    if (preset) {
-      updateCustomization({
-        colorPresetId: preset.id,
-        stickerColor: preset.stickerColor,
-        textColor: preset.textColor,
-      });
-    }
-  };
+  const selectColorPreset = useCallback(
+    (presetId: string) => {
+      const preset = getColorPresetById(presetId);
+      if (preset) {
+        updateCustomization({
+          colorPresetId: preset.id,
+          stickerColor: preset.stickerColor,
+          textColor: preset.textColor,
+        });
+      }
+    },
+    [updateCustomization]
+  );
 
   return (
-    <div className="grid lg:grid-cols-2 gap-8">
+    <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 lg:gap-8">
+      {/* Vista previa móvil - mostrar primero en móvil */}
+      <div className="flex flex-col items-center justify-center order-1 lg:order-2">
+        <h3 className="text-lg font-semibold mb-4">Vista previa</h3>
+        <div className="w-full max-w-xs sm:max-w-sm lg:max-w-none">
+          <StickerPreview
+            key={`${customization.name}-${customization.flagCode}-${customization.colorPresetId}`}
+            name={customization.name}
+            flagCode={customization.flagCode}
+            stickerColor={customization.stickerColor}
+            textColor={customization.textColor}
+            showRealQR={false}
+            className="mb-4 mx-auto"
+          />
+        </div>
+        <p className="text-sm text-gray-600 text-center max-w-sm px-4">
+          Esta es una vista previa de cómo se verá tu sticker. El QR real se
+          activará cuando recibas el producto físico.
+        </p>
+      </div>
+
       {/* Panel de personalización */}
-      <div className="space-y-6">
+      <div className="space-y-6 order-2 lg:order-1">
         <div>
           <h2 className="text-2xl font-bold mb-6">Personaliza tu sticker</h2>
 
@@ -105,14 +131,14 @@ export default function StickerCustomizer({
               <h4 className="text-sm font-medium text-gray-600 mb-2">
                 Neutros
               </h4>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {COLOR_PRESETS.filter(
                   (preset) => preset.category === 'neutral'
                 ).map((preset) => (
                   <button
                     key={preset.id}
                     onClick={() => selectColorPreset(preset.id)}
-                    className={`p-3 rounded-lg border-2 flex flex-col items-center justify-center text-xs font-medium transition-all hover:scale-105 ${
+                    className={`p-2 sm:p-3 rounded-lg border-2 flex flex-col items-center justify-center text-xs font-medium transition-all hover:scale-105 active:scale-95 touch-manipulation ${
                       customization.colorPresetId === preset.id
                         ? 'border-blue-500 ring-2 ring-blue-200'
                         : 'border-gray-300 hover:border-gray-400'
@@ -143,14 +169,14 @@ export default function StickerCustomizer({
               <h4 className="text-sm font-medium text-gray-600 mb-2">
                 Con color
               </h4>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                 {COLOR_PRESETS.filter(
                   (preset) => preset.category === 'colors'
                 ).map((preset) => (
                   <button
                     key={preset.id}
                     onClick={() => selectColorPreset(preset.id)}
-                    className={`p-3 rounded-lg border-2 flex flex-col items-center justify-center text-xs font-medium transition-all hover:scale-105 ${
+                    className={`p-2 sm:p-3 rounded-lg border-2 flex flex-col items-center justify-center text-xs font-medium transition-all hover:scale-105 active:scale-95 touch-manipulation ${
                       customization.colorPresetId === preset.id
                         ? 'border-blue-500 ring-2 ring-blue-200'
                         : 'border-gray-300 hover:border-gray-400'
@@ -204,24 +230,9 @@ export default function StickerCustomizer({
           </div>
         </div>
       </div>
-
-      {/* Vista previa */}
-      <div className="flex flex-col items-center justify-center">
-        <h3 className="text-lg font-semibold mb-4">Vista previa</h3>
-        <StickerPreview
-          key={`${customization.name}-${customization.flagCode}-${customization.colorPresetId}`}
-          name={customization.name}
-          flagCode={customization.flagCode}
-          stickerColor={customization.stickerColor}
-          textColor={customization.textColor}
-          showRealQR={false}
-          className="mb-4"
-        />
-        <p className="text-sm text-gray-600 text-center max-w-sm">
-          Esta es una vista previa de cómo se verá tu sticker. El QR real se
-          activará cuando recibas el producto físico.
-        </p>
-      </div>
     </div>
   );
-}
+};
+
+const StickerCustomizer = memo(StickerCustomizerComponent);
+export default StickerCustomizer;

@@ -1,5 +1,7 @@
 'use client';
 
+import { memo } from 'react';
+
 import { StickerQrCode } from '@/components/StickerQrCode';
 
 interface StickerPreviewProps {
@@ -32,7 +34,7 @@ const FLAGS = {
   GB: '🇬🇧',
 };
 
-export default function StickerPreview({
+const StickerPreviewComponent = ({
   name,
   flagCode,
   stickerColor = '#f1f5f9',
@@ -41,29 +43,32 @@ export default function StickerPreview({
   stickerId,
   serial,
   className = '',
-}: StickerPreviewProps) {
+}: StickerPreviewProps) => {
   const flag = FLAGS[flagCode as keyof typeof FLAGS] || '🏳️';
 
   return (
     <div className={`relative ${className}`}>
       {/* Sticker container */}
       <div
-        className="w-48 h-48 rounded-xl shadow-md border border-gray-200 p-3 flex flex-col justify-between"
+        className="w-40 h-40 sm:w-48 sm:h-48 rounded-xl shadow-md border border-gray-200 p-2 sm:p-3 flex flex-col justify-between"
         style={{ backgroundColor: stickerColor }}
       >
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-lg font-bold mb-1" style={{ color: textColor }}>
+          <h1
+            className="text-sm sm:text-lg font-bold mb-1"
+            style={{ color: textColor }}
+          >
             SafeTap
           </h1>
         </div>
 
         {/* Personal info */}
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <span className="text-2xl">{flag}</span>
+        <div className="flex items-center justify-center gap-1 sm:gap-2 mb-2 sm:mb-3">
+          <span className="text-xl sm:text-2xl">{flag}</span>
           <div className="text-center">
             <p
-              className="text-base font-semibold leading-tight"
+              className="text-sm sm:text-base font-semibold leading-tight"
               style={{ color: textColor }}
             >
               {name || 'Tu Nombre'}
@@ -87,7 +92,7 @@ export default function StickerPreview({
             {/* NFC Icon */}
             <div className="mb-1">
               <svg
-                className="w-8 h-8 mx-auto"
+                className="w-6 h-6 sm:w-8 sm:h-8 mx-auto"
                 fill={textColor}
                 viewBox="0 0 24 24"
               >
@@ -119,4 +124,7 @@ export default function StickerPreview({
       )}
     </div>
   );
-}
+};
+
+const StickerPreview = memo(StickerPreviewComponent);
+export default StickerPreview;

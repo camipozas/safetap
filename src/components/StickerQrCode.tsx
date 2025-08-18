@@ -27,12 +27,16 @@ export function StickerQrCode({
   const identifier = serial || stickerId || 'demo-sticker';
   const qrUrl = `${resolvedBaseUrl}/s/${identifier}`;
 
+  // Create a unique key to force re-render when props change
+  const qrKey = `${identifier}-${size}-${isPreview}-${highQuality}`;
+
   if (isPreview) {
     // Generate a real QR code for preview, but it won't work in this context
     // This will look exactly like a real QR but won't be functional
     return (
       <div className={`relative ${className}`}>
         <QrCanvas
+          key={qrKey}
           url="https://safetap.cl/s/preview-demo"
           size={size}
           className=""
@@ -49,6 +53,7 @@ export function StickerQrCode({
   return (
     <div className={`relative ${className}`}>
       <QrCanvas
+        key={qrKey}
         url={qrUrl}
         size={size}
         className=""

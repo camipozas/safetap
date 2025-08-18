@@ -1,7 +1,13 @@
 'use client';
 
 import QRCode from 'qrcode';
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
+
+const QR_SMALL_SIZE_THRESHOLD = 64;
+const QR_SMALL_IMAGE_QUALITY = 0.8;
+const QR_STANDARD_IMAGE_QUALITY = 0.92;
+const HIGH_RESOLUTION_SCALE_FACTOR = 2;
+const LOW_RESOLUTION_SCALE_FACTOR = 1.5;
 
 interface StickerQrCodeProps {
   slug?: string;
@@ -34,15 +40,22 @@ const getBaseUrl = () => {
   return `${protocol}//${hostname}`;
 };
 
-export function StickerQrCode({
+export const StickerQrCode = memo(function StickerQrCode({
   slug,
   size = 64,
   isPreview = false,
   className = '',
 }: StickerQrCodeProps) {
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
+    // Cancel previous request if it exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    abortControllerRef.current = new AbortController();
     let isMounted = true;
 
     const generateQR = async () => {
@@ -53,14 +66,29 @@ export function StickerQrCode({
 
       try {
         const qrUrl = `${getBaseUrl()}/s/${slug}`;
-        const dataUrl = await QRCode.toDataURL(qrUrl, {
-          width: size * 2, // Generate at 2x for better quality
+        const qrOptions = {
+          width:
+            size <= QR_SMALL_SIZE_THRESHOLD
+              ? size * LOW_RESOLUTION_SCALE_FACTOR
+              : size * HIGH_RESOLUTION_SCALE_FACTOR, // Optimized scaling for small QRs
           margin: 1,
           color: {
             dark: '#000000',
             light: '#FFFFFF',
           },
-        });
+          quality:
+            size <= QR_SMALL_SIZE_THRESHOLD
+              ? QR_SMALL_IMAGE_QUALITY
+              : QR_STANDARD_IMAGE_QUALITY, // Lower quality for small QRs
+          rendererOpts: {
+            quality:
+              size <= QR_SMALL_SIZE_THRESHOLD
+                ? QR_SMALL_IMAGE_QUALITY
+                : QR_STANDARD_IMAGE_QUALITY,
+          },
+        };
+
+        const dataUrl = await QRCode.toDataURL(qrUrl, qrOptions);
 
         // Only update state if component is still mounted
         if (isMounted) {
@@ -79,6 +107,9 @@ export function StickerQrCode({
     // Cleanup function to prevent state updates after unmount
     return () => {
       isMounted = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
     };
   }, [slug, size, isPreview]);
 
@@ -170,7 +201,8 @@ export function StickerQrCode({
         alt="QR Code"
         className="rounded"
         style={{ width: `${size}px`, height: `${size}px` }}
+        loading="lazy"
       />
     </div>
   );
-}
+});

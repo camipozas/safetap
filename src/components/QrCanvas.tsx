@@ -1,10 +1,12 @@
 'use client';
 import Image from 'next/image';
 import QRCode from 'qrcode';
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 
-// QR Code generation constants
 const QR_IMAGE_QUALITY = 0.92;
+const QR_SMALL_SIZE_THRESHOLD = 64;
+const QR_SMALL_IMAGE_QUALITY = 0.8;
+const HIGH_RESOLUTION_SCALE_FACTOR = 2;
 
 interface QrCanvasProps {
   url: string;
@@ -16,7 +18,7 @@ interface QrCanvasProps {
   foregroundColor?: string;
 }
 
-export function QrCanvas({
+const QrCanvasComponent = function QrCanvas({
   url,
   alt = 'Código QR',
   size = 200,
@@ -28,6 +30,7 @@ export function QrCanvas({
   const [dataUrl, setDataUrl] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!url || url.trim() === '') {
@@ -36,38 +39,63 @@ export function QrCanvas({
       return;
     }
 
-    let active = true;
+    // Reset state for new URL
     setIsLoading(true);
     setError(null);
+    setDataUrl('');
 
-    // Calculate final QR size
-    const qrSize = highResolution ? size * 4 : size;
+    // Cancel previous request if it exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
 
-    // Configure QR options with error handling
+    abortControllerRef.current = new AbortController();
+    let active = true;
+
+    // Calculate final QR size with optimization for mobile
+    const qrSize = highResolution ? size * HIGH_RESOLUTION_SCALE_FACTOR : size;
+
+    // Configure QR options with error handling and performance optimization
     const qrOptions = {
       width: qrSize,
       height: qrSize,
-      margin: 2,
+      margin: 1,
       color: {
         dark: foregroundColor || '#000000',
         light: backgroundColor || '#ffffff',
       },
       errorCorrectionLevel: 'M' as const,
       type: 'image/png' as const,
-      quality: QR_IMAGE_QUALITY,
+      quality:
+        size <= QR_SMALL_SIZE_THRESHOLD
+          ? QR_SMALL_IMAGE_QUALITY
+          : QR_IMAGE_QUALITY, // Lower quality for small QRs
       rendererOpts: {
-        quality: QR_IMAGE_QUALITY,
+        quality:
+          size <= QR_SMALL_SIZE_THRESHOLD
+            ? QR_SMALL_IMAGE_QUALITY
+            : QR_IMAGE_QUALITY,
       },
     };
 
+    // Add timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      if (active) {
+        setError('Timeout: QR generation took too long');
+        setIsLoading(false);
+      }
+    }, 10000); // 10 second timeout
+
     QRCode.toDataURL(url, qrOptions)
       .then((generatedDataUrl) => {
+        clearTimeout(timeoutId);
         if (active) {
           setDataUrl(generatedDataUrl);
           setIsLoading(false);
         }
       })
       .catch((err) => {
+        clearTimeout(timeoutId);
         if (active) {
           setError(`Error: ${err.message || 'Code generation failed'}`);
           setIsLoading(false);
@@ -76,6 +104,10 @@ export function QrCanvas({
 
     return () => {
       active = false;
+      clearTimeout(timeoutId);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
     };
   }, [url, size, highResolution, backgroundColor, foregroundColor]);
 
@@ -125,7 +157,11 @@ export function QrCanvas({
 
   return (
     <div
-      style={{ position: 'relative', width: displaySize, height: displaySize }}
+      style={{
+        position: 'relative',
+        width: displaySize,
+        height: displaySize,
+      }}
       className={className}
     >
       <Image
@@ -137,7 +173,10 @@ export function QrCanvas({
         style={{ width: displaySize, height: displaySize }}
         loading="lazy"
         unoptimized
+        priority={size > 100} // Priority for larger QRs only
       />
     </div>
   );
-}
+};
+
+export const QrCanvas = memo(QrCanvasComponent);

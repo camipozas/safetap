@@ -79,6 +79,31 @@ describe('StickerPreview', () => {
     expect(container).toBeInTheDocument();
     expect(container).toHaveClass('custom-class');
   });
+
+  it('is responsive and adapts to different screen sizes', () => {
+    render(<StickerPreview name="John Doe" flagCode="CL" />);
+
+    // Find the sticker container by its specific responsive classes
+    const stickerContainer = document.querySelector(
+      '.w-40.h-40.sm\\:w-48.sm\\:h-48'
+    );
+    expect(stickerContainer).toBeInTheDocument();
+    expect(stickerContainer).toHaveClass('w-40', 'h-40', 'sm:w-48', 'sm:h-48');
+  });
+
+  it('uses optimized QR size for mobile', () => {
+    render(
+      <StickerPreview
+        name="John Doe"
+        flagCode="CL"
+        showRealQR={true}
+        stickerId="stick123"
+      />
+    );
+
+    const qrCode = screen.getByTestId('sticker-qr-code');
+    expect(qrCode).toHaveAttribute('data-size', '64'); // Optimized size for mobile
+  });
   it('displays serial number when provided in real mode', () => {
     render(
       <StickerPreview
