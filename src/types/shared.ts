@@ -1,5 +1,3 @@
-// Centralized types for SafeTap
-// This file exports shared types used across the application
 import { AccessVia, PaymentStatus, Role, StickerStatus } from '@prisma/client';
 
 export { AccessVia, PaymentStatus, Role, StickerStatus };
