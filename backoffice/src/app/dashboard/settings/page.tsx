@@ -39,6 +39,36 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [inviteLoading, setInviteLoading] = useState(false);
 
+  // Filter states
+  const [emailFilter, setEmailFilter] = useState('');
+  const [roleFilter, setRoleFilter] = useState<'ALL' | 'ADMIN' | 'SUPER_ADMIN'>(
+    'ALL'
+  );
+  const [invitationEmailFilter, setInvitationEmailFilter] = useState('');
+  const [invitationRoleFilter, setInvitationRoleFilter] = useState<
+    'ALL' | 'ADMIN' | 'SUPER_ADMIN'
+  >('ALL');
+
+  // Filter functions
+  const filteredAdminUsers = adminUsers.filter((user) => {
+    const emailMatch =
+      user.email.toLowerCase().includes(emailFilter.toLowerCase()) ||
+      (user.name &&
+        user.name.toLowerCase().includes(emailFilter.toLowerCase()));
+    const roleMatch = roleFilter === 'ALL' || user.role === roleFilter;
+    return emailMatch && roleMatch;
+  });
+
+  const filteredPendingInvitations = pendingInvitations.filter((invitation) => {
+    const emailMatch = invitation.email
+      .toLowerCase()
+      .includes(invitationEmailFilter.toLowerCase());
+    const roleMatch =
+      invitationRoleFilter === 'ALL' ||
+      invitation.role === invitationRoleFilter;
+    return emailMatch && roleMatch;
+  });
+
   // Fetch admin users and pending invitations
   useEffect(() => {
     fetchAdminUsers();
@@ -101,9 +131,21 @@ export default function SettingsPage() {
 
       if (response.ok) {
         const data = await response.json();
-        alert(
-          `Invitación enviada a ${newUserEmail}. Link de invitación: ${data.inviteUrl}`
-        );
+
+        let message = `Invitación creada para ${newUserEmail}.`;
+
+        if (data.emailSent) {
+          message += ' Email de invitación enviado exitosamente.';
+        } else if (data.warning) {
+          message += `\n\n⚠️ ${data.warning}`;
+          if (data.inviteUrl) {
+            message += `\n\nLink de invitación manual: ${data.inviteUrl}`;
+          }
+        } else if (data.inviteUrl) {
+          message += ` Link de invitación: ${data.inviteUrl}`;
+        }
+
+        alert(message);
         setNewUserEmail('');
         setNewUserRole('ADMIN');
         fetchPendingInvitations();
@@ -239,6 +281,41 @@ export default function SettingsPage() {
                 <Mail className="mr-2 h-5 w-5" />
                 Invitaciones Pendientes
               </h3>
+
+              {/* Invitation Filters */}
+              <div className="flex gap-4 mb-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium mb-1">
+                    Filtrar por email
+                  </label>
+                  <input
+                    type="text"
+                    value={invitationEmailFilter}
+                    onChange={(e) => setInvitationEmailFilter(e.target.value)}
+                    className="w-full border rounded px-3 py-2"
+                    placeholder="Buscar por email..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Filtrar por rol
+                  </label>
+                  <select
+                    value={invitationRoleFilter}
+                    onChange={(e) =>
+                      setInvitationRoleFilter(
+                        e.target.value as 'ALL' | 'ADMIN' | 'SUPER_ADMIN'
+                      )
+                    }
+                    className="border rounded px-3 py-2"
+                  >
+                    <option value="ALL">Todos los roles</option>
+                    <option value="ADMIN">Admin</option>
+                    <option value="SUPER_ADMIN">Super Admin</option>
+                  </select>
+                </div>
+              </div>
+
               <div className="border rounded-lg overflow-hidden">
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50">
@@ -250,8 +327,8 @@ export default function SettingsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {Array.isArray(pendingInvitations) &&
-                      pendingInvitations.map((invitation) => (
+                    {Array.isArray(filteredPendingInvitations) &&
+                      filteredPendingInvitations.map((invitation) => (
                         <tr key={invitation.id} className="border-t">
                           <td className="p-3">{invitation.email}</td>
                           <td className="p-3">
@@ -295,6 +372,41 @@ export default function SettingsPage() {
               <Users className="mr-2 h-5 w-5" />
               Administradores Actuales
             </h3>
+
+            {/* Admin Filters */}
+            <div className="flex gap-4 mb-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium mb-1">
+                  Filtrar por email o nombre
+                </label>
+                <input
+                  type="text"
+                  value={emailFilter}
+                  onChange={(e) => setEmailFilter(e.target.value)}
+                  className="w-full border rounded px-3 py-2"
+                  placeholder="Buscar por email o nombre..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Filtrar por rol
+                </label>
+                <select
+                  value={roleFilter}
+                  onChange={(e) =>
+                    setRoleFilter(
+                      e.target.value as 'ALL' | 'ADMIN' | 'SUPER_ADMIN'
+                    )
+                  }
+                  className="border rounded px-3 py-2"
+                >
+                  <option value="ALL">Todos los roles</option>
+                  <option value="ADMIN">Admin</option>
+                  <option value="SUPER_ADMIN">Super Admin</option>
+                </select>
+              </div>
+            </div>
+
             <div className="border rounded-lg overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
@@ -307,8 +419,8 @@ export default function SettingsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {Array.isArray(adminUsers) &&
-                    adminUsers.map((user) => (
+                  {Array.isArray(filteredAdminUsers) &&
+                    filteredAdminUsers.map((user) => (
                       <tr key={user.id} className="border-t">
                         <td className="p-3">
                           <div className="font-medium">

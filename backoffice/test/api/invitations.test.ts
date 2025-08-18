@@ -30,6 +30,7 @@ import {
 import { GET as validateInvitation } from '@/app/api/admin/invitations/validate/route';
 
 // Get reference to mocked prisma and cast to MockedObject
+import { EmailService } from '@/lib/email';
 import { prisma as _mockPrisma } from '@/lib/prisma';
 const mockPrisma = _mockPrisma as any;
 
@@ -40,6 +41,17 @@ vi.mock('next-auth', () => ({
 
 vi.mock('@/lib/auth', () => ({
   authOptions: {},
+}));
+
+// Mock email service
+const mockEmailService = {
+  sendInvitationEmail: vi.fn(),
+  testConnection: vi.fn(),
+};
+
+vi.mock('@/lib/email', () => ({
+  createEmailService: vi.fn(() => mockEmailService),
+  EmailService: vi.fn(() => mockEmailService),
 }));
 
 // Mock crypto
@@ -58,6 +70,9 @@ describe('Invitations API', () => {
     vi.clearAllMocks();
     // Set NODE_ENV to development for bypassing auth
     vi.stubEnv('NODE_ENV', 'development');
+    // Reset email service mock
+    mockEmailService.sendInvitationEmail.mockResolvedValue('mock-message-id');
+    mockEmailService.testConnection.mockResolvedValue(true);
   });
 
   describe('GET /api/admin/invitations', () => {
@@ -153,6 +168,14 @@ describe('Invitations API', () => {
       expect(data.inviteUrl).toContain(
         'http://localhost:3001/auth/accept-invitation?token='
       );
+      expect(data.emailSent).toBe(true);
+      expect(mockEmailService.sendInvitationEmail).toHaveBeenCalledWith(
+        'newadmin@example.com',
+        expect.stringContaining(
+          'http://localhost:3001/auth/accept-invitation?token='
+        ),
+        'ADMIN'
+      );
     });
 
     it('rejects invalid email format', async () => {
@@ -242,6 +265,94 @@ describe('Invitations API', () => {
       expect(response.status).toBe(400);
       expect(data.error).toBe(
         'Ya existe una invitación pendiente para este email'
+      );
+    });
+
+    it('creates invitation successfully even when email fails', async () => {
+      const mockInvitation = {
+        id: 'invite-1',
+        email: 'newadmin@example.com',
+        role: 'ADMIN',
+        token: 'mocked-token-123',
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        createdAt: new Date(),
+        usedAt: null,
+      };
+
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.adminInvitation.findFirst.mockResolvedValue(null);
+      mockPrisma.adminInvitation.create.mockResolvedValue(mockInvitation);
+
+      // Mock email service to fail
+      mockEmailService.sendInvitationEmail.mockRejectedValue(
+        new Error('SMTP connection failed')
+      );
+
+      const request = new NextRequest(
+        'http://localhost:3001/api/admin/invitations',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            email: 'newadmin@example.com',
+            role: 'ADMIN',
+          }),
+        }
+      );
+
+      const response = await createInvitation(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+      expect(data.emailSent).toBe(false);
+      expect(data.emailError).toBe('SMTP connection failed');
+      expect(data.warning).toContain(
+        'Invitación creada pero el email no pudo ser enviado'
+      );
+      expect(data.inviteUrl).toBeDefined(); // Should include manual link when email fails
+    });
+
+    it('handles email service not configured', async () => {
+      const mockInvitation = {
+        id: 'invite-1',
+        email: 'newadmin@example.com',
+        role: 'ADMIN',
+        token: 'mocked-token-123',
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        createdAt: new Date(),
+        usedAt: null,
+      };
+
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.adminInvitation.findFirst.mockResolvedValue(null);
+      mockPrisma.adminInvitation.create.mockResolvedValue(mockInvitation);
+
+      // Mock email service to return null (not configured)
+      const { createEmailService } = await import('@/lib/email');
+      vi.mocked(createEmailService).mockReturnValue(null);
+
+      const request = new NextRequest(
+        'http://localhost:3001/api/admin/invitations',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            email: 'newadmin@example.com',
+            role: 'ADMIN',
+          }),
+        }
+      );
+
+      const response = await createInvitation(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+      expect(data.emailSent).toBe(false);
+      expect(data.inviteUrl).toBeDefined(); // Should include manual link
+
+      // Reset mock for other tests
+      vi.mocked(createEmailService).mockReturnValue(
+        mockEmailService as unknown as EmailService
       );
     });
   });
