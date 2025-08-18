@@ -25,7 +25,12 @@ function AcceptInvitationContent() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
+    console.log(
+      '🔍 Accept invitation page loaded with token:',
+      token ? 'present' : 'missing'
+    );
     if (!token) {
+      console.log('❌ No token provided in URL');
       setError('Token de invitación no válido');
       setLoading(false);
       return;
@@ -35,19 +40,30 @@ function AcceptInvitationContent() {
   }, [token]);
 
   const validateInvitation = async () => {
+    console.log(
+      '🔍 Validating invitation token:',
+      token?.substring(0, 8) + '...'
+    );
     try {
       const response = await fetch(
         `/api/admin/invitations/validate?token=${token}`
       );
       const data = await response.json();
+      console.log('📥 Validation response:', {
+        status: response.status,
+        isValid: data.isValid,
+        hasInvitation: !!data.invitation,
+      });
 
       if (response.ok && data.isValid) {
+        console.log('✅ Invitation is valid:', data.invitation.email);
         setInvitation(data.invitation);
       } else {
+        console.log('❌ Invitation validation failed:', data.error);
         setError(data.error || 'Invitación no válida o expirada');
       }
     } catch (error) {
-      console.error('Error validating invitation:', error);
+      console.error('❌ Error validating invitation:', error);
       setError('Error al validar la invitación');
     } finally {
       setLoading(false);
@@ -55,6 +71,7 @@ function AcceptInvitationContent() {
   };
 
   const acceptInvitation = async () => {
+    console.log('📝 Starting invitation acceptance process');
     setAccepting(true);
     try {
       const response = await fetch('/api/admin/invitations/accept', {
@@ -64,17 +81,25 @@ function AcceptInvitationContent() {
       });
 
       const data = await response.json();
+      console.log('📥 Accept invitation response:', {
+        status: response.status,
+        success: response.ok,
+      });
 
       if (response.ok) {
+        console.log(
+          '✅ Invitation accepted successfully, redirecting to signin'
+        );
         setSuccess(true);
         setTimeout(() => {
           router.push('/auth/signin?message=invitation_accepted');
         }, 2000);
       } else {
+        console.log('❌ Failed to accept invitation:', data.error);
         setError(data.error || 'Error al aceptar la invitación');
       }
     } catch (error) {
-      console.error('Error accepting invitation:', error);
+      console.error('❌ Error accepting invitation:', error);
       setError('Error al aceptar la invitación');
     } finally {
       setAccepting(false);

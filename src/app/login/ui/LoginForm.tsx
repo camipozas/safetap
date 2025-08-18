@@ -11,11 +11,13 @@ export default function LoginForm() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    console.log('📧 Starting email login process for:', email);
     setError(null);
     setIsLoading(true);
 
     try {
       // Use our custom endpoint that DOES work
+      console.log('📤 Sending login request to custom endpoint');
       const res = await fetch('/api/custom-login', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -23,15 +25,19 @@ export default function LoginForm() {
       });
 
       const data = await res.json();
+      console.log('📥 Login response status:', res.status);
 
       if (!res.ok) {
+        console.log('❌ Login request failed:', data.error);
         throw new Error(data.error || 'No se pudo enviar el enlace.');
       }
 
+      console.log('✅ Login email sent successfully');
       setSubmitted(true);
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : 'Error desconocido';
+      console.error('❌ Login error:', errorMessage);
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -39,15 +45,17 @@ export default function LoginForm() {
   }
 
   async function handleGoogleSignIn() {
+    console.log('🔐 Starting Google sign-in process');
     setIsGoogleLoading(true);
     setError(null);
 
     try {
+      console.log('🔗 Initiating Google OAuth with callback to /account');
       await signIn('google', {
         callbackUrl: '/account',
       });
     } catch (err) {
-      console.error('Error signing in with Google:', err);
+      console.error('❌ Error signing in with Google:', err);
       setError('No se pudo iniciar sesión con Google. Inténtalo de nuevo.');
     } finally {
       setIsGoogleLoading(false);

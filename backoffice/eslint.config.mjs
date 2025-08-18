@@ -1,7 +1,7 @@
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
-import tsParser from '@typescript-eslint/parser';
 
 export default [
   {
@@ -35,7 +35,7 @@ export default [
     rules: {
       // Core ESLint rules
       'no-unused-vars': 'off',
-      'no-console': 'warn',
+      'no-console': 'off', // Allow console logs for debugging
       'prefer-const': 'error',
 
       // TypeScript rules
