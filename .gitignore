@@ -143,3 +143,4 @@ vite.config.ts.timestamp-*
 
 # Playwright test artifacts
 playwright-report/
+.vercel

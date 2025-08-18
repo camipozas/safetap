@@ -49,8 +49,27 @@ export default async function AccountPage({
     user = await prisma.user.findUnique({
       where: { email: session.user.email },
       include: {
-        stickers: true,
-        payments: { orderBy: { createdAt: 'desc' } },
+        stickers: {
+          include: {
+            payments: {
+              where: { status: 'VERIFIED' },
+              orderBy: { createdAt: 'desc' },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+        payments: {
+          orderBy: { createdAt: 'desc' },
+          include: {
+            sticker: {
+              select: {
+                nameOnSticker: true,
+                status: true,
+                serial: true,
+              },
+            },
+          },
+        },
       },
     });
   }
@@ -108,8 +127,8 @@ export default async function AccountPage({
                   <StickerPreview
                     name={s.nameOnSticker}
                     flagCode={s.flagCode}
-                    stickerColor={(s as any).stickerColor || '#f1f5f9'}
-                    textColor={(s as any).textColor || '#000000'}
+                    stickerColor={s.stickerColor || '#f1f5f9'}
+                    textColor={s.textColor || '#000000'}
                     showRealQR={s.status === 'SHIPPED' || s.status === 'ACTIVE'}
                     stickerId={s.id}
                     serial={s.serial}
@@ -128,25 +147,93 @@ export default async function AccountPage({
                     <p className="text-sm text-slate-600">
                       Estado:{' '}
                       <span
-                        className={`font-medium ${s.status === 'ACTIVE' ? 'text-green-600' : s.status === 'SHIPPED' ? 'text-blue-600' : 'text-amber-600'}`}
+                        className={`font-medium px-2 py-1 rounded text-xs ${
+                          s.status === 'ACTIVE'
+                            ? 'bg-green-100 text-green-800'
+                            : s.status === 'SHIPPED'
+                              ? 'bg-blue-100 text-blue-800'
+                              : s.status === 'PRINTING'
+                                ? 'bg-orange-100 text-orange-800'
+                                : s.status === 'PAID'
+                                  ? 'bg-purple-100 text-purple-800'
+                                  : 'bg-yellow-100 text-yellow-800'
+                        }`}
                       >
-                        {s.status}
+                        {s.status === 'ORDERED' && '📝 Creada'}
+                        {s.status === 'PAID' && '💰 Pagada'}
+                        {s.status === 'PRINTING' && '🖨️ Imprimiendo'}
+                        {s.status === 'SHIPPED' && '📦 Enviada'}
+                        {s.status === 'ACTIVE' && '✅ Activa'}
+                        {s.status === 'LOST' && '❌ Perdida'}
                       </span>
                     </p>
+
+                    {/* Información adicional según el estado */}
+                    {s.status === 'ORDERED' && (
+                      <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
+                        <p className="text-yellow-800">
+                          <strong>⏳ Pendiente de pago</strong>
+                        </p>
+                        <p className="text-yellow-700 text-xs mt-1">
+                          Realiza la transferencia bancaria para procesar tu
+                          pedido
+                        </p>
+                      </div>
+                    )}
+
+                    {s.status === 'PAID' && (
+                      <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded text-sm">
+                        <p className="text-purple-800">
+                          <strong>✨ Pago confirmado</strong>
+                        </p>
+                        <p className="text-purple-700 text-xs mt-1">
+                          Tu sticker está en cola de impresión
+                        </p>
+                      </div>
+                    )}
+
+                    {s.status === 'PRINTING' && (
+                      <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-sm">
+                        <p className="text-orange-800">
+                          <strong>🖨️ En impresión</strong>
+                        </p>
+                        <p className="text-orange-700 text-xs mt-1">
+                          Tu sticker se está imprimiendo y será enviado pronto
+                        </p>
+                      </div>
+                    )}
+
+                    {s.status === 'SHIPPED' && (
+                      <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+                        <p className="text-blue-800">
+                          <strong>📦 Enviado</strong>
+                        </p>
+                        <p className="text-blue-700 text-xs mt-1">
+                          Tu sticker está en camino. Revisa tu email para el
+                          tracking
+                        </p>
+                      </div>
+                    )}
+
+                    {s.status === 'ACTIVE' && (
+                      <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm">
+                        <p className="text-green-800">
+                          <strong>✅ Activo y funcionando</strong>
+                        </p>
+                        <p className="text-green-700 text-xs mt-1">
+                          Tu sticker está activo y listo para emergencias
+                        </p>
+                      </div>
+                    )}
                     <p className="text-sm text-slate-600">
                       URL pública:{' '}
                       <span className="font-mono">/s/{s.slug}</span>
                     </p>
-                    {(s as any).stickerColor && (
+                    {s.stickerColor && (
                       <p className="text-xs text-slate-500 mt-1">
                         Colores:{' '}
-                        <span className="font-mono">
-                          {(s as any).stickerColor}
-                        </span>{' '}
-                        /{' '}
-                        <span className="font-mono">
-                          {(s as any).textColor}
-                        </span>
+                        <span className="font-mono">{s.stickerColor}</span> /{' '}
+                        <span className="font-mono">{s.textColor}</span>
                       </p>
                     )}
                   </div>
