@@ -44,7 +44,7 @@ describe('/api/admin/orders/[id] PUT', () => {
     (prisma.sticker.update as any).mockResolvedValue(mockUpdatedSticker);
 
     const request = new NextRequest(
-      'http://localhost:3002/api/admin/orders/test-id',
+      'http://localhost:3001/api/admin/orders/test-id',
       {
         method: 'PUT',
         body: JSON.stringify({ status: 'PAID' }),
@@ -77,7 +77,7 @@ describe('/api/admin/orders/[id] PUT', () => {
 
   it('rejects invalid status', async () => {
     const request = new NextRequest(
-      'http://localhost:3002/api/admin/orders/test-id',
+      'http://localhost:3001/api/admin/orders/test-id',
       {
         method: 'PUT',
         body: JSON.stringify({ status: 'INVALID_STATUS' }),
@@ -98,7 +98,7 @@ describe('/api/admin/orders/[id] PUT', () => {
     );
 
     const request = new NextRequest(
-      'http://localhost:3002/api/admin/orders/test-id',
+      'http://localhost:3001/api/admin/orders/test-id',
       {
         method: 'PUT',
         body: JSON.stringify({ status: 'PAID' }),
@@ -120,7 +120,7 @@ describe('/api/admin/orders/[id] PUT', () => {
     );
 
     const request = new NextRequest(
-      'http://localhost:3002/api/admin/orders/test-id',
+      'http://localhost:3001/api/admin/orders/test-id',
       {
         method: 'PUT',
         body: JSON.stringify({ status: 'PAID' }),
@@ -161,7 +161,7 @@ describe('/api/admin/orders/[id] PUT', () => {
       (prisma.sticker.update as any).mockResolvedValue(mockUpdatedSticker);
 
       const request = new NextRequest(
-        'http://localhost:3002/api/admin/orders/test-id',
+        'http://localhost:3001/api/admin/orders/test-id',
         {
           method: 'PUT',
           body: JSON.stringify({ status }),

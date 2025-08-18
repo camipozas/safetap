@@ -4,7 +4,7 @@ import { vi } from 'vitest';
 // Mock environment variables for testing
 vi.stubEnv('NODE_ENV', 'test');
 vi.stubEnv('NEXTAUTH_SECRET', 'test-secret');
-vi.stubEnv('NEXTAUTH_URL', 'http://localhost:3002');
+vi.stubEnv('NEXTAUTH_BACKOFFICE_URL', 'http://localhost:3001');
 
 // Mock Next.js router
 vi.mock('next/navigation', () => ({

@@ -66,12 +66,12 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
   const getMainAppUrl = () => {
     if (typeof window === 'undefined') return '';
 
-    // In development, replace backoffice port (3002) with main app port (3000)
-    // In production, both should be on the same domain or configured properly
+    const BACKOFFICE_PORT = process.env.NEXT_PUBLIC_BACKOFFICE_PORT || '3001';
+    const MAINAPP_PORT = process.env.NEXT_PUBLIC_MAINAPP_PORT || '3000';
     const currentOrigin = window.location.origin;
 
-    if (currentOrigin.includes(':3002')) {
-      return currentOrigin.replace(':3002', ':3000');
+    if (currentOrigin.includes(`:${BACKOFFICE_PORT}`)) {
+      return currentOrigin.replace(`:${BACKOFFICE_PORT}`, `:${MAINAPP_PORT}`);
     }
 
     // In production, assume main app is on root domain

@@ -126,7 +126,7 @@ describe('Invitations API', () => {
       mockPrisma.adminInvitation.create.mockResolvedValue(mockInvitation);
 
       const request = new NextRequest(
-        'http://localhost:3002/api/admin/invitations',
+        'http://localhost:3001/api/admin/invitations',
         {
           method: 'POST',
           body: JSON.stringify({
@@ -151,13 +151,13 @@ describe('Invitations API', () => {
       expect(data.invitation.expiresAt).toBeDefined();
       expect(data.invitation.token).toBeDefined();
       expect(data.inviteUrl).toContain(
-        'http://localhost:3002/auth/accept-invitation?token='
+        'http://localhost:3001/auth/accept-invitation?token='
       );
     });
 
     it('rejects invalid email format', async () => {
       const request = new NextRequest(
-        'http://localhost:3002/api/admin/invitations',
+        'http://localhost:3001/api/admin/invitations',
         {
           method: 'POST',
           body: JSON.stringify({
@@ -176,7 +176,7 @@ describe('Invitations API', () => {
 
     it('rejects invalid role', async () => {
       const request = new NextRequest(
-        'http://localhost:3002/api/admin/invitations',
+        'http://localhost:3001/api/admin/invitations',
         {
           method: 'POST',
           body: JSON.stringify({
@@ -200,7 +200,7 @@ describe('Invitations API', () => {
       });
 
       const request = new NextRequest(
-        'http://localhost:3002/api/admin/invitations',
+        'http://localhost:3001/api/admin/invitations',
         {
           method: 'POST',
           body: JSON.stringify({
@@ -226,7 +226,7 @@ describe('Invitations API', () => {
       });
 
       const request = new NextRequest(
-        'http://localhost:3002/api/admin/invitations',
+        'http://localhost:3001/api/admin/invitations',
         {
           method: 'POST',
           body: JSON.stringify({
@@ -258,7 +258,7 @@ describe('Invitations API', () => {
       mockPrisma.adminInvitation.delete.mockResolvedValue(mockInvitation);
 
       const request = new NextRequest(
-        'http://localhost:3002/api/admin/invitations/invite-1',
+        'http://localhost:3001/api/admin/invitations/invite-1',
         {
           method: 'DELETE',
         }
@@ -278,7 +278,7 @@ describe('Invitations API', () => {
       mockPrisma.adminInvitation.findUnique.mockResolvedValue(null);
 
       const request = new NextRequest(
-        'http://localhost:3002/api/admin/invitations/invalid-id',
+        'http://localhost:3001/api/admin/invitations/invalid-id',
         {
           method: 'DELETE',
         }
@@ -309,7 +309,7 @@ describe('Invitations API', () => {
       mockPrisma.user.findUnique.mockResolvedValue(null); // User doesn't exist
 
       const request = new NextRequest(
-        'http://localhost:3002/api/admin/invitations/validate?token=valid-token'
+        'http://localhost:3001/api/admin/invitations/validate?token=valid-token'
       );
 
       const response = await validateInvitation(request);
@@ -322,7 +322,7 @@ describe('Invitations API', () => {
 
     it('rejects missing token', async () => {
       const request = new NextRequest(
-        'http://localhost:3002/api/admin/invitations/validate'
+        'http://localhost:3001/api/admin/invitations/validate'
       );
 
       const response = await validateInvitation(request);
@@ -336,7 +336,7 @@ describe('Invitations API', () => {
       mockPrisma.adminInvitation.findUnique.mockResolvedValue(null);
 
       const request = new NextRequest(
-        'http://localhost:3002/api/admin/invitations/validate?token=invalid-token'
+        'http://localhost:3001/api/admin/invitations/validate?token=invalid-token'
       );
 
       const response = await validateInvitation(request);
@@ -356,7 +356,7 @@ describe('Invitations API', () => {
       mockPrisma.adminInvitation.findUnique.mockResolvedValue(mockInvitation);
 
       const request = new NextRequest(
-        'http://localhost:3002/api/admin/invitations/validate?token=used-token'
+        'http://localhost:3001/api/admin/invitations/validate?token=used-token'
       );
 
       const response = await validateInvitation(request);
@@ -377,7 +377,7 @@ describe('Invitations API', () => {
       mockPrisma.adminInvitation.findUnique.mockResolvedValue(mockInvitation);
 
       const request = new NextRequest(
-        'http://localhost:3002/api/admin/invitations/validate?token=expired-token'
+        'http://localhost:3001/api/admin/invitations/validate?token=expired-token'
       );
 
       const response = await validateInvitation(request);
@@ -411,7 +411,7 @@ describe('Invitations API', () => {
       mockPrisma.$transaction.mockResolvedValue(mockNewUser);
 
       const request = new NextRequest(
-        'http://localhost:3002/api/admin/invitations/accept',
+        'http://localhost:3001/api/admin/invitations/accept',
         {
           method: 'POST',
           body: JSON.stringify({ token: 'valid-token' }),
@@ -429,7 +429,7 @@ describe('Invitations API', () => {
 
     it('rejects missing token', async () => {
       const request = new NextRequest(
-        'http://localhost:3002/api/admin/invitations/accept',
+        'http://localhost:3001/api/admin/invitations/accept',
         {
           method: 'POST',
           body: JSON.stringify({}),
@@ -460,7 +460,7 @@ describe('Invitations API', () => {
       mockPrisma.user.findUnique.mockResolvedValue(mockExistingUser);
 
       const request = new NextRequest(
-        'http://localhost:3002/api/admin/invitations/accept',
+        'http://localhost:3001/api/admin/invitations/accept',
         {
           method: 'POST',
           body: JSON.stringify({ token: 'valid-token' }),

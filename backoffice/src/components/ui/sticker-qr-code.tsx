@@ -12,9 +12,26 @@ interface StickerQrCodeProps {
 
 const getBaseUrl = () => {
   if (typeof window === 'undefined') {
-    return process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const MAINAPP_PORT = process.env.NEXT_PUBLIC_MAINAPP_PORT || '3000';
+    return (
+      process.env.NEXT_PUBLIC_BASE_URL || `http://localhost:${MAINAPP_PORT}`
+    );
   }
-  return window.location.origin.replace(':3002', '');
+
+  // Use environment variables for ports, fallback to defaults if not set
+  const BACKOFFICE_PORT = process.env.NEXT_PUBLIC_BACKOFFICE_PORT || '3001';
+  const MAINAPP_PORT = process.env.NEXT_PUBLIC_MAINAPP_PORT || '3000';
+  const { protocol, hostname } = window.location;
+
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    const currentOrigin = window.location.origin;
+    if (currentOrigin.includes(`:${BACKOFFICE_PORT}`)) {
+      return currentOrigin.replace(`:${BACKOFFICE_PORT}`, `:${MAINAPP_PORT}`);
+    }
+    return `${protocol}//${hostname}:${MAINAPP_PORT}`;
+  }
+
+  return `${protocol}//${hostname}`;
 };
 
 export function StickerQrCode({

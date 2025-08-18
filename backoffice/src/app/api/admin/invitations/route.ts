@@ -150,7 +150,8 @@ export async function POST(request: NextRequest) {
     });
 
     // Generar URL de invitación
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3002';
+    const baseUrl =
+      process.env.NEXTAUTH_BACKOFFICE_URL || 'http://localhost:3001';
     const inviteUrl = `${baseUrl}/auth/accept-invitation?token=${token}`;
 
     // TODO: Aquí se enviaría el email en un sistema real

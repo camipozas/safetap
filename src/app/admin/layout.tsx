@@ -33,7 +33,10 @@ export default async function AdminLayout({
               <p className="text-blue-800">
                 💡 <strong>Nuevo:</strong> Usa el backoffice completo en{' '}
                 <a
-                  href="http://localhost:3001"
+                  href={
+                    process.env.NEXTAUTH_BACKOFFICE_URL ||
+                    'http://localhost:3001'
+                  }
                   className="underline font-medium"
                 >
                   localhost:3001

@@ -140,7 +140,7 @@ describe('SettingsPage', () => {
           Promise.resolve({
             success: true,
             inviteUrl:
-              'http://localhost:3002/auth/accept-invitation?token=new-token',
+              'http://localhost:3001/auth/accept-invitation?token=new-token',
           }),
       })
       .mockResolvedValueOnce({

@@ -8,7 +8,7 @@ export function formatCurrency(amount: number, currency = 'EUR') {
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency,
-  }).format(amount / 100); // Convertir de centavos
+  }).format(amount / 100);
 }
 
 export function formatDate(date: Date | string) {
