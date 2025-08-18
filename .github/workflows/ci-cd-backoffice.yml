@@ -45,6 +45,10 @@ jobs:
         working-directory: ./backoffice
         run: npm run type-check
 
+      - name: Setup Prisma
+        working-directory: ./backoffice
+        run: npx prisma generate --schema=prisma/schema.prisma
+
       - name: Run tests
         working-directory: ./backoffice
         run: npm run test
@@ -60,6 +64,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'backoffice/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ./backoffice
+        run: npm ci
+
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
@@ -69,6 +84,10 @@ jobs:
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_BACKOFFICE }}
+
+      - name: Setup Prisma
+        working-directory: ./backoffice
+        run: npx prisma generate --schema=prisma/schema.prisma
 
       - name: Build Project Artifacts
         working-directory: ./backoffice
@@ -101,6 +120,10 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'backoffice/package-lock.json'
 
+      - name: Install dependencies
+        working-directory: ./backoffice
+        run: npm ci
+
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
@@ -110,6 +133,10 @@ jobs:
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_BACKOFFICE }}
+
+      - name: Setup Prisma (Preview)
+        working-directory: ./backoffice
+        run: npx prisma generate --schema=prisma/schema.prisma
 
       - name: Build Preview Artifacts
         working-directory: ./backoffice

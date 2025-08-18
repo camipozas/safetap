@@ -25,8 +25,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Setup Prisma
+        run: npx prisma generate
+
       - name: Build application
-        run: npm run build
+        run: npm run build:vercel
         env:
           NEXTAUTH_SECRET: 'test-secret-key'
           NEXTAUTH_URL: 'http://localhost:3000'
