@@ -69,10 +69,6 @@ export async function POST(request: NextRequest) {
       return newUser;
     });
 
-    console.log(
-      `✅ Nuevo administrador creado: ${result.email} (${result.role})`
-    );
-
     return NextResponse.json({
       success: true,
       message: `Cuenta de administrador creada exitosamente para ${result.email}`,
@@ -83,7 +79,6 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error accepting invitation:', error);
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import crypto from 'crypto';
 
 import { NextResponse } from 'next/server';
@@ -15,14 +16,7 @@ export async function GET(req: Request) {
     const email = url.searchParams.get('email');
     const callbackUrl = url.searchParams.get('callbackUrl') || '/account';
 
-    console.log('🔄 [CUSTOM CALLBACK] Processing login with:', {
-      token: `${token?.slice(0, 8)}...`,
-      email,
-      callbackUrl,
-    });
-
     if (!token || !email) {
-      console.error('❌ Missing token or email');
       return NextResponse.redirect(
         new URL('/login?error=InvalidToken', req.url)
       );
@@ -33,11 +27,6 @@ export async function GET(req: Request) {
       .createHash('sha256')
       .update(`${token}${process.env.NEXTAUTH_SECRET}`)
       .digest('hex');
-
-    console.log(
-      '🔍 Looking for verification token with hash:',
-      `${hashedToken.slice(0, 16)}...`
-    );
 
     const verificationToken = await prisma.verificationToken.findFirst({
       where: {
@@ -50,7 +39,6 @@ export async function GET(req: Request) {
     });
 
     if (!verificationToken) {
-      console.error('❌ Invalid or expired token for email:', email);
       // List existing tokens for debugging
       const existingTokens = await prisma.verificationToken.findMany({
         where: { identifier: email },
@@ -70,8 +58,6 @@ export async function GET(req: Request) {
         new URL('/login?error=InvalidToken', req.url)
       );
     }
-
-    console.log('✅ Token verified successfully');
 
     // Find or create user by email
     let user = await prisma.user.findUnique({
@@ -116,13 +102,6 @@ export async function GET(req: Request) {
       },
     });
 
-    console.log(
-      '✅ Login successful for:',
-      email,
-      'Session token:',
-      `${sessionToken.slice(0, 8)}...`
-    );
-
     // Configure session cookie
     const response = NextResponse.redirect(new URL(callbackUrl, req.url));
 
@@ -143,7 +122,6 @@ export async function GET(req: Request) {
 
     return response;
   } catch (error: unknown) {
-    console.error('❌ Custom callback failed:', error);
     const errorParam = error instanceof Error ? error.message : 'CallbackError';
     return NextResponse.redirect(
       new URL(`/login?error=${encodeURIComponent(errorParam)}`, req.url)

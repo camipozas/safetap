@@ -36,15 +36,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Email required' }, { status: 400 });
     }
 
-    console.log('🔥 [CUSTOM LOGIN] Starting login process for:', email);
-
     // 1. Create or find user by email
     let user = await prisma.user.findUnique({
       where: { email },
     });
 
     if (!user) {
-      console.log('👤 Creating new user:', email);
       user = await prisma.user.create({
         data: {
           email,
@@ -75,11 +72,8 @@ export async function POST(req: Request) {
     const host = req.headers.get('host') || 'localhost:3000';
     const protocol = host.includes('localhost') ? 'http' : 'https';
     const baseUrl = `${protocol}://${host}`;
-    console.log('🌐 Base URL detected:', baseUrl);
 
     const loginUrl = `${baseUrl}/api/custom-callback?callbackUrl=${encodeURIComponent('/account')}&token=${token}&email=${encodeURIComponent(email)}`;
-
-    console.log('🔗 Login URL generated:', loginUrl);
 
     // 4. Validate required environment variables for email
     const {
@@ -126,8 +120,6 @@ export async function POST(req: Request) {
       text: emailMessages.text(loginUrl),
       html: emailMessages.html(loginUrl),
     });
-
-    console.log('✅ Custom login email sent successfully:', result.messageId);
 
     // Return the login URL for testing purposes in development
     const responseData: Record<string, unknown> = {

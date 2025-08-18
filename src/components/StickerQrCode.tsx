@@ -1,5 +1,5 @@
 'use client';
-import { QrCanvas } from './QrCanvas';
+import { QrCanvas } from '@/components/QrCanvas';
 
 interface StickerQrCodeProps {
   stickerId?: string;

@@ -8,9 +8,6 @@ export async function GET(_request: NextRequest) {
   try {
     // Bypass authentication in development
     if (process.env.NODE_ENV === 'development') {
-      console.log(
-        '🚀 Development mode: Bypassing authentication for admin users list'
-      );
       const adminUsers = await prisma.user.findMany({
         where: {
           role: {

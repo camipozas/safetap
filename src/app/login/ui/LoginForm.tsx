@@ -26,7 +26,6 @@ export default function LoginForm() {
         throw new Error(data.error || 'No se pudo enviar el enlace.');
       }
 
-      console.log('✅ Email sent successfully:', data.messageId);
       setSubmitted(true);
     } catch (err: unknown) {
       const errorMessage =

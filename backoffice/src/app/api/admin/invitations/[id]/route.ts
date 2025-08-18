@@ -13,6 +13,7 @@ export async function DELETE(
     const invitationId = params.id;
 
     if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
       console.log(
         '🚀 Development mode: Bypassing authentication for invitation deletion'
       );
@@ -49,7 +50,7 @@ export async function DELETE(
       where: { id: invitationId },
     });
 
-    console.log(`🗑️ Invitación revocada para ${invitation.email}`);
+    `🗑️ Invitación revocada para ${invitation.email}`;
 
     return NextResponse.json({
       success: true,

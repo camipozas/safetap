@@ -2,11 +2,10 @@
 
 import { useState } from 'react';
 
+import CheckoutFormNew from '@/app/buy/ui/CheckoutFormNew';
 import StickerCustomizerNew, {
   StickerCustomization,
 } from '@/components/StickerCustomizerNew';
-
-import CheckoutFormNew from './ui/CheckoutFormNew';
 
 export default function BuyPage() {
   const [customization, setCustomization] = useState<StickerCustomization>({
