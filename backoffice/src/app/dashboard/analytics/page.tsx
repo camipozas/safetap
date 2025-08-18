@@ -188,10 +188,10 @@ export default async function AnalyticsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
-                €
+                $
                 {data.revenue
                   .reduce((sum, item) => sum + item.value, 0)
-                  .toFixed(2)}
+                  .toLocaleString('es-CL')}
               </div>
               <p className="text-sm text-gray-600">Ingresos últimos 30 días</p>
             </div>
