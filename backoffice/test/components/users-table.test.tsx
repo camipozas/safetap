@@ -107,7 +107,7 @@ describe('UsersTable', () => {
   it('displays creation dates correctly', () => {
     render(<UsersTable users={mockUsers} />);
 
-    // Check that dates are displayed (they might be formatted differently in test environment)
+    // Check that dates are displayed (based on actual rendered output with timezone)
     expect(screen.getByText(/31 dic 2023/)).toBeInTheDocument();
     expect(screen.getByText(/1 ene 2024/)).toBeInTheDocument();
   });
