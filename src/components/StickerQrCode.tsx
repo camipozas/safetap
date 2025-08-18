@@ -56,13 +56,6 @@ export function StickerQrCode({
         backgroundColor="#ffffff"
         foregroundColor="#000000"
       />
-
-      {/* Quality indicator for high resolution QRs */}
-      {(highQuality || size <= 64) && (
-        <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1 py-0.5 rounded-full">
-          HD
-        </div>
-      )}
     </div>
   );
 }
