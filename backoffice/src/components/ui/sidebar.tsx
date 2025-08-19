@@ -2,6 +2,7 @@
 
 import {
   BarChart3,
+  BookOpen,
   FileText,
   LayoutDashboard,
   LogOut,
@@ -20,6 +21,7 @@ const navigation = [
   { name: 'Usuarios', href: '/dashboard/users', icon: Users },
   { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
   { name: 'Reportes', href: '/dashboard/reports', icon: FileText },
+  { name: 'Guía de Uso', href: '/dashboard/guide', icon: BookOpen },
   { name: 'Configuración', href: '/dashboard/settings', icon: Settings },
 ];
 
