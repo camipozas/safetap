@@ -1,22 +1,4 @@
-import { config } from 'dotenv';
-import * as fs from 'fs';
-import * as path from 'path';
-
-function loadEnvironmentVariables() {
-  const projectRoot = path.join(__dirname, '../../..');
-  const envPath = path.join(projectRoot, '.env');
-  const envLocalPath = path.join(projectRoot, '.env.local');
-
-  if (fs.existsSync(envPath)) {
-    config({ path: envPath });
-  }
-
-  if (fs.existsSync(envLocalPath)) {
-    config({ path: envLocalPath });
-  }
-}
-
-loadEnvironmentVariables();
+// Next.js automatically loads .env, .env.local, etc. from the project root
 
 export const environment = {
   database: {
