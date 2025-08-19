@@ -2,22 +2,9 @@
 
 const fs = require('fs');
 const path = require('path');
+const { config, validateEnvironment } = require('./config');
 
 console.log('🔧 Configurando variables de entorno...\n');
-
-// Configuraciones para diferentes entornos
-const envConfigs = {
-  production: {
-    NEXTAUTH_URL: 'https://www.backoffice.safetap.cl',
-    DATABASE_URL:
-      'prisma+postgres://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3RfaWQiOjEsInNlY3VyZV9rZXkiOiJza19TazA3bTA2RzJDSVd0M0dKNTR1TXUiLCJhcGlfa2V5IjoiMDFLMk1XSkYyVzNDREoxNkpCUkVQVDBTUVYiLCJ0ZW5hbnRfaWQiOiI2MDJhNzc0YzkxYzJmNzVlZjNlNGEyYWVhM2Y3YjZiMjI4MjhjYTk1YTVjMWYyNDZkNTJlYWJlZTAwMzEwZTVkIiwiaW50ZXJuYWxfc2VjcmV0IjoiNjM4ZmQzNjItOTNkNy00OWE4LWJiYTMtZTY0MDA1MjhmZTVjIn0.v6iohJLvZAWtLkS47riUcmi-if3rQ04wxnVcnCyrm6I',
-  },
-  test: {
-    NEXTAUTH_URL: 'http://localhost:3001',
-    DATABASE_URL:
-      'prisma+postgres://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3RfaWQiOjEsInNlY3VyZV9rZXkiOiJza18tT0M1WTZ6UXU0YlRBRm1ET3F5dVkiLCJhcGlfa2V5IjoiMDFLMlpCVDY1VktENlE3UjQ3VjE2MUc5RVkiLCJ0ZW5hbnRfaWQiOiI2NzkzMzhlZmVkY2I3YTc3NjU0YjFhMmFjNzQwNTEzODVmODM4OGQwNjI4YWMyZjY0ZTBkYTNhM2JiMWJiNWUwIiwiaW50ZXJuYWxfc2VjcmV0IjoiZWYxZWRjZGEtNTBjNi00OWQ1LTg3MzktYTc0MGM3ZmEwZDBkIn0.VhjBBuUTpathLuNN1dIDNflluO5_F1LVbrvq9uPl3c0',
-  },
-};
 
 // Función para actualizar archivo .env
 function updateEnvFile(filePath, updates) {
@@ -53,7 +40,7 @@ function updateEnvFile(filePath, updates) {
 // Obtener argumento de línea de comandos
 const environment = process.argv[2];
 
-if (!environment || !envConfigs[environment]) {
+if (!environment || !['production', 'test'].includes(environment)) {
   console.log('❌ Uso: node scripts/setup-env.js <environment>');
   console.log('   Entornos disponibles: production, test');
   console.log('');
@@ -70,23 +57,42 @@ if (!environment || !envConfigs[environment]) {
 console.log(`📋 Configurando entorno: ${environment}`);
 console.log('=====================================');
 
-const config = envConfigs[environment];
+// Validar variables de ambiente
+if (!validateEnvironment()) {
+  console.log('\n⚠️  Algunas variables de ambiente no están configuradas.');
+  console.log(
+    '   El script usará valores por defecto, pero es recomendable configurar las variables.'
+  );
+}
+
+const envConfig = {
+  NEXTAUTH_URL: config.nextauth[environment],
+  DATABASE_URL: config.databases[environment],
+};
+
 const projectRoot = path.join(__dirname, '..');
 
 if (environment === 'production') {
-  updateEnvFile(path.join(projectRoot, '.env'), config);
+  updateEnvFile(path.join(projectRoot, '.env'), envConfig);
 } else if (environment === 'test') {
-  updateEnvFile(path.join(projectRoot, '.env.local'), config);
+  updateEnvFile(path.join(projectRoot, '.env.local'), envConfig);
 }
 
 console.log('\n📊 Resumen:');
 console.log('==========');
 console.log(`✅ Entorno ${environment} configurado`);
-console.log(`✅ NEXTAUTH_URL: ${config.NEXTAUTH_URL}`);
-console.log(`✅ DATABASE_URL: ${config.DATABASE_URL.substring(0, 50)}...`);
+console.log(`✅ NEXTAUTH_URL: ${envConfig.NEXTAUTH_URL}`);
+console.log(`✅ DATABASE_URL: ${envConfig.DATABASE_URL.substring(0, 50)}...`);
 
 console.log('\n⚠️  IMPORTANTE:');
 console.log('==============');
 console.log('1. Reinicia el servidor después de los cambios');
 console.log('2. Ejecuta "npx prisma generate" para regenerar el cliente');
 console.log('3. Verifica la conexión con "node scripts/test-db-connection.js"');
+
+console.log('\n🔧 Variables de ambiente recomendadas:');
+console.log('====================================');
+console.log('PROD_DATABASE_URL="tu_url_de_produccion"');
+console.log('TEST_DATABASE_URL="tu_url_de_test"');
+console.log('SUPER_ADMIN_EMAIL="email@ejemplo.com"');
+console.log('USERS_TO_DELETE="email1@ejemplo.com,email2@ejemplo.com"');

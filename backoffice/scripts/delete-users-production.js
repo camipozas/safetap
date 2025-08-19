@@ -1,16 +1,73 @@
 #!/usr/bin/env node
 
 const { PrismaClient } = require('@prisma/client');
+const readline = require('readline');
+const { config } = require('./config');
 
 const prisma = new PrismaClient();
+
+function getEmailsFromArgs() {
+  // process.argv[0] = node, [1] = script, [2...] = emails
+  return process.argv.slice(2);
+}
+
+async function confirmAction(emails) {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    console.log('\n⚠️  ATENCIÓN: Los siguientes usuarios serán eliminados:');
+    emails.forEach((email) => console.log(`   - ${email}`));
+    console.log('\n🔒 Esta acción:');
+    console.log('   • Cambiará el rol del usuario a USER');
+    console.log('   • Eliminará todas las cuentas asociadas (Google OAuth)');
+    console.log('   • Eliminará todas las sesiones activas');
+    console.log('   • NO se puede deshacer automáticamente');
+
+    rl.question(
+      '\n¿Estás seguro de que deseas continuar? Escribe "CONFIRMAR" para proceder: ',
+      (answer) => {
+        rl.close();
+        resolve(answer.trim().toUpperCase() === 'CONFIRMAR');
+      }
+    );
+  });
+}
 
 async function deleteUsers() {
   console.log('🗑️  Eliminando usuarios en producción...\n');
 
-  const usersToDelete = [
-    'camila.pozas@banca.me',
-    'ramirezalvarezesteban@gmail.com',
-  ];
+  const usersToDelete = getEmailsFromArgs();
+
+  if (usersToDelete.length === 0) {
+    console.log(
+      '❌ Uso: node scripts/delete-users-production.js <email1> <email2> ...'
+    );
+    console.log('');
+    console.log('📝 Ejemplos:');
+    console.log(
+      '   node scripts/delete-users-production.js usuario@ejemplo.com'
+    );
+    console.log(
+      '   node scripts/delete-users-production.js usuario1@ejemplo.com usuario2@ejemplo.com'
+    );
+    console.log('');
+    console.log(
+      '💡 También puedes configurar la variable de entorno USERS_TO_DELETE:'
+    );
+    console.log(
+      '   USERS_TO_DELETE="usuario1@ejemplo.com,usuario2@ejemplo.com"'
+    );
+    process.exit(1);
+  }
+
+  const confirmed = await confirmAction(usersToDelete);
+  if (!confirmed) {
+    console.log('❌ Operación cancelada por el usuario.');
+    process.exit(0);
+  }
 
   try {
     for (const email of usersToDelete) {
@@ -71,7 +128,7 @@ async function deleteUsers() {
       // 3. Cambiar rol a USER
       const updatedUser = await prisma.user.update({
         where: { id: user.id },
-        data: { role: 'USER' },
+        data: { role: config.roles.USER },
         select: {
           id: true,
           email: true,

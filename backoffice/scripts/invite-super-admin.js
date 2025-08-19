@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const { PrismaClient } = require('@prisma/client');
+const { config } = require('./config');
 
 const prisma = new PrismaClient();
 
@@ -8,8 +9,16 @@ async function inviteSuperAdmin() {
   console.log('👑 Invitando como SUPER_ADMIN en producción...\n');
 
   try {
-    const email = 'cpozasg1103@gmail.com';
-    const role = 'SUPER_ADMIN';
+    // Get email from command-line argument or environment variable
+    const email = process.argv[2] || config.defaultEmails.superAdmin;
+    const role = config.roles.SUPER_ADMIN;
+
+    if (!email) {
+      console.error('❌ Debe proporcionar un email como argumento:');
+      console.error('   node scripts/invite-super-admin.js <email>');
+      console.error('   o establecer la variable de entorno SUPER_ADMIN_EMAIL');
+      process.exit(1);
+    }
 
     console.log(`📧 Email: ${email}`);
     console.log(`👑 Rol: ${role}`);
@@ -29,7 +38,7 @@ async function inviteSuperAdmin() {
         `✅ Usuario encontrado: ${existingUser.email} (Rol actual: ${existingUser.role})`
       );
 
-      if (existingUser.role === 'SUPER_ADMIN') {
+      if (existingUser.role === config.roles.SUPER_ADMIN) {
         console.log('⚠️  El usuario ya es SUPER_ADMIN');
         return;
       }
@@ -72,8 +81,7 @@ async function inviteSuperAdmin() {
     });
 
     // Generar URL de invitación
-    const baseUrl =
-      process.env.NEXTAUTH_URL || 'https://www.backoffice.safetap.cl';
+    const baseUrl = config.nextauth.production;
     const inviteUrl = `${baseUrl}/auth/accept-invitation?token=${token}`;
 
     console.log('\n🔗 URL de invitación:');
