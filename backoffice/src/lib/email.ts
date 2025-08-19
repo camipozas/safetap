@@ -1,5 +1,7 @@
 /* eslint-disable no-console */
-import nodemailer from 'nodemailer';
+import * as nodemailer from 'nodemailer';
+
+import { environment } from '@/environment/config';
 
 const invitationEmailMessages = {
   subject: 'Invitación para unirse al Panel de Administración - SafeTap',
@@ -83,7 +85,7 @@ export class EmailService {
     role: string
   ): Promise<string> {
     // In test environment, don't send real emails
-    if (process.env.NODE_ENV === 'test') {
+    if (environment.app.environment === 'test') {
       console.log('🚫 Test mode: Skipping real invitation email send');
       return `test-invitation-mock-${Date.now()}`;
     }
@@ -104,7 +106,7 @@ export class EmailService {
 
   async testConnection(): Promise<boolean> {
     // In test environment, always return true without real connection test
-    if (process.env.NODE_ENV === 'test') {
+    if (environment.app.environment === 'test') {
       console.log('🚫 Test mode: Skipping real email connection test');
       return true;
     }
@@ -122,10 +124,10 @@ export class EmailService {
 }
 
 export function createEmailService(): EmailService | null {
-  const host = process.env.EMAIL_SERVER_HOST;
-  const user = process.env.EMAIL_SERVER_USER;
-  const password = process.env.EMAIL_SERVER_PASSWORD;
-  const from = process.env.EMAIL_FROM;
+  const host = environment.email?.smtpHost;
+  const user = environment.email?.smtpUser;
+  const password = environment.email?.smtpPass;
+  const from = environment.email?.from;
 
   const rejectUnauthorized = process.env.EMAIL_REJECT_UNAUTHORIZED !== 'false';
 

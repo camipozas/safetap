@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { environment } from '@/environment/config';
 import { prisma } from '@/lib/prisma';
 
 export async function GET() {
@@ -12,11 +13,11 @@ export async function GET() {
       database: Array.isArray(rows) && rows.length > 0 ? 'connected' : 'error',
       responseTime: `${Date.now() - started}ms`,
       version: process.env.npm_package_version || '0.1.0',
-      environment: process.env.NODE_ENV || 'development',
+      environment: environment.app.environment,
     });
   } catch (error) {
     // Log error for debugging
-    if (process.env.NODE_ENV === 'development') {
+    if (environment.app.isDevelopment) {
       // eslint-disable-next-line no-console
       console.error('Health check failed:', error);
     }

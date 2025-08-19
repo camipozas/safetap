@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 
+import { environment } from '@/environment/config';
 import { prisma } from '@/lib/prisma';
 
 // ⚠️ SOLO PARA DESARROLLO - Las tablas ya fueron creadas
 export async function POST() {
-  if (process.env.NODE_ENV === 'production') {
+  if (environment.app.isProduction) {
     return NextResponse.json(
       { error: 'No disponible en producción' },
       { status: 403 }

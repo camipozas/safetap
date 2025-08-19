@@ -1,3 +1,4 @@
+import { environment } from '@/environment/config';
 import { authOptions } from '@/lib/auth';
 import { createEmailService } from '@/lib/email';
 import { prisma } from '@/lib/prisma';
@@ -9,8 +10,8 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET() {
   try {
     if (
-      process.env.NODE_ENV === 'development' ||
-      process.env.NODE_ENV === 'test'
+      environment.app.isDevelopment ||
+      environment.app.environment === 'test'
     ) {
       const invitations = await prisma.adminInvitation.findMany({
         where: {
@@ -81,12 +82,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (
-      process.env.NODE_ENV === 'development' ||
-      process.env.NODE_ENV === 'test'
+      environment.app.isDevelopment ||
+      environment.app.environment === 'test'
     ) {
       // eslint-disable-next-line no-console
       console.log(
-        `🚀 ${process.env.NODE_ENV} mode: Bypassing authentication for invitation creation`
+        `🚀 ${environment.app.environment} mode: Bypassing authentication for invitation creation`
       );
     } else {
       const session = await getServerSession(authOptions);
@@ -188,23 +189,11 @@ export async function POST(request: NextRequest) {
     });
     console.log('✅ Invitation created with ID:', invitation.id);
 
-    const baseUrl =
-      process.env.NEXTAUTH_URL ||
-      process.env.NEXTAUTH_BACKOFFICE_URL ||
-      process.env.NEXT_PUBLIC_BACKOFFICE_URL ||
-      'https://backoffice.safetap.cl';
+    const baseUrl = environment.nextauth.url;
 
     console.log('🔧 Environment info for invitation URL:');
-    console.log('- NODE_ENV:', process.env.NODE_ENV);
-    console.log('- NEXTAUTH_URL:', process.env.NEXTAUTH_URL);
-    console.log(
-      '- NEXTAUTH_BACKOFFICE_URL:',
-      process.env.NEXTAUTH_BACKOFFICE_URL
-    );
-    console.log(
-      '- NEXT_PUBLIC_BACKOFFICE_URL:',
-      process.env.NEXT_PUBLIC_BACKOFFICE_URL
-    );
+    console.log('- NODE_ENV:', environment.app.environment);
+    console.log('- NEXTAUTH_URL:', environment.nextauth.url);
     console.log('- Final baseUrl:', baseUrl);
 
     const inviteUrl = `${baseUrl}/auth/accept-invitation?token=${token}`;
@@ -246,8 +235,8 @@ export async function POST(request: NextRequest) {
     };
 
     if (
-      process.env.NODE_ENV === 'development' ||
-      process.env.NODE_ENV === 'test' ||
+      environment.app.isDevelopment ||
+      environment.app.environment === 'test' ||
       !emailSent
     ) {
       responseData.inviteUrl = inviteUrl;

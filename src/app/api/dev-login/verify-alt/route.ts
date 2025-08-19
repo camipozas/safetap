@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { environment } from '@/environment/config';
 import { prisma } from '@/lib/prisma';
 
 // Mark this route as dynamic to prevent static rendering
@@ -8,8 +9,8 @@ export const dynamic = 'force-dynamic';
 
 // ⚠️ SOLO PARA DESARROLLO - NO USAR EN PRODUCCIÓN
 export async function GET(req: Request) {
-  const isProduction = process.env.NODE_ENV === 'production';
-  const baseUrl = process.env.PUBLIC_BASE_URL || 'http://localhost:3000';
+  const isProduction = environment.app.isProduction;
+  const baseUrl = environment.app.url;
 
   if (isProduction) {
     return NextResponse.redirect(`${baseUrl}/login`);

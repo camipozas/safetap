@@ -1,22 +1,21 @@
+import { environment } from '@/environment/config';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
   const envVars = {
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET
+    NEXTAUTH_URL: environment.nextauth.url,
+    NEXTAUTH_SECRET: environment.auth.secret ? 'CONFIGURADO' : 'NO CONFIGURADO',
+    GOOGLE_CLIENT_ID: environment.auth.googleClientId
       ? 'CONFIGURADO'
       : 'NO CONFIGURADO',
-    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID
+    GOOGLE_CLIENT_SECRET: environment.auth.googleClientSecret
       ? 'CONFIGURADO'
       : 'NO CONFIGURADO',
-    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET
-      ? 'CONFIGURADO'
-      : 'NO CONFIGURADO',
-    NODE_ENV: process.env.NODE_ENV,
+    NODE_ENV: environment.app.environment,
   };
 
-  const expectedCallbackUrl = process.env.NEXTAUTH_URL
-    ? `${process.env.NEXTAUTH_URL}/api/auth/callback/google`
+  const expectedCallbackUrl = environment.nextauth.url
+    ? `${environment.nextauth.url}/api/auth/callback/google`
     : 'NEXTAUTH_URL NO CONFIGURADO';
 
   return NextResponse.json({
@@ -28,7 +27,7 @@ export async function GET() {
       'https://backoffice-camila-pozas-projects.vercel.app/api/auth/callback/google',
       'http://localhost:3001/api/auth/callback/google',
     ],
-    matches: process.env.NEXTAUTH_URL
+    matches: environment.nextauth.url
       ? expectedCallbackUrl ===
           'https://www.backoffice.safetap.cl/api/auth/callback/google' ||
         expectedCallbackUrl ===

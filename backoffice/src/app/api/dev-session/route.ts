@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { environment } from '@/environment/config';
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Only allow in development
-    if (process.env.NODE_ENV !== 'development') {
+    if (!environment.app.isDevelopment) {
       return NextResponse.json(
         { error: 'Dev login only available in development' },
         { status: 403 }

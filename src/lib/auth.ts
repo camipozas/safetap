@@ -2,14 +2,15 @@ import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { NextAuthOptions, getServerSession } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 
+import { environment } from '@/environment/config';
 import { prisma } from '@/lib/prisma';
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: environment.auth.googleClientId!,
+      clientSecret: environment.auth.googleClientSecret!,
       allowDangerousEmailAccountLinking: true,
     }),
   ],
@@ -106,7 +107,7 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'database',
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: environment.auth.secret,
 };
 
 export const auth = () => getServerSession(authOptions);

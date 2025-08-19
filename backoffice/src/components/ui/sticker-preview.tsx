@@ -1,6 +1,5 @@
 'use client';
 
-import { memo } from 'react';
 import { StickerQrCode } from './sticker-qr-code';
 
 interface StickerPreviewProps {
@@ -10,13 +9,8 @@ interface StickerPreviewProps {
     serial: string;
     nameOnSticker: string;
     flagCode: string;
-    colorPresetId?: string;
     stickerColor: string;
     textColor: string;
-    owner?: {
-      name: string | null;
-      country: string | null;
-    };
     profile?: {
       bloodType: string | null;
       contacts: {
@@ -27,7 +21,6 @@ interface StickerPreviewProps {
     } | null;
   };
   size?: number;
-  showRealQR?: boolean; // Whether to show real QR or preview placeholder
 }
 
 // Available flags
@@ -49,18 +42,13 @@ const FLAGS = {
   GB: '🇬🇧',
 } as const;
 
-const StickerPreview = memo(function StickerPreview({
+export default function StickerPreview({
   sticker,
   size = 200,
 }: StickerPreviewProps) {
-  // Always prioritize owner data from database for consistency
-  const country = sticker.owner?.country || sticker.flagCode || 'CL';
-  const flag = FLAGS[country as keyof typeof FLAGS] || '🏳️';
+  const flag = FLAGS[sticker.flagCode as keyof typeof FLAGS] || '🏳️';
 
-  // Always prioritize owner.name from database for consistency with table
-  const displayName = sticker.owner?.name || sticker.nameOnSticker || 'Usuario';
-
-  // Calculate dimensions based on size with mobile optimization
+  // Calculate dimensions based on size
   const width = size;
   const height = size;
 
@@ -68,7 +56,7 @@ const StickerPreview = memo(function StickerPreview({
     <div className="relative">
       {/* Sticker container */}
       <div
-        className="rounded-xl shadow-md border border-gray-200 p-2 sm:p-3 flex flex-col justify-between"
+        className="rounded-xl shadow-md border border-gray-200 p-3 flex flex-col justify-between"
         style={{
           backgroundColor: sticker.stickerColor,
           width: `${width}px`,
@@ -89,7 +77,7 @@ const StickerPreview = memo(function StickerPreview({
         </div>
 
         {/* Personal info */}
-        <div className="flex items-center justify-center gap-1 sm:gap-2 mb-2 sm:mb-3">
+        <div className="flex items-center justify-center gap-2 mb-3">
           <span style={{ fontSize: `${Math.max(size * 0.12, 16)}px` }}>
             {flag}
           </span>
@@ -98,10 +86,10 @@ const StickerPreview = memo(function StickerPreview({
               className="font-semibold leading-tight"
               style={{
                 color: sticker.textColor,
-                fontSize: `${Math.max(size * 0.09, 14)}px`,
+                fontSize: `${Math.max(size * 0.06, 10)}px`,
               }}
             >
-              {displayName}
+              {sticker.nameOnSticker || 'Sin nombre'}
             </p>
           </div>
         </div>
@@ -111,7 +99,7 @@ const StickerPreview = memo(function StickerPreview({
           <div className="flex-1">
             <StickerQrCode
               slug={sticker.slug}
-              size={Math.max(size * 0.4, 40)}
+              size={Math.max(size * 0.32, 32)}
               isPreview={false}
               className="mx-auto"
             />
@@ -134,19 +122,19 @@ const StickerPreview = memo(function StickerPreview({
               </svg>
             </div>
             <p
-              className="font-normal leading-tight"
+              className="font-medium leading-tight"
               style={{
                 color: sticker.textColor,
-                fontSize: `${Math.max(size * 0.035, 7)}px`,
+                fontSize: `${Math.max(size * 0.04, 8)}px`,
               }}
             >
               INFORMACIÓN
             </p>
             <p
-              className="font-normal leading-tight"
+              className="font-medium leading-tight"
               style={{
                 color: sticker.textColor,
-                fontSize: `${Math.max(size * 0.035, 7)}px`,
+                fontSize: `${Math.max(size * 0.04, 8)}px`,
               }}
             >
               DE EMERGENCIA
@@ -156,6 +144,4 @@ const StickerPreview = memo(function StickerPreview({
       </div>
     </div>
   );
-});
-
-export default StickerPreview;
+}

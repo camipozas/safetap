@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 
+import { environment } from '@/environment/config';
 import { prisma } from '@/lib/prisma';
 
 // ⚠️ JUST FOR DEVELOPMENT PURPOSES ⚠️
 export async function POST(req: Request) {
-  if (process.env.NODE_ENV === 'production') {
+  if (environment.app.isProduction) {
     return NextResponse.json(
       { error: 'No disponible en producción' },
       { status: 403 }
@@ -43,7 +44,7 @@ export async function POST(req: Request) {
     });
 
     // Generate login URL
-    const baseUrl = process.env.PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = environment.app.url;
     const loginUrl = `${baseUrl}/api/dev-login/verify-alt?sessionToken=${sessionToken}`;
 
     return NextResponse.json({

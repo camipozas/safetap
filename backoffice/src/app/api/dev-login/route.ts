@@ -1,3 +1,4 @@
+import { environment } from '@/environment/config';
 import { prisma } from '@/lib/prisma';
 import { hasPermission } from '@/types/shared';
 import { NextRequest, NextResponse } from 'next/server';
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     // In development, bypass authentication for dev login
-    if (process.env.NODE_ENV === 'development') {
+    if (environment.app.isDevelopment) {
       return NextResponse.json({
         success: true,
         message: 'Dev login successful',

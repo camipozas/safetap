@@ -2,6 +2,7 @@ import crypto from 'crypto';
 
 import { NextResponse } from 'next/server';
 
+import { environment } from '@/environment/config';
 import { prisma } from '@/lib/prisma';
 
 // Mark this route as dynamic to prevent static rendering
@@ -24,7 +25,7 @@ export async function GET(req: Request) {
     // Verify the token (should match the hash in the DB)
     const hashedToken = crypto
       .createHash('sha256')
-      .update(`${token}${process.env.NEXTAUTH_SECRET}`)
+      .update(`${token}${environment.auth.secret}`)
       .digest('hex');
 
     const verificationToken = await prisma.verificationToken.findFirst({
@@ -105,15 +106,14 @@ export async function GET(req: Request) {
     const response = NextResponse.redirect(new URL(callbackUrl, req.url));
 
     // Get the correct cookie name for NextAuth
-    const cookieName =
-      process.env.NODE_ENV === 'production'
-        ? '__Secure-next-auth.session-token'
-        : 'next-auth.session-token';
+    const cookieName = environment.app.isProduction
+      ? '__Secure-next-auth.session-token'
+      : 'next-auth.session-token';
 
     // Configure session cookie to be compatible with NextAuth
     response.cookies.set(cookieName, sessionToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: environment.app.isProduction,
       sameSite: 'lax',
       expires,
       path: '/',
