@@ -1,4 +1,3 @@
-// Script para generar datos de prueba para el backoffice
 import {
   AccessVia,
   PaymentStatus,
@@ -11,7 +10,6 @@ const prisma = new PrismaClient();
 async function seedTestData() {
   console.log('🌱 Generando datos de prueba...');
 
-  // Crear usuarios de prueba
   const users = await Promise.all([
     prisma.user.upsert({
       where: { email: 'admin@safetap.cl' },
@@ -57,14 +55,14 @@ async function seedTestData() {
 
   console.log(`✅ Creados ${users.length} usuarios`);
 
-  // Crear stickers de prueba
+  // Create test stickers
   const stickers = [];
   for (let i = 1; i <= 10; i++) {
     const sticker = await prisma.sticker.create({
       data: {
         slug: `test-sticker-${i}`,
         serial: `ST${String(i).padStart(6, '0')}`,
-        ownerId: users[Math.floor(Math.random() * (users.length - 1)) + 1].id, // Excluir admin
+        ownerId: users[Math.floor(Math.random() * (users.length - 1)) + 1].id, // Exclude admin
         nameOnSticker: `Test User ${i}`,
         flagCode: ['CL', 'AR', 'PE', 'MX', 'CO'][Math.floor(Math.random() * 5)],
         status: (
@@ -83,10 +81,10 @@ async function seedTestData() {
 
   console.log(`✅ Creados ${stickers.length} stickers`);
 
-  // Crear pagos de prueba
+  // Create test payments
   const payments = [];
   for (let i = 1; i <= 15; i++) {
-    const userId = users[Math.floor(Math.random() * (users.length - 1)) + 1].id; // Excluir admin
+    const userId = users[Math.floor(Math.random() * (users.length - 1)) + 1].id; // Exclude admin
     const stickerId =
       Math.random() > 0.3
         ? stickers[Math.floor(Math.random() * stickers.length)].id
@@ -96,7 +94,7 @@ async function seedTestData() {
       data: {
         userId,
         stickerId,
-        amountCents: [2990, 3990, 4990][Math.floor(Math.random() * 3)], // 29.90, 39.90, 49.90 EUR
+        amountCents: [2990, 3990, 4990][Math.floor(Math.random() * 3)], // Random amounts
         currency: 'EUR',
         method: ['BANK_TRANSFER', 'STRIPE', 'PAYPAL'][
           Math.floor(Math.random() * 3)
@@ -108,7 +106,7 @@ async function seedTestData() {
         receivedAt: Math.random() > 0.5 ? new Date() : null,
         createdAt: new Date(
           Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000
-        ), // Últimos 30 días
+        ), // Last 30 days
       },
     });
     payments.push(payment);
@@ -116,11 +114,11 @@ async function seedTestData() {
 
   console.log(`✅ Creados ${payments.length} pagos`);
 
-  // Crear perfiles de emergencia de prueba
-  for (let i = 0; i < Math.min(5, users.length - 1, stickers.length); i++) {
+  // Create emergency profiles and access logs
+  for (let i = 0; i < 5; i++) {
     const profile = await prisma.emergencyProfile.create({
       data: {
-        userId: users[i + 1].id, // Excluir admin (índice 0)
+        userId: users[i + 1].id, // Skip admin
         stickerId: stickers[i].id,
         bloodType: ['A+', 'B+', 'AB+', 'O+', 'A-', 'B-', 'AB-', 'O-'][
           Math.floor(Math.random() * 8)
@@ -134,7 +132,7 @@ async function seedTestData() {
       },
     });
 
-    // Crear contactos de emergencia
+    // Create emergency contacts
     await prisma.emergencyContact.createMany({
       data: [
         {
@@ -156,7 +154,7 @@ async function seedTestData() {
       ],
     });
 
-    // Crear logs de acceso
+    // Create access logs
     for (let j = 0; j < Math.floor(Math.random() * 10); j++) {
       await prisma.profileAccessLog.create({
         data: {
@@ -169,7 +167,7 @@ async function seedTestData() {
           country: 'CL',
           createdAt: new Date(
             Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000
-          ), // Última semana
+          ), // Last 7 days
         },
       });
     }
