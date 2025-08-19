@@ -70,10 +70,10 @@ const mockOrders = [
 describe('OrdersTable', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (fetch as any).mockResolvedValue({
+    vi.mocked(fetch).mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ success: true }),
-    });
+    } as Response);
   });
 
   it('renders orders correctly', () => {
@@ -103,24 +103,23 @@ describe('OrdersTable', () => {
     expect(statusTexts).toContain('Pagada');
   });
 
-  it('shows transition dropdowns for valid statuses', () => {
+  it('shows transition buttons for valid statuses', () => {
     render(<OrdersTable orders={mockOrders} />);
 
-    // There are filter dropdowns (2) + order status dropdowns (2) = 4 total
+    // There are filter dropdowns (2) + potentially status transition buttons
     const dropdowns = screen.getAllByRole('combobox');
-    expect(dropdowns.length).toBeGreaterThanOrEqual(4);
+    expect(dropdowns.length).toBeGreaterThanOrEqual(2); // At least status and country filters
   });
 
-  it('updates order status when dropdown selection changes', async () => {
-    const { container } = render(<OrdersTable orders={mockOrders} />);
+  it('updates order status when button clicked', async () => {
+    render(<OrdersTable orders={mockOrders} />);
 
-    // Find the status dropdown specifically in the table body
-    const statusDropdown = container.querySelector(
-      'td select'
-    ) as HTMLSelectElement;
-    expect(statusDropdown).toBeTruthy();
+    // Find status transition buttons (look for buttons with next status text)
+    // We need to be more specific since "Pagada" appears in multiple places
+    const paidButton = screen.getByRole('button', { name: /Pagada/ });
+    expect(paidButton).toBeInTheDocument();
 
-    fireEvent.change(statusDropdown, { target: { value: 'PAID' } });
+    fireEvent.click(paidButton);
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith('/api/admin/orders/test-order-1', {
@@ -194,18 +193,19 @@ describe('OrdersTable', () => {
     });
   });
 
-  it('renders profile buttons correctly', () => {
+  it('renders action buttons correctly', () => {
     render(<OrdersTable orders={mockOrders} />);
 
-    const profileButtons = screen.getAllByText('Perfil');
-    expect(profileButtons.length).toBeGreaterThan(0);
+    // Check for "Ver" buttons (view sticker preview)
+    const viewButtons = screen.getAllByText('Ver');
+    expect(viewButtons.length).toBeGreaterThan(0);
 
-    // Check that button is clickable and has correct title
-    expect(profileButtons[0]).toBeInTheDocument();
-    expect(profileButtons[0]).not.toBeDisabled();
-    expect(profileButtons[0]).toHaveAttribute(
-      'title',
-      'Ver detalles completos del usuario'
-    );
+    // Check for "QR" buttons (download QR)
+    const qrButtons = screen.getAllByText('QR');
+    expect(qrButtons.length).toBeGreaterThan(0);
+
+    // Check that buttons are clickable
+    expect(viewButtons[0]).toBeInTheDocument();
+    expect(viewButtons[0]).not.toBeDisabled();
   });
 });

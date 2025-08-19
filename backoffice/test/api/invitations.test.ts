@@ -10,11 +10,13 @@ vi.mock('@/lib/prisma', () => ({
       findUnique: vi.fn(),
       findFirst: vi.fn(),
       delete: vi.fn(),
+      deleteMany: vi.fn(),
       update: vi.fn(),
     },
     user: {
       findUnique: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
     },
     $transaction: vi.fn(),
   },
@@ -130,6 +132,7 @@ describe('Invitations API', () => {
       };
 
       mockPrisma.user.findUnique.mockResolvedValue(null); // User doesn't exist
+      mockPrisma.adminInvitation.deleteMany.mockResolvedValue({ count: 0 }); // No expired invitations to clean
       mockPrisma.adminInvitation.findFirst.mockResolvedValue(null); // No existing invitation
       mockPrisma.adminInvitation.create.mockResolvedValue(mockInvitation);
 
@@ -226,6 +229,7 @@ describe('Invitations API', () => {
         usedAt: null,
       };
 
+      mockPrisma.adminInvitation.deleteMany.mockResolvedValue({ count: 0 });
       mockPrisma.adminInvitation.findFirst.mockResolvedValue(null);
       mockPrisma.adminInvitation.create.mockResolvedValue(mockInvitation);
 
@@ -265,6 +269,7 @@ describe('Invitations API', () => {
         usedAt: null,
       };
 
+      mockPrisma.adminInvitation.deleteMany.mockResolvedValue({ count: 0 });
       mockPrisma.adminInvitation.findFirst.mockResolvedValue(null);
       mockPrisma.adminInvitation.create.mockResolvedValue(mockInvitation);
 
@@ -313,6 +318,7 @@ describe('Invitations API', () => {
 
     it('rejects duplicate invitation', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.adminInvitation.deleteMany.mockResolvedValue({ count: 0 });
       mockPrisma.adminInvitation.findFirst.mockResolvedValue({
         id: 'existing-invite',
         email: 'test@example.com',
@@ -351,6 +357,7 @@ describe('Invitations API', () => {
       };
 
       mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.adminInvitation.deleteMany.mockResolvedValue({ count: 0 });
       mockPrisma.adminInvitation.findFirst.mockResolvedValue(null);
       mockPrisma.adminInvitation.create.mockResolvedValue(mockInvitation);
 
@@ -394,6 +401,7 @@ describe('Invitations API', () => {
       };
 
       mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.adminInvitation.deleteMany.mockResolvedValue({ count: 0 });
       mockPrisma.adminInvitation.findFirst.mockResolvedValue(null);
       mockPrisma.adminInvitation.create.mockResolvedValue(mockInvitation);
 
