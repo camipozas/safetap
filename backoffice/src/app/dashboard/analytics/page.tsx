@@ -142,7 +142,7 @@ export default async function AnalyticsPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Ingresos (Últimos 30 días)</CardTitle>
@@ -185,27 +185,31 @@ export default async function AnalyticsPage() {
           <CardTitle>Resumen de Analytics</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+            <div className="bg-blue-50 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-blue-600">
                 $
                 {data.revenue
                   .reduce((sum, item) => sum + item.value, 0)
                   .toLocaleString('es-CL')}
               </div>
-              <p className="text-sm text-gray-600">Ingresos últimos 30 días</p>
+              <p className="text-sm text-gray-600 mt-1">
+                Ingresos últimos 30 días
+              </p>
             </div>
-            <div className="text-center">
+            <div className="bg-green-50 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-green-600">
                 {data.orders.reduce((sum, item) => sum + item.value, 0)}
               </div>
-              <p className="text-sm text-gray-600">Órdenes últimos 30 días</p>
+              <p className="text-sm text-gray-600 mt-1">
+                Órdenes últimos 30 días
+              </p>
             </div>
-            <div className="text-center">
+            <div className="bg-purple-50 rounded-lg p-4 text-center sm:col-span-2 lg:col-span-1">
               <div className="text-2xl font-bold text-purple-600">
                 {data.users.reduce((sum, item) => sum + item.value, 0)}
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 mt-1">
                 Nuevos usuarios últimos 30 días
               </p>
             </div>

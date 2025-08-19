@@ -57,15 +57,17 @@ describe('Orders Workflow Integration', () => {
   it('allows transitioning from ORDERED to PAID', () => {
     render(<OrdersTable orders={[mockOrder]} />);
 
-    // Verify order is rendered
-    expect(screen.getByText('workflow@example.com')).toBeInTheDocument();
+    // Verify order is rendered - use getAllByText since email appears in both desktop and mobile
+    const emailElements = screen.getAllByText('workflow@example.com');
+    expect(emailElements.length).toBeGreaterThanOrEqual(1);
 
     // Find the status transition button (should show next status "Pagada")
-    const paidButton = screen.getByRole('button', { name: /Pagada/ });
-    expect(paidButton).toBeInTheDocument();
+    // Use getAllByRole since buttons appear in both desktop and mobile views
+    const paidButtons = screen.getAllByRole('button', { name: /Pagada/ });
+    expect(paidButtons.length).toBeGreaterThanOrEqual(1);
 
-    // Check that button is clickable
-    expect(paidButton).not.toBeDisabled();
+    // Check that first button is clickable
+    expect(paidButtons[0]).not.toBeDisabled();
   });
 
   it('allows marking order as LOST from any status', () => {
@@ -74,8 +76,9 @@ describe('Orders Workflow Integration', () => {
 
     // For LOST status, orders should show the next transition button
     // Since ORDERED -> PAID, we should see a "Pagada" button
-    const nextButton = screen.getByRole('button', { name: /Pagada/ });
-    expect(nextButton).toBeInTheDocument();
+    // Use getAllByRole since buttons appear in both desktop and mobile views
+    const nextButtons = screen.getAllByRole('button', { name: /Pagada/ });
+    expect(nextButtons.length).toBeGreaterThanOrEqual(1);
   });
 
   it('prevents invalid transitions', () => {
@@ -83,7 +86,9 @@ describe('Orders Workflow Integration', () => {
     render(<OrdersTable orders={[orderShipped]} />);
 
     // Verify order is rendered by checking unique email
-    expect(screen.getByText('workflow@example.com')).toBeInTheDocument();
+    // Use getAllByText since email appears in both desktop and mobile views
+    const emailElements = screen.getAllByText('workflow@example.com');
+    expect(emailElements.length).toBeGreaterThanOrEqual(1);
 
     // Verify dropdown exists for status transitions (including filter dropdowns)
     const dropdowns = screen.getAllByRole('combobox');
@@ -104,10 +109,11 @@ describe('Orders Workflow Integration', () => {
     render(<OrdersTable orders={[mockOrder]} />);
 
     // Find the status transition button and click it
-    const nextButton = screen.getByRole('button', { name: /Pagada/ });
-    expect(nextButton).toBeInTheDocument();
+    // Use getAllByRole since buttons appear in both desktop and mobile views
+    const nextButtons = screen.getAllByRole('button', { name: /Pagada/ });
+    expect(nextButtons.length).toBeGreaterThanOrEqual(1);
 
-    fireEvent.click(nextButton);
+    fireEvent.click(nextButtons[0]);
 
     await waitFor(
       () => {

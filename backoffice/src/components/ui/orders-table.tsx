@@ -382,17 +382,18 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
   return (
     <div className="space-y-4">
       {/* Filters and Bulk Actions */}
-      <div className="flex flex-wrap gap-4 items-center justify-between bg-white p-4 rounded-lg border">
-        <div className="flex flex-wrap gap-4 items-center">
+      <div className="bg-white p-4 rounded-lg border space-y-4">
+        {/* Filters Row */}
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
           {/* Status Filter */}
-          <div>
+          <div className="w-full sm:w-auto">
             <label className="block text-sm font-medium mb-1">Estado</label>
             <select
               value={statusFilter}
               onChange={(e) =>
                 setStatusFilter(e.target.value as Order['status'] | 'ALL')
               }
-              className="border rounded px-3 py-1 text-sm"
+              className="w-full sm:w-auto border rounded px-3 py-1 text-sm"
             >
               <option value="ALL">Todos</option>
               <option value="ORDERED">Creada</option>
@@ -405,12 +406,12 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
           </div>
 
           {/* Country Filter */}
-          <div>
+          <div className="w-full sm:w-auto">
             <label className="block text-sm font-medium mb-1">País</label>
             <select
               value={countryFilter}
               onChange={(e) => setCountryFilter(e.target.value)}
-              className="border rounded px-3 py-1 text-sm"
+              className="w-full sm:w-auto border rounded px-3 py-1 text-sm"
             >
               <option value="ALL">Todos</option>
               {countries.map((country) => (
@@ -422,39 +423,41 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
           </div>
 
           {/* Results count */}
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600 sm:ml-auto">
             {filteredOrders.length} de {orders.length} órdenes
           </div>
         </div>
 
         {/* Bulk Actions */}
         {selectedOrders.size > 0 && (
-          <div className="flex gap-2 items-center">
+          <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center pt-2 border-t">
             <span className="text-sm font-medium">
               {selectedOrders.size} seleccionadas
             </span>
-            <Button
-              onClick={bulkUpdateStatus}
-              disabled={selectedOrders.size === 0}
-              className="text-sm"
-            >
-              Avanzar Estado
-            </Button>
-            <Button
-              onClick={downloadSelectedStickers}
-              disabled={selectedOrders.size === 0}
-              variant="outline"
-              className="text-sm"
-            >
-              <Download className="w-4 h-4 mr-1" />
-              Descargar
-            </Button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button
+                onClick={bulkUpdateStatus}
+                disabled={selectedOrders.size === 0}
+                className="text-sm flex-1 sm:flex-none"
+              >
+                Avanzar Estado
+              </Button>
+              <Button
+                onClick={downloadSelectedStickers}
+                disabled={selectedOrders.size === 0}
+                variant="outline"
+                className="text-sm flex-1 sm:flex-none"
+              >
+                <Download className="w-4 h-4 mr-1" />
+                Descargar
+              </Button>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Orders Table */}
-      <div className="bg-white rounded-lg border overflow-hidden">
+      {/* Orders Table - Desktop */}
+      <div className="hidden lg:block bg-white rounded-lg border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
@@ -628,6 +631,172 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Orders Cards - Mobile */}
+      <div className="lg:hidden space-y-3">
+        {/* Mobile select all */}
+        {filteredOrders.length > 0 && (
+          <div className="bg-white rounded-lg border p-3">
+            <label className="flex items-center space-x-2 text-sm">
+              <input
+                type="checkbox"
+                checked={
+                  selectedOrders.size === filteredOrders.length &&
+                  filteredOrders.length > 0
+                }
+                onChange={toggleSelectAll}
+                className="rounded border-gray-300"
+              />
+              <span>Seleccionar todas las órdenes</span>
+            </label>
+          </div>
+        )}
+
+        {filteredOrders.map((order) => {
+          const nextStatus = getNextStatus(order.status);
+          const totalPaid = order.payments.reduce(
+            (sum, p) => sum + p.amountCents,
+            0
+          );
+
+          return (
+            <div
+              key={order.id}
+              className="bg-white rounded-lg border p-4 space-y-3"
+            >
+              {/* Header with checkbox and status */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedOrders.has(order.id)}
+                    onChange={() => toggleOrderSelection(order.id)}
+                    className="rounded border-gray-300 mt-1"
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">
+                      {order.owner.name || 'Sin nombre'}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {order.owner.email}
+                    </div>
+                  </div>
+                </div>
+                <span
+                  className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(order.status)}`}
+                >
+                  {getStatusLabel(order.status)}
+                </span>
+              </div>
+
+              {/* Sticker and main info */}
+              <div className="flex space-x-4">
+                <div className="flex-shrink-0">
+                  <StickerPreview sticker={order} size={80} />
+                </div>
+                <div className="flex-1 space-y-2 min-w-0">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-1 text-xs">
+                    <div>
+                      <span className="text-gray-500">País:</span>
+                      <div>{order.owner.country || 'Sin país'}</div>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Grupo Sang.:</span>
+                      <div>
+                        {order.profile?.bloodType ? (
+                          <span className="text-red-600 font-medium">
+                            🩸 {order.profile.bloodType}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Pago:</span>
+                      <div>
+                        {totalPaid > 0 ? (
+                          <span className="text-green-600 font-medium">
+                            {formatCurrency(
+                              totalPaid,
+                              order.payments[0]?.currency || 'EUR'
+                            )}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">Sin pago</span>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Fecha:</span>
+                      <div>{formatDateTime(order.createdAt)}</div>
+                    </div>
+                  </div>
+
+                  {/* Contact info */}
+                  {order.profile?.contacts?.[0] && (
+                    <div className="text-xs">
+                      <span className="text-gray-500">Contacto:</span>
+                      <div>{order.profile.contacts[0].name}</div>
+                      <div className="text-gray-500">
+                        {order.profile.contacts[0].phone}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="space-y-2 pt-3 border-t">
+                {nextStatus && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => updateOrderStatus(order.id, nextStatus)}
+                    disabled={loadingStates[order.id]}
+                    className="text-xs flex items-center justify-center space-x-1 w-full"
+                  >
+                    <ChevronRight className="w-3 h-3" />
+                    <span>Avanzar a: {getStatusLabel(nextStatus)}</span>
+                  </Button>
+                )}
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => viewStickerPreview(order)}
+                    className="text-xs flex items-center justify-center"
+                  >
+                    <Eye className="w-3 h-3 mr-1" />
+                    Ver
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const previewUrl = `/s/${order.slug}`;
+                      window.open(previewUrl, '_blank');
+                    }}
+                    className="text-xs flex items-center justify-center"
+                    title="Ver perfil público"
+                  >
+                    🔗 Perfil
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => downloadQR(order)}
+                    className="text-xs flex items-center justify-center"
+                  >
+                    <Download className="w-3 h-3 mr-1" />
+                    QR
+                  </Button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {orders.length === 0 && (

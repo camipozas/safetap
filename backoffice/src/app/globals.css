@@ -25,6 +25,37 @@
   --radius: 0.5rem;
 }
 
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .text-3xl {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+  }
+
+  .text-2xl {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  /* Ensure cards have proper spacing on mobile */
+  .card {
+    margin-bottom: 0.5rem;
+  }
+
+  /* Better touch targets for mobile */
+  button,
+  select,
+  input {
+    min-height: 44px;
+  }
+}
+
+/* Responsive table improvements */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .dark {
   --background: 222.2 84% 4.9%;
   --foreground: 210 40% 98%;
@@ -54,6 +85,41 @@
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
+}
+
+/* Responsive typography improvements */
+@media (max-width: 640px) {
+  h1 {
+    font-size: 1.25rem; /* text-xl */
+    line-height: 1.75rem;
+  }
+
+  h2 {
+    font-size: 1.125rem; /* text-lg */
+    line-height: 1.75rem;
+  }
+
+  h3 {
+    font-size: 1rem; /* text-base */
+    line-height: 1.5rem;
+  }
+
+  /* Prevent horizontal scroll */
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Ensure cards don't overflow */
+  .card {
+    min-width: 0;
+  }
+
+  /* Better mobile padding */
+  .mobile-padding {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 }
 
 /* Custom scrollbar */

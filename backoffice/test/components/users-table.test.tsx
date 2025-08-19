@@ -59,38 +59,50 @@ describe('UsersTable', () => {
   it('renders users correctly', () => {
     render(<UsersTable users={mockUsers} />);
 
-    expect(screen.getByText('John Doe')).toBeInTheDocument();
-    expect(screen.getByText('john@example.com')).toBeInTheDocument();
-    expect(screen.getByText('Jane Smith')).toBeInTheDocument();
-    expect(screen.getByText('jane@example.com')).toBeInTheDocument();
+    expect(screen.getAllByText('John Doe')).toHaveLength(2); // Desktop + mobile
+    // Use getAllByText since emails appear in both desktop and mobile views
+    const johnEmails = screen.getAllByText('john@example.com');
+    expect(johnEmails.length).toBeGreaterThanOrEqual(1);
+
+    const janeNames = screen.getAllByText('Jane Smith');
+    expect(janeNames.length).toBeGreaterThanOrEqual(1);
+
+    const janeEmails = screen.getAllByText('jane@example.com');
+    expect(janeEmails.length).toBeGreaterThanOrEqual(1);
   });
 
   it('displays user roles correctly', () => {
     render(<UsersTable users={mockUsers} />);
 
-    expect(screen.getByText('USER')).toBeInTheDocument();
-    expect(screen.getByText('ADMIN')).toBeInTheDocument();
+    expect(screen.getAllByText('USER')).toHaveLength(2); // Desktop + mobile
+    // Use getAllByText since roles appear in both desktop and mobile views
+    const adminRoles = screen.getAllByText('ADMIN');
+    expect(adminRoles.length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows sticker counts', () => {
     render(<UsersTable users={mockUsers} />);
 
-    expect(screen.getByText('2')).toBeInTheDocument();
+    expect(screen.getAllByText('2')).toHaveLength(2); // Desktop + mobile
     expect(screen.getAllByText('0').length).toBeGreaterThan(0);
   });
 
   it('displays countries correctly', () => {
     render(<UsersTable users={mockUsers} />);
 
-    expect(screen.getByText('US')).toBeInTheDocument();
-    expect(screen.getByText('GB')).toBeInTheDocument();
+    expect(screen.getAllByText('US')).toHaveLength(2); // Desktop + mobile
+    // Use getAllByText since countries appear in both desktop and mobile views
+    const gbCountries = screen.getAllByText('GB');
+    expect(gbCountries.length).toBeGreaterThanOrEqual(1);
   });
 
   it('displays blood types correctly', () => {
     render(<UsersTable users={mockUsers} />);
 
-    expect(screen.getByText('O+')).toBeInTheDocument();
-    expect(screen.getByText('No especificado')).toBeInTheDocument();
+    expect(screen.getAllByText('O+')).toHaveLength(2); // Desktop + mobile
+    // Use getAllByText since blood types appear in both desktop and mobile views
+    const noSpecified = screen.getAllByText('No especificado');
+    expect(noSpecified.length).toBeGreaterThanOrEqual(1);
   });
 
   it('displays action buttons correctly', () => {
@@ -114,7 +126,11 @@ describe('UsersTable', () => {
     expect(dateTexts.length).toBeGreaterThanOrEqual(2);
 
     // Check for specific dates that should be consistent across environments
-    expect(screen.getByText(/15 dic 2023/)).toBeInTheDocument();
-    expect(screen.getByText(/20 mar 2024/)).toBeInTheDocument();
+    // Use getAllByText since dates appear in both desktop and mobile views
+    const decemberDates = screen.getAllByText(/15 dic 2023/);
+    expect(decemberDates.length).toBeGreaterThanOrEqual(1);
+
+    const marchDates = screen.getAllByText(/20 mar 2024/);
+    expect(marchDates.length).toBeGreaterThanOrEqual(1);
   });
 });
