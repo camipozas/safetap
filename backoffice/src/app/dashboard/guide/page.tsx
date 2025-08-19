@@ -120,7 +120,7 @@ export default function GuidePage() {
               <li>Su información médica (diabetes tipo 2)</li>
               <li>Medicamentos que toma (metformina)</li>
               <li>Alergias (penicilina)</li>
-              <li>Contacto de emergencia (esposo - Juan: +34 600 123 456)</li>
+              <li>Contacto de emergencia (esposo - Juan: +56 9 6001 2345)</li>
             </ul>
           </div>
 
