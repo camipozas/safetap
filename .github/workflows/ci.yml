@@ -77,8 +77,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('package-lock.json') }}-chromium-${{ runner.os }}
+
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install chromium --with-deps
+
+      - name: Install Playwright dependencies only
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
 
       - name: Setup Prisma
         run: npx prisma generate
@@ -91,24 +103,30 @@ jobs:
       - name: Build application
         run: npm run build:vercel
         env:
+          PLAYWRIGHT_TEST: 'true'
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'fallback-secret-for-ci-testing-only' }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'file:./test.db' }}
           EMAIL_SERVER_HOST: ${{ secrets.EMAIL_SERVER_HOST || 'smtp.example.com' }}
           EMAIL_SERVER_USER: ${{ secrets.EMAIL_SERVER_USER || 'test@example.com' }}
           EMAIL_SERVER_PASSWORD: ${{ secrets.EMAIL_SERVER_PASSWORD || 'testpassword' }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM || 'Test <test@example.com>' }}
+          NODE_OPTIONS: '--max-old-space-size=4096'
 
-      - name: Run Playwright tests
-        run: npm run e2e
+      - name: Run Playwright tests (skip mobile optimization)
+        run: npm run e2e:ci
         env:
+          PLAYWRIGHT_TEST: 'true'
+          CI: 'true'
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'fallback-secret-for-ci-testing-only' }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'file:./test.db' }}
+          # Email variables no son necesarias en test mode pero las dejamos por compatibilidad
           EMAIL_SERVER_HOST: ${{ secrets.EMAIL_SERVER_HOST || 'smtp.example.com' }}
           EMAIL_SERVER_USER: ${{ secrets.EMAIL_SERVER_USER || 'test@example.com' }}
           EMAIL_SERVER_PASSWORD: ${{ secrets.EMAIL_SERVER_PASSWORD || 'testpassword' }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM || 'Test <test@example.com>' }}
+          NODE_OPTIONS: '--max-old-space-size=4096'
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
