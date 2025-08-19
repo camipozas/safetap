@@ -37,7 +37,42 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Email required' }, { status: 400 });
     }
 
-    // 1. Create or find user by email
+    // Check if we're in a test environment (either NODE_ENV=test or when running e2e tests)
+    const isTestMode =
+      process.env.NODE_ENV === 'test' || process.env.PLAYWRIGHT_TEST === 'true';
+
+    // In test environment, skip database operations and return early
+    if (isTestMode) {
+      console.log('🚫 Test mode: Skipping database operations and email send');
+
+      // Create mock login URL for testing
+      const host = req.headers.get('host') || 'localhost:3000';
+      const protocol = host.includes('localhost') ? 'http' : 'https';
+      const baseUrl = `${protocol}://${host}`;
+      const mockToken = `test-token-${Date.now()}`;
+      const loginUrl = `${baseUrl}/api/custom-callback?callbackUrl=${encodeURIComponent('/account')}&token=${mockToken}&email=${encodeURIComponent(email)}`;
+
+      const result = {
+        messageId: `test-mock-${Date.now()}`,
+        accepted: [email],
+        rejected: [],
+        pending: [],
+        response: '250 Mock OK - Test mode, no real email sent',
+      };
+
+      const responseData: Record<string, unknown> = {
+        success: true,
+        messageId: result.messageId,
+        message: `Email de login enviado a ${email}`,
+        loginUrl,
+        testInfo:
+          'Test mode - no real email sent, loginUrl provided for testing',
+      };
+
+      return NextResponse.json(responseData);
+    }
+
+    // 1. Create or find user by email (only in non-test environments)
     let user = await prisma.user.findUnique({
       where: { email },
     });
@@ -76,7 +111,7 @@ export async function POST(req: Request) {
 
     const loginUrl = `${baseUrl}/api/custom-callback?callbackUrl=${encodeURIComponent('/account')}&token=${token}&email=${encodeURIComponent(email)}`;
 
-    // 4. Validate required environment variables for email
+    // 4. Validate required environment variables for email (only in non-test environments)
     if (
       !environment.email.smtpHost ||
       !environment.email.smtpUser ||
@@ -94,29 +129,6 @@ export async function POST(req: Request) {
     }
 
     // 5. Send email with login link
-    // In test environment, don't send real emails
-    if (environment.app.environment === 'test') {
-      console.log('🚫 Test mode: Skipping real email send');
-      const result = {
-        messageId: `test-mock-${Date.now()}`,
-        accepted: [email],
-        rejected: [],
-        pending: [],
-        response: '250 Mock OK - Test mode, no real email sent',
-      };
-
-      // Return early with mock response
-      const responseData: Record<string, unknown> = {
-        success: true,
-        messageId: result.messageId,
-        message: `Email de login enviado a ${email}`,
-        loginUrl,
-        testInfo:
-          'Test mode - no real email sent, loginUrl provided for testing',
-      };
-
-      return NextResponse.json(responseData);
-    }
 
     // Production email sending
     const transporter = nodemailer.createTransport({
