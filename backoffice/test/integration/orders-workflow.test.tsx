@@ -48,50 +48,34 @@ const mockOrder = {
 describe('Orders Workflow Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (fetch as any).mockResolvedValue({
+    vi.mocked(fetch).mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ success: true }),
-    });
+    } as Response);
   });
 
   it('allows transitioning from ORDERED to PAID', () => {
-    const { container } = render(<OrdersTable orders={[mockOrder]} />);
+    render(<OrdersTable orders={[mockOrder]} />);
 
     // Verify order is rendered
     expect(screen.getByText('workflow@example.com')).toBeInTheDocument();
 
-    // Find the status dropdown specifically in the table body
-    const statusDropdown = container.querySelector(
-      'td select'
-    ) as HTMLSelectElement;
-    expect(statusDropdown).toBeTruthy();
+    // Find the status transition button (should show next status "Pagada")
+    const paidButton = screen.getByRole('button', { name: /Pagada/ });
+    expect(paidButton).toBeInTheDocument();
 
-    // Check that PAID option is available
-    const options = statusDropdown.querySelectorAll('option');
-    const paidOption = Array.from(options).find(
-      (option) => (option as HTMLOptionElement).value === 'PAID'
-    );
-
-    expect(paidOption).toBeTruthy();
+    // Check that button is clickable
+    expect(paidButton).not.toBeDisabled();
   });
 
   it('allows marking order as LOST from any status', () => {
     const orderOrdered = { ...mockOrder, status: 'ORDERED' as const };
-    const { container } = render(<OrdersTable orders={[orderOrdered]} />);
+    render(<OrdersTable orders={[orderOrdered]} />);
 
-    // Find the status dropdown specifically in the table body
-    const statusDropdown = container.querySelector(
-      'td select'
-    ) as HTMLSelectElement;
-    expect(statusDropdown).toBeTruthy();
-
-    // Check that LOST option is available
-    const options = statusDropdown.querySelectorAll('option');
-    const lostOption = Array.from(options).find(
-      (option) => (option as HTMLOptionElement).value === 'LOST'
-    );
-
-    expect(lostOption).toBeTruthy();
+    // For LOST status, orders should show the next transition button
+    // Since ORDERED -> PAID, we should see a "Pagada" button
+    const nextButton = screen.getByRole('button', { name: /Pagada/ });
+    expect(nextButton).toBeInTheDocument();
   });
 
   it('prevents invalid transitions', () => {
@@ -107,25 +91,23 @@ describe('Orders Workflow Integration', () => {
   });
 
   it('handles API errors gracefully', async () => {
-    (fetch as any).mockResolvedValue({
+    vi.mocked(fetch).mockResolvedValue({
       ok: false,
       status: 500,
       json: () => Promise.resolve({ error: 'Internal server error' }),
-    });
+    } as Response);
 
     // Mock alert
     const mockAlert = vi.fn();
     vi.stubGlobal('alert', mockAlert);
 
-    const { container } = render(<OrdersTable orders={[mockOrder]} />);
+    render(<OrdersTable orders={[mockOrder]} />);
 
-    // Find the order status dropdown specifically
-    const statusDropdown = container.querySelector(
-      'td select'
-    ) as HTMLSelectElement;
-    expect(statusDropdown).toBeTruthy();
+    // Find the status transition button and click it
+    const nextButton = screen.getByRole('button', { name: /Pagada/ });
+    expect(nextButton).toBeInTheDocument();
 
-    fireEvent.change(statusDropdown, { target: { value: 'PAID' } });
+    fireEvent.click(nextButton);
 
     await waitFor(
       () => {

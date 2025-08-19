@@ -38,8 +38,8 @@ test.describe('Mobile Optimization', () => {
     await expect(colorButton).toHaveClass(/touch-manipulation/);
     await expect(colorButton).toHaveClass(/active:scale-95/);
 
-    // Test that button is clickable/tappable
-    await colorButton.tap();
+    // Test that button is clickable/tappable (use click for compatibility)
+    await colorButton.click();
 
     // Verify the color changed in the preview
     const preview = page.locator('[data-testid="sticker-preview"]').first();
@@ -133,16 +133,16 @@ test.describe('Mobile Optimization', () => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
 
-    // Test tap on color preset
+    // Test click on color preset (using click for compatibility)
     const colorButton = page.locator('button[title*="Negro"]').first();
-    await colorButton.tap();
+    await colorButton.click();
 
     // Verify visual feedback (scale animation)
     await expect(colorButton).toHaveClass(/active:scale-95/);
 
-    // Test tap on country selector
+    // Test click on country selector
     const countrySelect = page.locator('select[name="flagCode"]');
-    await countrySelect.tap();
+    await countrySelect.click();
     await countrySelect.selectOption('US');
 
     // Verify changes applied

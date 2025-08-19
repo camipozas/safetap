@@ -64,25 +64,21 @@ describe('StickerPreview (Backoffice)', () => {
   it('uses responsive padding classes', () => {
     render(<StickerPreview sticker={mockSticker} />);
 
-    const stickerContainer = screen
-      .getByText('SafeTap')
-      .closest('.p-2.sm\\:p-3');
+    const stickerContainer = screen.getByText('SafeTap').closest('.p-3');
     expect(stickerContainer).toBeInTheDocument();
   });
 
   it('uses optimized spacing for mobile', () => {
     render(<StickerPreview sticker={mockSticker} />);
 
-    // Check for mobile-optimized gap classes
+    // Check for gap classes in personal info section
     const personalInfoContainer = screen
       .getByText('John Doe')
-      .closest('.gap-1.sm\\:gap-2');
+      .closest('.gap-2');
     expect(personalInfoContainer).toBeInTheDocument();
 
-    // Check for mobile-optimized margin classes
-    const containerWithMargin = screen
-      .getByText('John Doe')
-      .closest('.mb-2.sm\\:mb-3');
+    // Check for margin classes in personal info section
+    const containerWithMargin = screen.getByText('John Doe').closest('.mb-3');
     expect(containerWithMargin).toBeInTheDocument();
   });
 
@@ -92,26 +88,21 @@ describe('StickerPreview (Backoffice)', () => {
     const qrCode = screen.getByTestId('sticker-qr-code');
     expect(qrCode).toBeInTheDocument();
     expect(qrCode).toHaveAttribute('data-slug', 'test-slug');
-    // QR size should be 40% of sticker size with minimum of 40
-    expect(qrCode).toHaveAttribute('data-size', '60'); // Math.max(150 * 0.4, 40) = 60
+    // QR size should be 32% of sticker size with minimum of 32
+    expect(qrCode).toHaveAttribute('data-size', '48'); // Math.max(150 * 0.32, 32) = 48
   });
 
-  it('prioritizes owner data over sticker data', () => {
-    const stickerWithOwner = {
+  it('displays the name from sticker data', () => {
+    const stickerWithName = {
       ...mockSticker,
       nameOnSticker: 'Name On Sticker',
       flagCode: 'US',
-      owner: {
-        name: 'Owner Name',
-        country: 'ES',
-      },
     };
 
-    render(<StickerPreview sticker={stickerWithOwner} />);
+    render(<StickerPreview sticker={stickerWithName} />);
 
-    // Should use owner data, not sticker data
-    expect(screen.getByText('Owner Name')).toBeInTheDocument();
-    expect(screen.getByText('🇪🇸')).toBeInTheDocument();
+    // Should display the nameOnSticker value
+    expect(screen.getByText('Name On Sticker')).toBeInTheDocument();
   });
 
   it('falls back to sticker data when owner data is missing', () => {

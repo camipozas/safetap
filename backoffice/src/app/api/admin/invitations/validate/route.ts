@@ -1,16 +1,15 @@
 import { prisma } from '@/lib/prisma';
+import { USER_ROLES } from '@/types/shared';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const token = searchParams.get('token');
+    const token = request.nextUrl.searchParams.get('token');
 
     if (!token) {
       return NextResponse.json({ error: 'Token requerido' }, { status: 400 });
     }
 
-    // Buscar la invitación
     const invitation = await prisma.adminInvitation.findUnique({
       where: { token },
     });
@@ -22,7 +21,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Verificar si ya fue usada
     if (invitation.usedAt) {
       return NextResponse.json(
         { error: 'Esta invitación ya ha sido utilizada' },
@@ -30,7 +28,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Verificar si ha expirado
     if (invitation.expiresAt < new Date()) {
       return NextResponse.json(
         { error: 'Esta invitación ha expirado' },
@@ -38,16 +35,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Verificar si el usuario ya existe
     const existingUser = await prisma.user.findUnique({
       where: { email: invitation.email },
     });
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: 'El usuario ya existe en el sistema' },
-        { status: 400 }
-      );
+      if (
+        existingUser.role === USER_ROLES.ADMIN ||
+        existingUser.role === USER_ROLES.SUPER_ADMIN
+      ) {
+        return NextResponse.json(
+          { error: 'El usuario ya es administrador en el sistema' },
+          { status: 400 }
+        );
+      }
     }
 
     return NextResponse.json({

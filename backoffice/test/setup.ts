@@ -4,7 +4,14 @@ import { vi } from 'vitest';
 // Mock environment variables for testing
 vi.stubEnv('NODE_ENV', 'test');
 vi.stubEnv('NEXTAUTH_SECRET', 'test-secret');
+vi.stubEnv('NEXTAUTH_URL', 'http://localhost:3001');
 vi.stubEnv('NEXTAUTH_BACKOFFICE_URL', 'http://localhost:3001');
+
+// Override email configuration for tests to prevent real emails
+vi.stubEnv('EMAIL_SERVER_HOST', 'mock-smtp.test.localhost');
+vi.stubEnv('EMAIL_SERVER_USER', 'test@mock.localhost');
+vi.stubEnv('EMAIL_SERVER_PASSWORD', 'mock-password-123');
+vi.stubEnv('EMAIL_FROM', 'SafeTap Test <test@mock.localhost>');
 
 // Mock Next.js router
 vi.mock('next/navigation', () => ({

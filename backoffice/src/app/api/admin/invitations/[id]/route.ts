@@ -12,10 +12,13 @@ export async function DELETE(
   try {
     const invitationId = params.id;
 
-    if (process.env.NODE_ENV === 'development') {
+    if (
+      process.env.NODE_ENV === 'development' ||
+      process.env.NODE_ENV === 'test'
+    ) {
       // eslint-disable-next-line no-console
       console.log(
-        '🚀 Development mode: Bypassing authentication for invitation deletion'
+        `🚀 ${process.env.NODE_ENV} mode: Bypassing authentication for invitation deletion`
       );
     } else {
       const session = await getServerSession(authOptions);

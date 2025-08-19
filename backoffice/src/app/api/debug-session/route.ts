@@ -1,10 +1,11 @@
+import { environment } from '@/environment/config';
 import { authOptions } from '@/lib/auth';
 import { hasPermission } from '@/types/shared';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(_request: NextRequest) {
-  if (process.env.NODE_ENV !== 'development') {
+  if (!environment.app.isDevelopment) {
     return NextResponse.json(
       { error: 'Only available in development' },
       { status: 403 }
