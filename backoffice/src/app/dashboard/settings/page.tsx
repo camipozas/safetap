@@ -303,8 +303,11 @@ export default function SettingsPage() {
               <UserPlus className="mr-2 h-5 w-5" />
               Invitar Nuevo Administrador
             </h3>
-            <form onSubmit={sendInvitation} className="flex gap-4 items-end">
-              <div className="flex-1">
+            <form
+              onSubmit={sendInvitation}
+              className="flex flex-col sm:flex-row gap-4 items-start sm:items-end"
+            >
+              <div className="flex-1 w-full">
                 <label className="block text-sm font-medium mb-1">Email</label>
                 <input
                   type="email"
@@ -315,18 +318,22 @@ export default function SettingsPage() {
                   required
                 />
               </div>
-              <div>
+              <div className="w-full sm:w-auto">
                 <label className="block text-sm font-medium mb-1">Rol</label>
                 <select
                   value={newUserRole}
                   onChange={(e) => setNewUserRole(e.target.value as AdminRole)}
-                  className="border rounded px-3 py-2"
+                  className="w-full sm:w-auto border rounded px-3 py-2"
                 >
                   <option value={USER_ROLES.ADMIN}>Admin</option>
                   <option value={USER_ROLES.SUPER_ADMIN}>Super Admin</option>
                 </select>
               </div>
-              <Button type="submit" disabled={inviteLoading}>
+              <Button
+                type="submit"
+                disabled={inviteLoading}
+                className="w-full sm:w-auto"
+              >
                 <Mail className="mr-2 h-4 w-4" />
                 {inviteLoading ? 'Enviando...' : 'Enviar Invitación'}
               </Button>
@@ -348,9 +355,8 @@ export default function SettingsPage() {
                 <Mail className="mr-2 h-5 w-5" />
                 Invitaciones Pendientes
               </h3>
-
               {/* Invitation Filters */}
-              <div className="flex gap-4 mb-4">
+              <div className="flex flex-col sm:flex-row gap-4 mb-4">
                 <div className="flex-1">
                   <label className="block text-sm font-medium mb-1">
                     Filtrar por email
@@ -363,7 +369,7 @@ export default function SettingsPage() {
                     placeholder="Buscar por email..."
                   />
                 </div>
-                <div>
+                <div className="w-full sm:w-auto">
                   <label className="block text-sm font-medium mb-1">
                     Filtrar por rol
                   </label>
@@ -372,63 +378,112 @@ export default function SettingsPage() {
                     onChange={(e) =>
                       setInvitationRoleFilter(e.target.value as FilterRole)
                     }
-                    className="border rounded px-3 py-2"
+                    className="w-full sm:w-auto border rounded px-3 py-2"
                   >
                     <option value="ALL">Todos los roles</option>
                     <option value={USER_ROLES.ADMIN}>Admin</option>
                     <option value={USER_ROLES.SUPER_ADMIN}>Super Admin</option>
                   </select>
                 </div>
-              </div>
-
+              </div>{' '}
               <div className="border rounded-lg overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="text-left p-3">Email</th>
-                      <th className="text-left p-3">Rol</th>
-                      <th className="text-left p-3">Enviada</th>
-                      <th className="text-left p-3">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Array.isArray(filteredPendingInvitations) &&
-                      filteredPendingInvitations.map((invitation) => (
-                        <tr key={invitation.id} className="border-t">
-                          <td className="p-3">{invitation.email}</td>
-                          <td className="p-3">
-                            <span
-                              className={`inline-block px-2 py-1 text-xs rounded-full ${
-                                invitation.role === 'SUPER_ADMIN'
-                                  ? 'bg-purple-100 text-purple-800'
-                                  : 'bg-blue-100 text-blue-800'
-                              }`}
-                            >
-                              {invitation.role}
-                            </span>
-                          </td>
-                          <td className="p-3">
-                            {new Date(
-                              invitation.createdAt
-                            ).toLocaleDateString()}
-                          </td>
-                          <td className="p-3">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleRevokeInvitation(invitation.id)
-                              }
-                              className="text-xs"
-                            >
-                              <Trash2 className="h-3 w-3 mr-1" />
-                              Revocar
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
+                {/* Desktop Table */}
+                <div className="hidden lg:block">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="text-left p-3">Email</th>
+                        <th className="text-left p-3">Rol</th>
+                        <th className="text-left p-3">Enviada</th>
+                        <th className="text-left p-3">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Array.isArray(filteredPendingInvitations) &&
+                        filteredPendingInvitations.map((invitation) => (
+                          <tr key={invitation.id} className="border-t">
+                            <td className="p-3">{invitation.email}</td>
+                            <td className="p-3">
+                              <span
+                                className={`inline-block px-2 py-1 text-xs rounded-full ${
+                                  invitation.role === 'SUPER_ADMIN'
+                                    ? 'bg-purple-100 text-purple-800'
+                                    : 'bg-blue-100 text-blue-800'
+                                }`}
+                              >
+                                {invitation.role}
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              {new Date(
+                                invitation.createdAt
+                              ).toLocaleDateString()}
+                            </td>
+                            <td className="p-3">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  handleRevokeInvitation(invitation.id)
+                                }
+                                className="text-xs"
+                              >
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Revocar
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="lg:hidden space-y-3 p-3">
+                  {Array.isArray(filteredPendingInvitations) &&
+                    filteredPendingInvitations.map((invitation) => (
+                      <div
+                        key={invitation.id}
+                        className="bg-gray-50 rounded-lg p-3 space-y-2"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm break-all">
+                              {invitation.email}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Enviada:{' '}
+                              {new Date(
+                                invitation.createdAt
+                              ).toLocaleDateString()}
+                            </div>
+                          </div>
+                          <span
+                            className={`inline-block px-2 py-1 text-xs rounded-full whitespace-nowrap ml-2 ${
+                              invitation.role === 'SUPER_ADMIN'
+                                ? 'bg-purple-100 text-purple-800'
+                                : 'bg-blue-100 text-blue-800'
+                            }`}
+                          >
+                            {invitation.role}
+                          </span>
+                        </div>
+                        <div className="pt-2 border-t">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              handleRevokeInvitation(invitation.id)
+                            }
+                            className="text-xs w-full"
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            Revocar Invitación
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
               </div>
             </div>
           )}
@@ -441,7 +496,7 @@ export default function SettingsPage() {
             </h3>
 
             {/* Admin Filters */}
-            <div className="flex gap-4 mb-4">
+            <div className="flex flex-col sm:flex-row gap-4 mb-4">
               <div className="flex-1">
                 <label className="block text-sm font-medium mb-1">
                   Filtrar por email o nombre
@@ -454,14 +509,14 @@ export default function SettingsPage() {
                   placeholder="Buscar por email o nombre..."
                 />
               </div>
-              <div>
+              <div className="w-full sm:w-auto">
                 <label className="block text-sm font-medium mb-1">
                   Filtrar por rol
                 </label>
                 <select
                   value={roleFilter}
                   onChange={(e) => setRoleFilter(e.target.value as FilterRole)}
-                  className="border rounded px-3 py-2"
+                  className="w-full sm:w-auto border rounded px-3 py-2"
                 >
                   <option value="ALL">Todos los roles</option>
                   <option value={USER_ROLES.ADMIN}>Admin</option>
@@ -471,30 +526,106 @@ export default function SettingsPage() {
             </div>
 
             <div className="border rounded-lg overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="text-left p-3">Usuario</th>
-                    <th className="text-left p-3">Email</th>
-                    <th className="text-left p-3">Rol</th>
-                    <th className="text-left p-3">Registro</th>
-                    <th className="text-left p-3">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Array.isArray(filteredAdminUsers) &&
-                    filteredAdminUsers.map((user) => (
-                      <tr key={user.id} className="border-t">
-                        <td className="p-3">
-                          <div className="font-medium">
+              {/* Desktop Table */}
+              <div className="hidden lg:block">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="text-left p-3">Usuario</th>
+                      <th className="text-left p-3">Email</th>
+                      <th className="text-left p-3">Rol</th>
+                      <th className="text-left p-3">Registro</th>
+                      <th className="text-left p-3">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Array.isArray(filteredAdminUsers) &&
+                      filteredAdminUsers.map((user) => (
+                        <tr key={user.id} className="border-t">
+                          <td className="p-3">
+                            <div className="font-medium">
+                              {user.name || 'Sin nombre'}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              ID: {user.id}
+                            </div>
+                          </td>
+                          <td className="p-3">{user.email}</td>
+                          <td className="p-3">
+                            <select
+                              value={user.role as string}
+                              onChange={(e) =>
+                                updateUserRole(
+                                  user.id,
+                                  e.target.value as AdminRole
+                                )
+                              }
+                              className="text-xs border rounded px-2 py-1 bg-white"
+                            >
+                              <option value={USER_ROLES.ADMIN}>ADMIN</option>
+                              <option value={USER_ROLES.SUPER_ADMIN}>
+                                SUPER_ADMIN
+                              </option>
+                            </select>
+                          </td>
+                          <td className="p-3">
+                            {new Date(user.createdAt).toLocaleDateString()}
+                          </td>
+                          <td className="p-3">
+                            {user.email !== session?.user?.email && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteUser(user.id)}
+                                className="text-xs text-red-600 hover:text-red-800"
+                              >
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Remover Admin
+                              </Button>
+                            )}
+                            {user.email === session?.user?.email && (
+                              <span className="text-xs text-gray-500">
+                                (Tú mismo)
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="lg:hidden space-y-3 p-3">
+                {Array.isArray(filteredAdminUsers) &&
+                  filteredAdminUsers.map((user) => (
+                    <div
+                      key={user.id}
+                      className="bg-gray-50 rounded-lg p-3 space-y-3"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm">
                             {user.name || 'Sin nombre'}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-gray-500 break-all">
+                            {user.email}
+                          </div>
+                          <div className="text-xs text-gray-400">
                             ID: {user.id}
                           </div>
-                        </td>
-                        <td className="p-3">{user.email}</td>
-                        <td className="p-3">
+                          <div className="text-xs text-gray-500">
+                            Registro:{' '}
+                            {new Date(user.createdAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div>
+                          <label className="block text-xs font-medium mb-1">
+                            Rol:
+                          </label>
                           <select
                             value={user.role as string}
                             onChange={(e) =>
@@ -503,39 +634,35 @@ export default function SettingsPage() {
                                 e.target.value as AdminRole
                               )
                             }
-                            className="text-xs border rounded px-2 py-1 bg-white"
+                            className="text-xs border rounded px-2 py-1 bg-white w-full"
                           >
                             <option value={USER_ROLES.ADMIN}>ADMIN</option>
                             <option value={USER_ROLES.SUPER_ADMIN}>
                               SUPER_ADMIN
                             </option>
                           </select>
-                        </td>
-                        <td className="p-3">
-                          {new Date(user.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="p-3">
-                          {user.email !== session?.user?.email && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDeleteUser(user.id)}
-                              className="text-xs text-red-600 hover:text-red-800"
-                            >
-                              <Trash2 className="h-3 w-3 mr-1" />
-                              Remover Admin
-                            </Button>
-                          )}
-                          {user.email === session?.user?.email && (
-                            <span className="text-xs text-gray-500">
-                              (Tú mismo)
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
+                        </div>
+
+                        {user.email !== session?.user?.email && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteUser(user.id)}
+                            className="text-xs text-red-600 hover:text-red-800 w-full"
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            Remover Administrador
+                          </Button>
+                        )}
+                        {user.email === session?.user?.email && (
+                          <div className="text-xs text-gray-500 text-center py-2">
+                            (Este eres tú)
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+              </div>
             </div>
           </div>
         </CardContent>

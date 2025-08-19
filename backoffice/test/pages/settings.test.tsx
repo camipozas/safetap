@@ -109,7 +109,9 @@ describe('SettingsPage', () => {
     // Wait a bit more for async data loading
     await waitFor(
       () => {
-        expect(screen.getByText('admin@example.com')).toBeInTheDocument();
+        // Use getAllByText since email appears in both desktop table and mobile cards
+        const emailElements = screen.getAllByText('admin@example.com');
+        expect(emailElements.length).toBeGreaterThan(0);
       },
       { timeout: 3000 }
     );
@@ -120,7 +122,9 @@ describe('SettingsPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Invitaciones Pendientes')).toBeInTheDocument();
-      expect(screen.getByText('pending@example.com')).toBeInTheDocument();
+      // Use getAllByText since email appears in both desktop table and mobile cards
+      const emailElements = screen.getAllByText('pending@example.com');
+      expect(emailElements.length).toBeGreaterThan(0);
     });
   });
 
@@ -249,11 +253,9 @@ describe('SettingsPage', () => {
     render(<SettingsPage />);
 
     await waitFor(() => {
-      // Look for the current user's row
-      const currentUserRow = screen
-        .getByText('superadmin@example.com')
-        .closest('tr');
-      expect(currentUserRow).toBeInTheDocument();
+      // Look for the current user's email (appears in both desktop table and mobile cards)
+      const emailElements = screen.getAllByText('superadmin@example.com');
+      expect(emailElements.length).toBeGreaterThan(0);
 
       // Should show "(Tú mismo)" instead of delete button
       expect(screen.getByText('(Tú mismo)')).toBeInTheDocument();
