@@ -46,6 +46,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               </Link>
               <nav aria-label="Principal" className="flex items-center gap-6">
                 <Link
+                  href="/guide"
+                  className="text-slate-700 hover:text-brand font-medium transition-colors duration-200"
+                >
+                  Guía de uso
+                </Link>
+                <Link
                   href="/buy"
                   className="text-slate-700 hover:text-brand font-medium transition-colors duration-200"
                 >
@@ -102,6 +108,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                         className="hover:text-white transition-colors"
                       >
                         Comprar sticker
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/guide"
+                        className="hover:text-white transition-colors"
+                      >
+                        Guía de uso
                       </Link>
                     </li>
                   </ul>
