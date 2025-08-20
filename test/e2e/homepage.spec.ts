@@ -78,8 +78,9 @@ test.describe('Homepage', () => {
     // Should navigate to demo emergency page
     await expect(page).toHaveURL('/s/demo-chile');
 
-    // Should show Carlos Herrera profile
-    await expect(page.locator('h1')).toContainText('🇨🇱 Carlos Herrera');
+    // Should show María González profile
+    await expect(page.getByText('🚨 INFORMACIÓN DE EMERGENCIA')).toBeVisible();
+    await expect(page.getByText('María González')).toBeVisible();
   });
 
   test('footer contains privacy and terms links', async ({ page }) => {

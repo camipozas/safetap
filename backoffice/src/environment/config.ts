@@ -6,7 +6,7 @@ export const environment = {
   },
 
   nextauth: {
-    url: process.env.NEXTAUTH_URL || 'https://www.backoffice.safetap.cl',
+    url: process.env.NEXTAUTH_URL || 'http://localhost:3001',
   },
 
   emails: {

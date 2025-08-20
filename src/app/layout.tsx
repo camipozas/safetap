@@ -10,7 +10,7 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'safetap',
+  title: 'SafeTap',
   description: 'Tu información vital, en un tap.',
   icons: {
     icon: '/favicon.svg',

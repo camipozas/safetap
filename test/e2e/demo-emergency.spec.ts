@@ -11,24 +11,25 @@ test.describe('Demo Emergency Page', () => {
     await expect(page.locator('body')).toBeVisible();
   });
 
-  test('displays Carlos Herrera profile information', async ({ page }) => {
+  test('displays María González profile information', async ({ page }) => {
     await page.goto('/s/demo-chile');
 
-    // Check for main title with Chilean flag
-    await expect(page.locator('h1')).toContainText('🇨🇱 Carlos Herrera');
+    // Check for main title and name
+    await expect(page.getByText('🚨 INFORMACIÓN DE EMERGENCIA')).toBeVisible();
+    await expect(page.getByText('María González')).toBeVisible();
 
     // Check for medical information
-    await expect(page.locator('text=Sangre:')).toBeVisible();
+    await expect(page.getByText('Tipo de sangre')).toBeVisible();
     await expect(page.locator('text=O+')).toBeVisible();
 
-    await expect(page.locator('text=Alergias:')).toBeVisible();
-    await expect(page.locator('text=Penicilina, Nueces')).toBeVisible();
+    await expect(page.getByText('Alergias')).toBeVisible();
+    await expect(page.locator('text=Penicilina')).toBeVisible();
 
-    await expect(page.locator('text=Condiciones:')).toBeVisible();
-    await expect(page.locator('text=Diabetes tipo 2')).toBeVisible();
+    await expect(page.getByText('Condiciones médicas')).toBeVisible();
+    await expect(page.locator('text=Diabetes')).toBeVisible();
 
-    await expect(page.locator('text=Medicaciones:')).toBeVisible();
-    await expect(page.locator('text=Metformina 850mg')).toBeVisible();
+    await expect(page.getByText('Medicamentos')).toBeVisible();
+    await expect(page.locator('text=Insulina')).toBeVisible();
   });
 
   test('displays emergency contacts section', async ({ page }) => {
@@ -38,17 +39,17 @@ test.describe('Demo Emergency Page', () => {
     await expect(page.locator('h2')).toContainText('Contactos de emergencia');
 
     // Check for primary contact (spouse)
-    await expect(page.locator('text=María Elena Herrera')).toBeVisible();
-    await expect(page.locator('text=Esposa')).toBeVisible();
-    await expect(page.locator('text=+56 9 1234 5678')).toBeVisible();
+    await expect(page.locator('text=Carlos González')).toBeVisible();
+    await expect(page.locator('text=Esposo')).toBeVisible();
+    await expect(page.locator('text=+56912345678')).toBeVisible();
     await expect(page.locator('text=Preferido')).toBeVisible();
 
     // Check for doctor contact
-    await expect(page.locator('text=Dr. José Martinez')).toBeVisible();
-    await expect(page.locator('text=Médico tratante')).toBeVisible();
+    await expect(page.locator('text=Dr. Pedro Ramírez')).toBeVisible();
+    await expect(page.locator('text=Endocrinólogo')).toBeVisible();
 
     // Check for daughter contact
-    await expect(page.locator('text=Ana Herrera')).toBeVisible();
+    await expect(page.locator('text=Ana González')).toBeVisible();
     await expect(page.locator('text=Hija')).toBeVisible();
   });
 
@@ -56,12 +57,10 @@ test.describe('Demo Emergency Page', () => {
     await page.goto('/s/demo-chile');
 
     // Check for demo disclaimer
-    await expect(
-      page.locator('text=Esta es una página de demostración de SafeTap')
-    ).toBeVisible();
+    await expect(page.locator('text=Ejemplo de perfil SafeTap')).toBeVisible();
     await expect(
       page.locator(
-        'text=En producción, esta información se generaría dinámicamente'
+        'text=Este es un ejemplo de cómo se ve la información de emergencia'
       )
     ).toBeVisible();
   });
