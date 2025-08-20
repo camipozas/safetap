@@ -5,7 +5,7 @@ test.describe('Demo Emergency Page', () => {
     await page.goto('/s/demo-chile');
 
     // Check that the page loads without errors
-    await expect(page).toHaveTitle('safetap');
+    await expect(page).toHaveTitle('SafeTap');
 
     // Check that main content is visible
     await expect(page.locator('body')).toBeVisible();

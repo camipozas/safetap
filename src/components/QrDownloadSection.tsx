@@ -11,7 +11,7 @@ interface QrDownloadSectionProps {
 
 export function QrDownloadSection({
   url,
-  filename = 'safetap-qr',
+  filename = 'SafeTap-qr',
   className = '',
 }: QrDownloadSectionProps) {
   const [downloadSize, setDownloadSize] = useState(512);

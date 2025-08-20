@@ -125,7 +125,7 @@ export default function MobileNav() {
                     id="mobile-menu-title"
                     className="text-lg font-bold text-slate-900"
                   >
-                    safetap
+                    SafeTap
                   </h2>
                 </div>
                 <button

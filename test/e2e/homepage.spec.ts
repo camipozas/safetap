@@ -5,7 +5,7 @@ test.describe('Homepage', () => {
     await page.goto('/');
 
     // Check that the page loads without errors
-    await expect(page).toHaveTitle('safetap');
+    await expect(page).toHaveTitle('SafeTap');
 
     // Check that main content is visible
     await expect(page.locator('body')).toBeVisible();
@@ -16,7 +16,7 @@ test.describe('Homepage', () => {
 
     // Check for key navigation elements
     await expect(
-      page.locator('header').getByRole('link', { name: 'Inicio safetap' })
+      page.locator('header').getByRole('link', { name: 'Inicio SafeTap' })
     ).toBeVisible();
 
     // Check for main action buttons - should only have "Comprar ahora" now

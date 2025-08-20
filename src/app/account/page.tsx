@@ -115,7 +115,7 @@ export default async function AccountPage({
           </p>
           <p className="text-sm text-slate-700 mt-2">
             Datos bancarios: IBAN ES00 0000 0000 0000 0000 0000 · Beneficiario:
-            Safetap
+            SafeTap
           </p>
         </div>
       )}

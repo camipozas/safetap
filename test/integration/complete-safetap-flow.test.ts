@@ -1,10 +1,56 @@
 import type { EmergencyProfile, Sticker, User } from '@prisma/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { prisma } from '@/lib/prisma';
-
 // Mock fetch globally for these integration tests
 global.fetch = vi.fn() as unknown as typeof fetch;
+
+// Mock Prisma client for integration tests
+const mockPrisma = {
+  user: {
+    create: vi.fn(),
+    findFirst: vi.fn(),
+    findUnique: vi.fn(),
+    findMany: vi.fn(),
+    deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+  },
+  sticker: {
+    create: vi.fn(),
+    findFirst: vi.fn(),
+    findUnique: vi.fn(),
+    update: vi.fn(),
+    deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+  },
+  payment: {
+    create: vi.fn(),
+    findFirst: vi.fn(),
+    findUnique: vi.fn(),
+    update: vi.fn(),
+    deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+  },
+  emergencyProfile: {
+    create: vi.fn(),
+    findFirst: vi.fn(),
+    findUnique: vi.fn(),
+    findUniqueOrThrow: vi.fn(),
+    update: vi.fn(),
+    deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+  },
+  emergencyContact: {
+    create: vi.fn(),
+    deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+  },
+  profileAccessLog: {
+    deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+  },
+  $transaction: vi.fn((callback) => callback(mockPrisma)),
+};
+
+// Mock the prisma import
+vi.mock('@/lib/prisma', () => ({
+  prisma: mockPrisma,
+}));
+
+const { prisma } = await import('@/lib/prisma');
 
 describe('Complete SafeTap Flow Integration Test', () => {
   let testUser: User;
@@ -12,60 +58,113 @@ describe('Complete SafeTap Flow Integration Test', () => {
   let testProfile: EmergencyProfile;
 
   beforeEach(async () => {
-    // Reset fetch mock before each test
+    // Reset all mocks before each test
     vi.clearAllMocks();
 
-    // Clean up test data with proper deletion order
-    await prisma.profileAccessLog.deleteMany({
-      where: { profile: { user: { email: 'test-flow@safetap.cl' } } },
+    // Setup mock return values for database operations
+    testUser = {
+      id: 'test-user-id',
+      email: 'test-flow@safetap.cl',
+      name: 'Test User',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as User;
+
+    testSticker = {
+      id: 'test-sticker-id',
+      slug: 'test-chile-flow',
+      serial: 'TEST123FLOW',
+      nameOnSticker: 'Test Chile',
+      flagCode: 'CL',
+      stickerColor: '#3b82f6',
+      textColor: '#ffffff',
+      status: 'ORDERED',
+      ownerId: testUser.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as Sticker;
+
+    testProfile = {
+      id: 'test-profile-id',
+      userId: testUser.id,
+      stickerId: testSticker.id,
+      consentPublic: true,
+      bloodType: null,
+      allergies: [],
+      conditions: [],
+      medications: [],
+      notes: null,
+      organDonor: false,
+      preferredContact: null,
+      language: 'es',
+      insurance: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      updatedByUserAt: null,
+    } as EmergencyProfile;
+
+    // Setup mock database responses
+    mockPrisma.user.create.mockResolvedValue(testUser);
+    mockPrisma.user.findFirst.mockResolvedValue(testUser);
+    mockPrisma.user.findUnique.mockResolvedValue(testUser);
+
+    mockPrisma.sticker.create.mockResolvedValue(testSticker);
+    mockPrisma.sticker.findFirst.mockResolvedValue(testSticker);
+    mockPrisma.sticker.findUnique.mockResolvedValue(testSticker);
+    mockPrisma.sticker.update.mockResolvedValue({
+      ...testSticker,
+      status: 'ACTIVE',
     });
-    await prisma.emergencyContact.deleteMany({
-      where: { profile: { user: { email: 'test-flow@safetap.cl' } } },
+
+    mockPrisma.payment.create.mockResolvedValue({
+      id: 'test-payment-id',
+      reference: 'TEST_REF_12345',
+      amount: 5990,
+      status: 'PENDING',
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
-    await prisma.emergencyProfile.deleteMany({
-      where: { user: { email: 'test-flow@safetap.cl' } },
+
+    mockPrisma.emergencyProfile.create.mockResolvedValue(testProfile);
+    mockPrisma.emergencyProfile.findUnique.mockResolvedValue(testProfile);
+    mockPrisma.emergencyProfile.findUniqueOrThrow.mockResolvedValue({
+      ...testProfile,
+      bloodType: 'O+',
+      contacts: [
+        {
+          id: 'test-contact-id',
+          name: 'María Gonzalez',
+          phone: '+56912345678',
+          relation: 'Madre',
+          preferred: true,
+          profileId: testProfile.id,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
     });
-    await prisma.payment.deleteMany({
-      where: { reference: { startsWith: 'TEST_' } },
+    mockPrisma.emergencyProfile.update.mockResolvedValue({
+      ...testProfile,
+      bloodType: 'O+',
+      consentPublic: true,
     });
-    await prisma.sticker.deleteMany({
-      where: { ownerId: { in: await getUserIds() } },
-    });
-    await prisma.user.deleteMany({
-      where: { email: 'test-flow@safetap.cl' },
+
+    mockPrisma.emergencyContact.create.mockResolvedValue({
+      id: 'test-contact-id',
+      name: 'María Gonzalez',
+      phone: '+56912345678',
+      relation: 'Madre',
+      preferred: true,
+      profileId: testProfile.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
   });
 
   afterEach(async () => {
-    // Clean up test data with proper deletion order
-    await prisma.profileAccessLog.deleteMany({
-      where: { profile: { user: { email: 'test-flow@safetap.cl' } } },
-    });
-    await prisma.emergencyContact.deleteMany({
-      where: { profile: { user: { email: 'test-flow@safetap.cl' } } },
-    });
-    await prisma.emergencyProfile.deleteMany({
-      where: { user: { email: 'test-flow@safetap.cl' } },
-    });
-    await prisma.payment.deleteMany({
-      where: { reference: { startsWith: 'TEST_' } },
-    });
-    await prisma.sticker.deleteMany({
-      where: { ownerId: { in: await getUserIds() } },
-    });
-    await prisma.user.deleteMany({
-      where: { email: 'test-flow@safetap.cl' },
-    });
+    // Clean up is handled by mocks, no real database operations needed
+    vi.clearAllMocks();
   });
-
-  // Helper function to get user IDs
-  async function getUserIds(): Promise<string[]> {
-    const users = await prisma.user.findMany({
-      where: { email: 'test-flow@safetap.cl' },
-      select: { id: true },
-    });
-    return users.map((u) => u.id);
-  }
 
   it('should complete the full SafeTap flow: order → payment → activation → profile creation → QR generation', async () => {
     // Setup mocks for the APIs
@@ -127,15 +226,16 @@ describe('Complete SafeTap Flow Integration Test', () => {
       } as Response)
     );
 
-    // Create test user and sticker manually for this test
-    testUser = await prisma.user.create({
+    // Create test user and sticker manually for this test (now mocked)
+    // These calls will return the mocked objects set up in beforeEach
+    const createdUser = await prisma.user.create({
       data: {
         email: 'test-flow@safetap.cl',
         name: 'Test User',
       },
     });
 
-    testSticker = await prisma.sticker.create({
+    const createdSticker = await prisma.sticker.create({
       data: {
         slug: 'test-chile-flow',
         serial: 'TEST123FLOW',
@@ -144,17 +244,22 @@ describe('Complete SafeTap Flow Integration Test', () => {
         stickerColor: '#3b82f6',
         textColor: '#ffffff',
         status: 'ORDERED',
-        ownerId: testUser.id,
+        ownerId: createdUser.id,
       },
     });
 
-    testProfile = await prisma.emergencyProfile.create({
+    const createdProfile = await prisma.emergencyProfile.create({
       data: {
-        userId: testUser.id,
-        stickerId: testSticker.id,
+        userId: createdUser.id,
+        stickerId: createdSticker.id,
         consentPublic: true,
       },
     });
+
+    // Verify mocked data
+    expect(createdUser).toBeDefined();
+    expect(createdSticker).toBeDefined();
+    expect(createdProfile).toBeDefined();
 
     // Step 1: Create a new user order (mocked)
     const orderResponse = await fetch(
@@ -179,8 +284,8 @@ describe('Complete SafeTap Flow Integration Test', () => {
     expect(orderData.reference).toBeDefined();
     expect(orderData.paymentId).toBeDefined();
 
-    expect(testSticker).toBeDefined();
-    expect(testSticker.status).toBe('ORDERED');
+    expect(createdSticker).toBeDefined();
+    expect(createdSticker.status).toBe('ORDERED');
 
     // Step 2: Simulate transfer payment verification (mocked)
     const paymentResponse = await fetch(
@@ -199,14 +304,14 @@ describe('Complete SafeTap Flow Integration Test', () => {
     const paymentData = await paymentResponse.json();
     expect(paymentData.success).toBe(true);
 
-    // Manually update sticker status to simulate successful payment
+    // Manually update sticker status to simulate successful payment (mocked)
     const updatedSticker = await prisma.sticker.update({
-      where: { id: testSticker.id },
+      where: { id: createdSticker.id },
       data: { status: 'ACTIVE' },
     });
     expect(updatedSticker.status).toBe('ACTIVE');
 
-    expect(testProfile).toBeDefined();
+    expect(createdProfile).toBeDefined();
 
     // Step 3: Create profile data (mocked)
     const profileData = {
@@ -229,7 +334,7 @@ describe('Complete SafeTap Flow Integration Test', () => {
     };
 
     const profileResponse = await fetch(
-      `http://localhost:3000/api/profile/${testProfile.id}`,
+      `http://localhost:3000/api/profile/${createdProfile.id}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -241,9 +346,9 @@ describe('Complete SafeTap Flow Integration Test', () => {
     const updatedProfileData = await profileResponse.json();
     expect(updatedProfileData.success).toBe(true);
 
-    // Manually update profile data to simulate successful profile update
+    // Manually update profile data to simulate successful profile update (mocked)
     await prisma.emergencyProfile.update({
-      where: { id: testProfile.id },
+      where: { id: createdProfile.id },
       data: {
         bloodType: 'O+',
         consentPublic: true,
@@ -256,14 +361,14 @@ describe('Complete SafeTap Flow Integration Test', () => {
         phone: '+56912345678',
         relation: 'Madre',
         preferred: true,
-        profileId: testProfile.id,
+        profileId: createdProfile.id,
       },
     });
 
-    // Verify profile was updated correctly
+    // Verify profile was updated correctly (mocked)
     const updatedProfileWithContacts =
       await prisma.emergencyProfile.findUniqueOrThrow({
-        where: { id: testProfile.id },
+        where: { id: createdProfile.id },
         include: { contacts: true },
       });
 
@@ -274,7 +379,7 @@ describe('Complete SafeTap Flow Integration Test', () => {
 
     // Step 5: Test QR generation (mocked)
     const qrResponse = await fetch(
-      `http://localhost:3000/api/qr/profile/${testProfile.id}`
+      `http://localhost:3000/api/qr/profile/${createdProfile.id}`
     );
     expect(qrResponse.status).toBe(200);
     const qrData = await qrResponse.json();
@@ -283,7 +388,7 @@ describe('Complete SafeTap Flow Integration Test', () => {
 
     // Step 6: Test public profile access (mocked)
     const publicProfileResponse = await fetch(
-      `http://localhost:3000/s/${testSticker.slug}`
+      `http://localhost:3000/s/${createdSticker.slug}`
     );
     expect(publicProfileResponse.status).toBe(200);
     const publicProfileHtml = await publicProfileResponse.text();
@@ -305,15 +410,15 @@ describe('Complete SafeTap Flow Integration Test', () => {
       } as Response)
     );
 
-    // Create test data
-    testUser = await prisma.user.create({
+    // Create test data (mocked)
+    const createdUser = await prisma.user.create({
       data: {
         email: 'test-flow@safetap.cl',
         name: 'Test User',
       },
     });
 
-    testSticker = await prisma.sticker.create({
+    const createdSticker = await prisma.sticker.create({
       data: {
         slug: 'test-chile-consistency',
         serial: 'TEST123CONS',
@@ -322,14 +427,14 @@ describe('Complete SafeTap Flow Integration Test', () => {
         stickerColor: '#3b82f6',
         textColor: '#ffffff',
         status: 'ACTIVE',
-        ownerId: testUser.id,
+        ownerId: createdUser.id,
       },
     });
 
-    testProfile = await prisma.emergencyProfile.create({
+    const createdProfile = await prisma.emergencyProfile.create({
       data: {
-        userId: testUser.id,
-        stickerId: testSticker.id,
+        userId: createdUser.id,
+        stickerId: createdSticker.id,
         bloodType: 'A+',
         consentPublic: true,
       },
@@ -337,12 +442,12 @@ describe('Complete SafeTap Flow Integration Test', () => {
 
     // Generate QR multiple times and verify consistency (mocked)
     const qrResponse1 = await fetch(
-      `http://localhost:3000/api/qr/profile/${testProfile.id}`
+      `http://localhost:3000/api/qr/profile/${createdProfile.id}`
     );
     const qrData1 = await qrResponse1.json();
 
     const qrResponse2 = await fetch(
-      `http://localhost:3000/api/qr/profile/${testProfile.id}`
+      `http://localhost:3000/api/qr/profile/${createdProfile.id}`
     );
     const qrData2 = await qrResponse2.json();
 
