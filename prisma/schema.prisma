@@ -202,7 +202,11 @@ enum AccessVia {
 }
 
 enum PaymentStatus {
-  PENDING
-  VERIFIED
-  REJECTED
+  PENDING              // Pago pendiente
+  TRANSFER_PAYMENT     // Pago por transferencia confirmado
+  VERIFIED             // Pago verificado por el sistema
+  PAID                 // Pago completado
+  TRANSFERRED          // Transferencia realizada
+  REJECTED             // Pago rechazado
+  CANCELLED            // Pago cancelado
 }

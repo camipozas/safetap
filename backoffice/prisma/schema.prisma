@@ -33,9 +33,13 @@ enum AccessVia {
 }
 
 enum PaymentStatus {
-    PENDING
-    VERIFIED
-    REJECTED
+  PENDING
+  TRANSFER_PAYMENT
+  VERIFIED
+  PAID
+  TRANSFERRED
+  REJECTED
+  CANCELLED
 }
 
 model User {

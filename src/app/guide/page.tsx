@@ -10,6 +10,7 @@ import {
   Shield,
   Smartphone,
   User,
+  Wifi,
   Zap,
 } from 'lucide-react';
 
@@ -487,6 +488,46 @@ export default function GuidePage() {
               médicos autorizados en situaciones de emergencia.
             </div>
           </details>
+        </div>
+      </div>
+
+      {/* Advanced Guides */}
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+          📚 Guías Avanzadas
+        </h2>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center mb-3">
+              <Wifi className="h-6 w-6 text-blue-600 mr-2" />
+              <h3 className="font-semibold text-blue-800">Configuración NFC</h3>
+            </div>
+            <p className="text-blue-700 text-sm mb-3">
+              Aprende cómo vincular tu sticker SafeTap con tecnología NFC para
+              acceso instantáneo tocando el dispositivo.
+            </p>
+            <a
+              href="/guide/nfc"
+              className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
+            >
+              Ver Guía NFC
+              <ArrowRight className="h-4 w-4 ml-1" />
+            </a>
+          </div>
+
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-center mb-3">
+              <QrCode className="h-6 w-6 text-green-600 mr-2" />
+              <h3 className="font-semibold text-green-800">QR Personalizado</h3>
+            </div>
+            <p className="text-green-700 text-sm mb-3">
+              Información sobre cómo funciona el sistema de QR personalizado
+              para cada perfil de usuario.
+            </p>
+            <span className="text-green-600 text-sm">
+              Disponible en el backoffice
+            </span>
+          </div>
         </div>
       </div>
 

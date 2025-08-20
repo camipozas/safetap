@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
+import ActivateStickerButton from '@/components/ActivateStickerButton';
 import StickerPreview from '@/components/StickerPreview';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -180,6 +181,13 @@ export default async function AccountPage({
                           Realiza la transferencia bancaria para procesar tu
                           pedido
                         </p>
+                        <Link
+                          className="mt-2 text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded transition-colors inline-block"
+                          href="/datos-bancarios"
+                          target="_blank"
+                        >
+                          Ver datos bancarios
+                        </Link>
                       </div>
                     )}
 
@@ -227,33 +235,53 @@ export default async function AccountPage({
                         </p>
                       </div>
                     )}
-                    <p className="text-sm text-slate-600">
-                      URL pública:{' '}
-                      <span className="font-mono">/s/{s.slug}</span>
-                    </p>
-                    {s.stickerColor && (
-                      <p className="text-xs text-slate-500 mt-1">
-                        Colores:{' '}
-                        <span className="font-mono">{s.stickerColor}</span> /{' '}
-                        <span className="font-mono">{s.textColor}</span>
-                      </p>
+
+                    {/* Información técnica oculta para usuarios finales */}
+                    {process.env.NODE_ENV === 'development' && (
+                      <>
+                        <p className="text-sm text-slate-600">
+                          URL pública:{' '}
+                          <span className="font-mono">/s/{s.slug}</span>
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Serial: {s.serial}
+                        </p>
+                        {s.stickerColor && (
+                          <p className="text-xs text-slate-500 mt-1">
+                            Colores:{' '}
+                            <span className="font-mono">{s.stickerColor}</span>{' '}
+                            / <span className="font-mono">{s.textColor}</span>
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <Link className="btn" href={`/s/${s.slug}`}>
+                    <Link
+                      className="btn"
+                      href={`${process.env.NEXTAUTH_URL}/s/${s.slug}`}
+                      target="_blank"
+                    >
                       Ver perfil público
                     </Link>
                     <Link
-                      className="underline underline-offset-4"
+                      className="btn btn-secondary"
                       href={`/profile/new?stickerId=${s.id}`}
                     >
-                      Activar/Editar
+                      Editar información
                     </Link>
+                    {s.status === 'SHIPPED' ? (
+                      <span className="btn btn-primary opacity-50 cursor-not-allowed">
+                        Funcionalidad en desarrollo
+                      </span>
+                    ) : s.status !== 'ACTIVE' ? (
+                      <ActivateStickerButton stickerId={s.id} />
+                    ) : null}
                     {s.status === 'ACTIVE' && (
                       <Link
                         className="btn btn-secondary text-sm"
-                        href={`/api/qr/generate?url=${encodeURIComponent(`${process.env.NEXTAUTH_URL}/s/${s.serial}`)}&format=png&size=512&dpi=300`}
+                        href={`/api/qr/generate?url=${encodeURIComponent(`${process.env.NEXTAUTH_URL}/s/${s.slug}`)}&format=png&size=512&dpi=300`}
                         target="_blank"
                       >
                         Descargar QR PNG
@@ -262,7 +290,7 @@ export default async function AccountPage({
                     {s.status === 'ACTIVE' && (
                       <Link
                         className="btn btn-secondary text-sm"
-                        href={`/api/qr/generate?url=${encodeURIComponent(`${process.env.NEXTAUTH_URL}/s/${s.serial}`)}&format=svg`}
+                        href={`/api/qr/generate?url=${encodeURIComponent(`${process.env.NEXTAUTH_URL}/s/${s.slug}`)}&format=svg`}
                         target="_blank"
                       >
                         Descargar QR SVG
@@ -277,16 +305,87 @@ export default async function AccountPage({
       </section>
       <section>
         <h2 className="text-xl font-semibold">Pagos</h2>
-        <ul className="mt-2 grid gap-2">
-          {user.payments.map((p) => (
-            <li key={p.id} className="rounded border bg-white p-3">
-              <p>
-                Ref: <span className="font-mono">{p.reference}</span> — Estado:{' '}
-                {p.status} — {p.amountCents / 100} {p.currency}
-              </p>
-            </li>
-          ))}
-        </ul>
+        <div className="mt-4">
+          {user.payments.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p>No hay pagos registrados</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg border overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">
+                      Fecha
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">
+                      Producto
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">
+                      Monto
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">
+                      Estado
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {user.payments.map((p) => (
+                    <tr key={p.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm text-gray-900">
+                        {new Date(p.createdAt).toLocaleDateString('es-ES', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                        })}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            Sticker SafeTap
+                          </p>
+                          {/* Temporal: comentado hasta corregir tipos */}
+                          {/* {p.sticker && (
+                            <p className="text-gray-600 text-xs">
+                              {p.sticker.nameOnSticker} • {p.sticker.serial}
+                            </p>
+                          )} */}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900">
+                        ${(p.amountCents / 100).toLocaleString('es-ES')}{' '}
+                        {p.currency}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            p.status === 'VERIFIED' || p.status === 'PAID'
+                              ? 'bg-green-100 text-green-800'
+                              : p.status === 'PENDING' ||
+                                  p.status === 'TRANSFER_PAYMENT'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : p.status === 'REJECTED'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {(p.status === 'VERIFIED' || p.status === 'PAID') &&
+                            '✅ Confirmado'}
+                          {(p.status === 'PENDING' ||
+                            p.status === 'TRANSFER_PAYMENT') &&
+                            '⏳ Pendiente'}
+                          {p.status === 'REJECTED' && '❌ Rechazado'}
+                          {p.status === 'CANCELLED' && '🚫 Cancelado'}
+                          {p.status === 'TRANSFERRED' && '💸 Transferido'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </section>
     </div>
   );

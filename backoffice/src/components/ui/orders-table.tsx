@@ -116,7 +116,8 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
 
       // Reload the page to reflect changes
       window.location.reload();
-    } catch (error) {
+    } catch (err) {
+      console.error('Error al actualizar orden:', err);
       alert('Error al actualizar el estado de la orden');
     } finally {
       setLoadingStates((prev) => ({ ...prev, [orderId]: false }));
@@ -217,7 +218,8 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
         link.click();
       };
       qrImage.src = qrDataUrl;
-    } catch (error) {
+    } catch (err) {
+      console.error('Error al generar sticker:', err);
       alert('Error al generar el sticker');
     }
   };
@@ -316,7 +318,8 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
         link.click();
       };
       qrImage.src = qrDataUrl;
-    } catch (error) {
+    } catch (err) {
+      console.error('Error al generar sticker alta resolución:', err);
       alert('Error al generar el sticker en alta resolución');
     }
   };
@@ -462,7 +465,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="text-left p-4">
+                <th className="text-left p-2 font-medium">
                   <input
                     type="checkbox"
                     checked={
@@ -473,15 +476,14 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                     className="rounded border-gray-300"
                   />
                 </th>
-                <th className="text-left p-4 font-medium">Sticker</th>
-                <th className="text-left p-4 font-medium">Usuario</th>
-                <th className="text-left p-4 font-medium">Estado</th>
-                <th className="text-left p-4 font-medium">País</th>
-                <th className="text-left p-4 font-medium">Grupo Sang.</th>
-                <th className="text-left p-4 font-medium">Contactos</th>
-                <th className="text-left p-4 font-medium">Pago</th>
-                <th className="text-left p-4 font-medium">Fecha</th>
-                <th className="text-left p-4 font-medium">Acciones</th>
+                <th className="text-left p-2 font-medium">Usuario</th>
+                <th className="text-left p-2 font-medium">Estado</th>
+                <th className="text-left p-2 font-medium">País</th>
+                <th className="text-left p-2 font-medium">Grupo Sang.</th>
+                <th className="text-left p-2 font-medium">Contactos</th>
+                <th className="text-left p-2 font-medium">Pago</th>
+                <th className="text-left p-2 font-medium">Fecha</th>
+                <th className="text-left p-2 font-medium">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -494,7 +496,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
 
                 return (
                   <tr key={order.id} className="border-b hover:bg-gray-50">
-                    <td className="p-4">
+                    <td className="p-2">
                       <input
                         type="checkbox"
                         checked={selectedOrders.has(order.id)}
@@ -502,14 +504,9 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                         className="rounded border-gray-300"
                       />
                     </td>
-                    <td className="p-4">
-                      <div className="flex justify-center">
-                        <StickerPreview sticker={order} size={120} />
-                      </div>
-                    </td>
-                    <td className="p-4">
+                    <td className="p-2">
                       <div>
-                        <div className="font-medium">
+                        <div className="font-medium text-sm">
                           {order.owner.name || 'Sin nombre'}
                         </div>
                         <div className="text-xs text-gray-500">
@@ -517,7 +514,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                         </div>
                       </div>
                     </td>
-                    <td className="p-4">
+                    <td className="p-2">
                       <div className="flex items-center space-x-2">
                         <span
                           className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(order.status)}`}
@@ -540,7 +537,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                         )}
                       </div>
                     </td>
-                    <td className="p-4">
+                    <td className="p-2">
                       <div className="text-xs">
                         {order.owner.country ? (
                           <span>{order.owner.country}</span>
@@ -549,7 +546,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                         )}
                       </div>
                     </td>
-                    <td className="p-4">
+                    <td className="p-2">
                       <div className="text-xs">
                         {order.profile?.bloodType ? (
                           <span className="text-red-600 font-medium">
@@ -560,7 +557,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                         )}
                       </div>
                     </td>
-                    <td className="p-4">
+                    <td className="p-2">
                       <div className="text-xs">
                         {order.profile?.contacts?.[0] ? (
                           <div>
@@ -574,7 +571,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                         )}
                       </div>
                     </td>
-                    <td className="p-4">
+                    <td className="p-2">
                       {totalPaid > 0 ? (
                         <div className="text-sm font-medium text-green-600">
                           {formatCurrency(
@@ -586,12 +583,12 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                         <span className="text-xs text-gray-400">Sin pago</span>
                       )}
                     </td>
-                    <td className="p-4">
+                    <td className="p-2">
                       <div className="text-xs">
                         {formatDateTime(order.createdAt)}
                       </div>
                     </td>
-                    <td className="p-4">
+                    <td className="p-2">
                       <div className="flex space-x-1">
                         <Button
                           variant="outline"
@@ -606,11 +603,12 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            const previewUrl = `/s/${order.slug}`;
-                            window.open(previewUrl, '_blank');
+                            // Ir a la página de visualización del perfil en el backoffice
+                            const profileUrl = `/dashboard/users/${order.owner.id}/profile`;
+                            window.open(profileUrl, '_blank');
                           }}
                           className="text-xs"
-                          title="Ver perfil público"
+                          title="Ver información de emergencia completa"
                         >
                           🔗
                         </Button>
@@ -622,6 +620,34 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                         >
                           <Download className="w-3 h-3 mr-1" />
                           QR
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            window.open(
+                              `/dashboard/users/${order.owner.id}`,
+                              '_blank'
+                            );
+                          }}
+                          className="text-xs"
+                          title="Editar usuario"
+                        >
+                          ✏️
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            window.open(
+                              `/dashboard/users/${order.owner.id}/edit-profile`,
+                              '_blank'
+                            );
+                          }}
+                          className="text-xs"
+                          title="Editar perfil de emergencia"
+                        >
+                          👤
                         </Button>
                       </div>
                     </td>
@@ -690,61 +716,56 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                 </span>
               </div>
 
-              {/* Sticker and main info */}
-              <div className="flex space-x-4">
-                <div className="flex-shrink-0">
-                  <StickerPreview sticker={order} size={80} />
-                </div>
-                <div className="flex-1 space-y-2 min-w-0">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-1 text-xs">
+              {/* Main info */}
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-1 text-xs">
+                  <div>
+                    <span className="text-gray-500">País:</span>
+                    <div>{order.owner.country || 'Sin país'}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Grupo Sang.:</span>
                     <div>
-                      <span className="text-gray-500">País:</span>
-                      <div>{order.owner.country || 'Sin país'}</div>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Grupo Sang.:</span>
-                      <div>
-                        {order.profile?.bloodType ? (
-                          <span className="text-red-600 font-medium">
-                            🩸 {order.profile.bloodType}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Pago:</span>
-                      <div>
-                        {totalPaid > 0 ? (
-                          <span className="text-green-600 font-medium">
-                            {formatCurrency(
-                              totalPaid,
-                              order.payments[0]?.currency || 'EUR'
-                            )}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">Sin pago</span>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Fecha:</span>
-                      <div>{formatDateTime(order.createdAt)}</div>
+                      {order.profile?.bloodType ? (
+                        <span className="text-red-600 font-medium">
+                          🩸 {order.profile.bloodType}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
                     </div>
                   </div>
-
-                  {/* Contact info */}
-                  {order.profile?.contacts?.[0] && (
-                    <div className="text-xs">
-                      <span className="text-gray-500">Contacto:</span>
-                      <div>{order.profile.contacts[0].name}</div>
-                      <div className="text-gray-500">
-                        {order.profile.contacts[0].phone}
-                      </div>
+                  <div>
+                    <span className="text-gray-500">Pago:</span>
+                    <div>
+                      {totalPaid > 0 ? (
+                        <span className="text-green-600 font-medium">
+                          {formatCurrency(
+                            totalPaid,
+                            order.payments[0]?.currency || 'EUR'
+                          )}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">Sin pago</span>
+                      )}
                     </div>
-                  )}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Fecha:</span>
+                    <div>{formatDateTime(order.createdAt)}</div>
+                  </div>
                 </div>
+
+                {/* Contact info */}
+                {order.profile?.contacts?.[0] && (
+                  <div className="text-xs">
+                    <span className="text-gray-500">Contacto:</span>
+                    <div>{order.profile.contacts[0].name}</div>
+                    <div className="text-gray-500">
+                      {order.profile.contacts[0].phone}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Actions */}
@@ -761,7 +782,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                     <span>Avanzar a: {getStatusLabel(nextStatus)}</span>
                   </Button>
                 )}
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <Button
                     variant="outline"
                     size="sm"
@@ -775,11 +796,12 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      const previewUrl = `/s/${order.slug}`;
-                      window.open(previewUrl, '_blank');
+                      // Ir a la página de visualización del perfil en el backoffice
+                      const profileUrl = `/dashboard/users/${order.owner.id}/profile`;
+                      window.open(profileUrl, '_blank');
                     }}
                     className="text-xs flex items-center justify-center"
-                    title="Ver perfil público"
+                    title="Ver información de emergencia completa"
                   >
                     🔗 Perfil
                   </Button>
@@ -791,6 +813,20 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                   >
                     <Download className="w-3 h-3 mr-1" />
                     QR
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      window.open(
+                        `/dashboard/users/${order.owner.id}/edit-profile`,
+                        '_blank'
+                      );
+                    }}
+                    className="text-xs flex items-center justify-center"
+                    title="Editar perfil"
+                  >
+                    👤 Edit
                   </Button>
                 </div>
               </div>
@@ -808,21 +844,53 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
       {/* Sticker preview modal */}
       {showPreview && (
         <div
-          className="fixed inset-0 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
           onClick={() => setShowPreview(null)}
         >
-          <div className="bg-white p-4 rounded shadow-lg max-w-lg w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">Vista previa del sticker</h3>
+          <div
+            className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Vista previa del sticker
+              </h3>
               <button
                 onClick={() => setShowPreview(null)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-400 hover:text-gray-600 text-xl font-bold w-6 h-6 flex items-center justify-center"
               >
-                &times;
+                ×
               </button>
             </div>
+
             <div className="flex justify-center">
-              <StickerPreview sticker={showPreview} size={400} />
+              <div className="p-8">
+                <StickerPreview sticker={showPreview} size={300} />
+              </div>
+            </div>
+
+            {/* Información adicional */}
+            <div className="mt-6 space-y-2 text-sm text-gray-600">
+              <div className="flex justify-between">
+                <span>Serial:</span>
+                <span className="font-mono">{showPreview.serial}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Estado:</span>
+                <span
+                  className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(showPreview.status)}`}
+                >
+                  {getStatusLabel(showPreview.status)}
+                </span>
+              </div>
+              {showPreview.profile?.bloodType && (
+                <div className="flex justify-between">
+                  <span>Tipo de sangre:</span>
+                  <span className="text-red-600 font-medium">
+                    🩸 {showPreview.profile.bloodType}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>

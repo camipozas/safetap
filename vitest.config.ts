@@ -8,6 +8,7 @@ export default defineConfig({
     globals: true,
     include: [
       'test/unit/**/*.{test,spec}.ts?(x)',
+      'test/integration/**/*.{test,spec}.ts?(x)',
       'src/**/*.{test,spec}.ts?(x)',
     ],
     exclude: [

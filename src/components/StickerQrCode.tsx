@@ -45,6 +45,15 @@ export function StickerQrCode({
           backgroundColor="#ffffff"
           foregroundColor="#000000"
         />
+        {/* Marca de agua para previews */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div
+            className="bg-white/80 text-gray-600 text-xs font-medium px-1 py-0.5 rounded transform rotate-45"
+            style={{ fontSize: size > 32 ? '6px' : '4px' }}
+          >
+            PREVIEW
+          </div>
+        </div>
       </div>
     );
   }

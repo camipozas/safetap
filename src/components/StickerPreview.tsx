@@ -102,13 +102,13 @@ const StickerPreviewComponent = ({
             </div>
             <p
               className="text-xs font-normal leading-none"
-              style={{ color: textColor, fontSize: '0.65rem' }}
+              style={{ color: textColor, fontSize: '0.75rem' }}
             >
               INFORMACIÓN
             </p>
             <p
               className="text-xs font-normal leading-none"
-              style={{ color: textColor, fontSize: '0.65rem' }}
+              style={{ color: textColor, fontSize: '0.75rem' }}
             >
               DE EMERGENCIA
             </p>
