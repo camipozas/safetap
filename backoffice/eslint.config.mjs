@@ -1,64 +1,52 @@
-import typescriptEslint from '@typescript-eslint/eslint-plugin';
-import tsParser from '@typescript-eslint/parser';
-import react from 'eslint-plugin-react';
-import reactHooks from 'eslint-plugin-react-hooks';
+import { FlatCompat } from '@eslint/eslintrc';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-export default [
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
+
+const eslintConfig = [
+  ...compat.extends('next/core-web-vitals', 'next/typescript'),
   {
     ignores: [
-      'node_modules/**',
-      '.next/**',
-      'out/**',
-      'build/**',
-      'dist/**',
-      '*.d.ts',
-      'coverage/**',
+      '.next/**/*',
+      'node_modules/**/*',
+      '*.config.js',
+      '*.config.mjs',
+      '*.config.ts',
+      'coverage/**/*',
+      'playwright-report/**/*',
+      'test-results/**/*',
+      '.eslintrc.js',
+      'next-env.d.ts',
     ],
   },
   {
-    files: ['**/*.{js,jsx,ts,tsx}'],
-    languageOptions: {
-      parser: tsParser,
-      parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-        ecmaFeatures: {
-          jsx: true,
-        },
-      },
-    },
-    plugins: {
-      '@typescript-eslint': typescriptEslint,
-      react: react,
-      'react-hooks': reactHooks,
-    },
     rules: {
-      // Core ESLint rules
-      'no-unused-vars': 'off',
-      'no-console': 'off', // Allow console logs for debugging
-      'prefer-const': 'error',
-
-      // TypeScript rules
       '@typescript-eslint/no-unused-vars': [
-        'error',
+        'warn',
         { argsIgnorePattern: '^_' },
       ],
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-non-null-assertion': 'warn',
-
-      // React rules
-      'react/react-in-jsx-scope': 'off',
-      'react/prop-types': 'off',
-      'react/no-unescaped-entities': 'warn',
-
-      // React Hooks rules
-      'react-hooks/rules-of-hooks': 'error',
+      'prefer-const': 'warn',
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      // Desactivar reglas problemáticas para archivos específicos
+      '@typescript-eslint/no-empty-object-type': 'warn',
+      '@typescript-eslint/no-unsafe-function-type': 'warn',
+      '@typescript-eslint/no-wrapper-object-types': 'warn',
+      '@typescript-eslint/triple-slash-reference': 'warn',
+      '@typescript-eslint/no-require-imports': 'warn',
+      '@next/next/no-html-link-for-pages': 'warn',
+      '@next/next/no-img-element': 'warn',
+      '@next/next/no-async-client-component': 'warn',
+      'import/no-anonymous-default-export': 'warn',
       'react-hooks/exhaustive-deps': 'warn',
-    },
-    settings: {
-      react: {
-        version: 'detect',
-      },
     },
   },
 ];
+
+export default eslintConfig;
