@@ -20,11 +20,10 @@ async function getUserWithContacts(userId: string) {
   });
 }
 
-export default async function UserContactsPage({
-  params,
-}: {
-  params: { id: string };
+export default async function UserContactsPage(props: {
+  params: Promise<{ id: string }>;
 }) {
+  const params = await props.params;
   const user = await getUserWithContacts(params.id);
 
   if (!user) {

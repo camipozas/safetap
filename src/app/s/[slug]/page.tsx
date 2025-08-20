@@ -2,11 +2,10 @@ import { notFound } from 'next/navigation';
 
 import { prisma } from '@/lib/prisma';
 
-export default async function PublicProfile({
-  params,
-}: {
-  params: { slug: string };
+export default async function PublicProfile(props: {
+  params: Promise<{ slug: string }>;
 }) {
+  const params = await props.params;
   const profile = await prisma.emergencyProfile.findFirst({
     where: { sticker: { slug: params.slug }, consentPublic: true },
     include: {

@@ -66,11 +66,10 @@ async function getUserDetails(userId: string) {
   });
 }
 
-export default async function UserDetailsPage({
-  params,
-}: {
-  params: { id: string };
+export default async function UserDetailsPage(props: {
+  params: Promise<{ id: string }>;
 }) {
+  const params = await props.params;
   const user = await getUserDetails(params.id);
 
   if (!user) {
