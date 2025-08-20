@@ -47,7 +47,7 @@ const StickerPreviewComponent = ({
   const flag = FLAGS[flagCode as keyof typeof FLAGS] || '🏳️';
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className}`} data-testid="sticker-preview">
       {/* Sticker container */}
       <div
         className="w-40 h-40 sm:w-48 sm:h-48 rounded-xl shadow-md border border-gray-200 p-2 sm:p-3 flex flex-col justify-between"
@@ -101,14 +101,14 @@ const StickerPreviewComponent = ({
               </svg>
             </div>
             <p
-              className="text-xs font-medium leading-tight"
-              style={{ color: textColor }}
+              className="text-xs font-normal leading-none"
+              style={{ color: textColor, fontSize: '0.65rem' }}
             >
               INFORMACIÓN
             </p>
             <p
-              className="text-xs font-medium leading-tight"
-              style={{ color: textColor }}
+              className="text-xs font-normal leading-none"
+              style={{ color: textColor, fontSize: '0.65rem' }}
             >
               DE EMERGENCIA
             </p>

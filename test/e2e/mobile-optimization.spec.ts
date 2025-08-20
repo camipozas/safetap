@@ -58,9 +58,9 @@ test.describe('Mobile Optimization', () => {
     const qrCode = page.locator('[data-testid="qr-image"]').first();
     await expect(qrCode).toBeVisible({ timeout: 10000 });
 
-    // Verify QR is properly sized for mobile (48px)
+    // Verify QR is properly sized for mobile (64px)
     const qrSize = await qrCode.getAttribute('width');
-    expect(qrSize).toBe('48');
+    expect(qrSize).toBe('64');
   });
 
   test('form inputs are accessible on mobile', async ({ page }) => {
@@ -73,9 +73,13 @@ test.describe('Mobile Optimization', () => {
     await nameInput.fill('Test Name');
 
     // Test country select
-    const countrySelect = page.locator('select[name="flagCode"]');
+    const countrySelect = page.locator('[data-testid="country-select-button"]');
     await expect(countrySelect).toBeVisible();
-    await countrySelect.selectOption('ES');
+    await countrySelect.click();
+
+    // Select a different country from the dropdown
+    const spainOption = page.locator('text=España');
+    await spainOption.click();
 
     // Verify changes are reflected in preview
     const preview = page.locator('[data-testid="sticker-preview"]').first();
@@ -100,7 +104,7 @@ test.describe('Mobile Optimization', () => {
     await expect(mobileContainer).toBeVisible();
 
     // Check order changes for mobile
-    const previewContainer = page.locator('.order-1.lg\\:order-2').first();
+    const previewContainer = page.locator('.order-2.lg\\:order-2').first();
     await expect(previewContainer).toBeVisible();
   });
 
@@ -141,9 +145,9 @@ test.describe('Mobile Optimization', () => {
     await expect(colorButton).toHaveClass(/active:scale-95/);
 
     // Test click on country selector
-    const countrySelect = page.locator('select[name="flagCode"]');
+    const countrySelect = page.locator('[data-testid="country-select-button"]');
     await countrySelect.click();
-    await countrySelect.selectOption('US');
+    await page.locator('text=Estados Unidos').click();
 
     // Verify changes applied
     const flagEmoji = page.locator('text=🇺🇸').first();

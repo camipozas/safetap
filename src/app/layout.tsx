@@ -2,7 +2,9 @@ import { Inter } from 'next/font/google';
 import Link from 'next/link';
 import { ReactNode } from 'react';
 
+import MobileNav from '@/components/MobileNav';
 import SessionProviderWrapper from '@/components/providers/session-provider';
+
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -24,12 +26,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <div className="container flex h-16 items-center justify-between">
               <Link
                 href="/"
-                className="font-bold text-xl text-brand flex items-center"
+                className="font-bold text-lg sm:text-xl text-brand flex items-center"
                 aria-label="Inicio safetap"
               >
-                <div className="w-8 h-8 bg-brand rounded-lg flex items-center justify-center mr-2">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-brand rounded-lg flex items-center justify-center mr-2">
                   <svg
-                    className="w-5 h-5 text-white"
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -44,7 +46,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 </div>
                 safetap
               </Link>
-              <nav aria-label="Principal" className="flex items-center gap-6">
+
+              {/* Desktop navigation */}
+              <nav
+                aria-label="Principal"
+                className="hidden md:flex items-center gap-6"
+              >
                 <Link
                   href="/guide"
                   className="text-slate-700 hover:text-brand font-medium transition-colors duration-200"
@@ -64,6 +71,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   Iniciar sesión
                 </Link>
               </nav>
+
+              {/* Mobile navigation */}
+              <MobileNav />
             </div>
           </header>
 
