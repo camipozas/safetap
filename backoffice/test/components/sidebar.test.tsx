@@ -112,11 +112,18 @@ describe('Sidebar Component', () => {
     const mockOnToggle = vi.fn();
     render(<Sidebar isOpen={true} onToggle={mockOnToggle} />);
 
-    const closeButton = screen.getByRole('button', { name: /close sidebar/i });
+    // Get all elements with the close sidebar role and filter for the actual button
+    const closeElements = screen.getAllByRole('button', {
+      name: /close sidebar/i,
+    });
+    const closeButton = closeElements.find((el) => el.tagName === 'BUTTON');
+
     expect(closeButton).toBeInTheDocument();
 
-    fireEvent.click(closeButton);
-    expect(mockOnToggle).toHaveBeenCalled();
+    if (closeButton) {
+      fireEvent.click(closeButton);
+      expect(mockOnToggle).toHaveBeenCalled();
+    }
   });
 
   it('should call onToggle when navigation link is clicked on mobile', () => {

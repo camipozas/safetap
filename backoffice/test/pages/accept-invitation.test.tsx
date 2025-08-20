@@ -284,6 +284,10 @@ describe('AcceptInvitationPage', () => {
 
   it('handles network errors gracefully', async () => {
     mockSearchParams.get.mockReturnValue('valid-token');
+
+    // Mock the console.error to suppress error output in tests
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
     (fetch as any).mockRejectedValue(new Error('Network error'));
 
     render(<AcceptInvitationPage />);
@@ -293,5 +297,8 @@ describe('AcceptInvitationPage', () => {
         screen.getByText('Error al validar la invitación')
       ).toBeInTheDocument();
     });
+
+    // Restore console.error
+    consoleSpy.mockRestore();
   });
 });
