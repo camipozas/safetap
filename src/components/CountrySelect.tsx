@@ -47,6 +47,7 @@ export function CountrySelect({
         <button
           type="button"
           id={id}
+          data-testid="country-select-button"
           className={`w-full px-4 py-3 rounded-xl border bg-white text-left focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all duration-200 flex items-center justify-between ${
             error ? 'border-red-300' : 'border-slate-300'
           }`}

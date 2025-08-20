@@ -1,7 +1,24 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import StickerCustomizer from '@/components/StickerCustomizerNew';
+
+const originalError = console.error;
+beforeAll(() => {
+  console.error = (...args: unknown[]) => {
+    if (
+      typeof args[0] === 'string' &&
+      args[0].includes('act(...) is not supported in production builds')
+    ) {
+      return;
+    }
+    originalError.call(console, ...args);
+  };
+});
+
+afterAll(() => {
+  console.error = originalError;
+});
 
 // Mock child components
 vi.mock('@/components/CountrySelect', () => ({
@@ -52,7 +69,7 @@ describe('StickerCustomizer', () => {
   it('renders all customization options', () => {
     render(<StickerCustomizer />);
 
-    expect(screen.getByTestId('sticker-preview')).toBeInTheDocument();
+    expect(screen.getByTestId('sticker-preview-container')).toBeInTheDocument();
     expect(screen.getByTestId('country-select')).toBeInTheDocument();
     expect(screen.getByDisplayValue('')).toBeInTheDocument(); // Name input
   });
@@ -165,10 +182,10 @@ describe('StickerCustomizer', () => {
   it('displays mobile-optimized layout', () => {
     render(<StickerCustomizer />);
 
-    // Check that the preview appears first on mobile using order classes
+    // Check that the preview has correct order classes
     const previewContainer = screen
-      .getByTestId('sticker-preview')
-      .closest('.order-1');
+      .getByTestId('sticker-preview-container')
+      .closest('.order-2');
     expect(previewContainer).toBeInTheDocument();
     expect(previewContainer).toHaveClass('lg:order-2');
 
@@ -183,5 +200,34 @@ describe('StickerCustomizer', () => {
     // Find a color preset button and check for touch optimization classes
     const colorButton = screen.getByTitle(/blanco/i);
     expect(colorButton).toHaveClass('touch-manipulation', 'active:scale-95');
+  });
+
+  it('has correct preview positioning and centering', () => {
+    render(<StickerCustomizer />);
+
+    // Buscar el contenedor del preview
+    const previewContainer = screen.getByTestId('sticker-preview-container');
+    expect(previewContainer).toBeInTheDocument();
+    expect(previewContainer).toHaveClass(
+      'flex',
+      'flex-col',
+      'items-center',
+      'justify-center'
+    );
+
+    // Verificar que el texto esté centrado
+    const previewTitle = screen.getByText('Vista previa');
+    expect(previewTitle).toHaveClass('text-center');
+  });
+
+  it('shows preview section in correct order', () => {
+    render(<StickerCustomizer />);
+
+    // Verificar que la vista previa tenga el orden correcto
+    const previewSection = screen
+      .getByTestId('sticker-preview-container')
+      .closest('.order-2');
+    expect(previewSection).toBeInTheDocument();
+    expect(previewSection).toHaveClass('lg:order-2');
   });
 });

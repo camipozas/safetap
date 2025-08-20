@@ -47,17 +47,23 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
       {/* Mobile overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
+          className="fixed inset-0 z-[45] bg-black bg-opacity-50 lg:hidden"
           onClick={onToggle}
+          onKeyDown={(e) => e.key === 'Escape' && onToggle && onToggle()}
+          role="button"
+          tabIndex={0}
+          aria-label="Close sidebar"
+          style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}
         />
       )}
 
       {/* Sidebar */}
       <div
         data-testid="sidebar-container"
+        data-open={isOpen}
         className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
-        lg:translate-x-0 lg:static lg:inset-0
+        fixed inset-y-0 left-0 z-[50] w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+        lg:translate-x-0 lg:static lg:inset-0 lg:z-auto
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}
       >
@@ -118,14 +124,26 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
 // Mobile navigation header component
 export function MobileHeader({ onToggle }: { onToggle: () => void }) {
   return (
-    <div className="lg:hidden bg-white shadow-sm border-b px-4 py-4">
+    <div className="lg:hidden bg-white shadow-sm border-b px-4 py-3">
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Shield className="h-6 w-6 text-safetap-600" />
-          <span className="text-lg font-bold text-gray-900">SafeTap Admin</span>
+        <div className="flex items-center space-x-2 flex-1 justify-center">
+          <Shield className="h-5 w-5 text-safetap-600" />
+          <span className="text-base font-semibold text-gray-900">
+            SafeTap Admin
+          </span>
         </div>
-        <button onClick={onToggle} className="p-2 rounded-md hover:bg-gray-100">
-          <Menu className="h-6 w-6" />
+        <button
+          onClick={onToggle}
+          className="p-3 rounded-md hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+          data-testid="mobile-toggle"
+          aria-label="Toggle menu"
+          style={{
+            WebkitTouchCallout: 'none',
+            WebkitUserSelect: 'none',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          <Menu className="h-6 w-6 text-gray-600" />
         </button>
       </div>
     </div>

@@ -58,10 +58,13 @@ const StickerCustomizerComponent = ({
 
   return (
     <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 lg:gap-8">
-      {/* Vista previa móvil - mostrar primero en móvil */}
-      <div className="flex flex-col items-center justify-center order-1 lg:order-2">
-        <h3 className="text-lg font-semibold mb-4">Vista previa</h3>
-        <div className="w-full max-w-xs sm:max-w-sm lg:max-w-none">
+      {/* Vista previa - orden correcto */}
+      <div
+        className="flex flex-col items-center justify-center order-2 lg:order-2"
+        data-testid="sticker-preview-container"
+      >
+        <h3 className="text-lg font-semibold mb-4 text-center">Vista previa</h3>
+        <div className="flex justify-center w-full">
           <StickerPreview
             key={`${customization.name}-${customization.flagCode}-${customization.colorPresetId}`}
             name={customization.name}
@@ -69,7 +72,7 @@ const StickerCustomizerComponent = ({
             stickerColor={customization.stickerColor}
             textColor={customization.textColor}
             showRealQR={false}
-            className="mb-4 mx-auto"
+            className="mb-4"
           />
         </div>
         <p className="text-sm text-gray-600 text-center max-w-sm px-4">

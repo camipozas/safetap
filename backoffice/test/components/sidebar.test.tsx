@@ -128,6 +128,13 @@ describe('Sidebar Component', () => {
 
     expect(mockOnToggle).toHaveBeenCalled();
   });
+
+  it('should track sidebar state correctly', () => {
+    render(<Sidebar isOpen={true} onToggle={vi.fn()} />);
+
+    const sidebar = screen.getByTestId('sidebar-container');
+    expect(sidebar).toHaveAttribute('data-open', 'true');
+  });
 });
 
 describe('MobileHeader Component', () => {
@@ -171,6 +178,16 @@ describe('MobileHeader Component', () => {
     const header = container.querySelector('.lg\\:hidden');
     expect(header).toBeInTheDocument();
     expect(header).toHaveClass('lg:hidden');
+  });
+
+  it('should have proper mobile touch optimization on menu button', () => {
+    const mockOnToggle = vi.fn();
+    render(<MobileHeader onToggle={mockOnToggle} />);
+
+    const menuButton = screen.getByTestId('mobile-toggle');
+    expect(menuButton).toBeInTheDocument();
+    expect(menuButton).toHaveClass('touch-manipulation');
+    expect(menuButton).toHaveAttribute('aria-label', 'Toggle menu');
   });
 });
 

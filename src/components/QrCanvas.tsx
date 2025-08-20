@@ -167,6 +167,7 @@ const QrCanvasComponent = function QrCanvas({
       <Image
         src={dataUrl}
         alt={alt}
+        data-testid="qr-image"
         className="rounded border"
         width={size}
         height={size}

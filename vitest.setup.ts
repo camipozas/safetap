@@ -2,6 +2,9 @@ import '@testing-library/jest-dom';
 import React from 'react';
 import { vi } from 'vitest';
 
+// Make React available globally for JSX
+globalThis.React = React;
+
 // Hoist nodemailer mock to the top to ensure it's applied early
 vi.mock('nodemailer', async () => {
   const mockTransporter = {
@@ -26,9 +29,6 @@ vi.mock('nodemailer', async () => {
     },
   };
 });
-
-// Make React available globally for JSX
-globalThis.React = React;
 
 // Set test environment variables to prevent real email sending
 // Use vi.stubEnv to ensure these override any .env files

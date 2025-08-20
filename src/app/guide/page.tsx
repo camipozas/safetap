@@ -43,8 +43,10 @@ export default function GuidePage() {
         </p>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <p className="text-blue-800 text-sm">
-            💡 <strong>Dato importante:</strong> SafeTap funciona incluso cuando
-            tu teléfono está bloqueado, sin batería o dañado.
+            💡 <strong>Dato importante:</strong> SafeTap permite acceder a tu
+            información de emergencia sin necesidad de desbloquear tu teléfono
+            personal, ya que cualquier persona puede escanear el código QR con
+            su propio dispositivo móvil.
           </p>
         </div>
       </div>
@@ -105,16 +107,16 @@ export default function GuidePage() {
           {/* Case 1 */}
           <div className="border-l-4 border-red-400 pl-6">
             <h3 className="font-semibold text-gray-900 mb-2">
-              📱 Emergencia Médica con Teléfono Bloqueado
+              📱 Emergencia Médica sin Acceso al Teléfono
             </h3>
             <p className="text-gray-700 mb-3">
-              <strong>Situación:</strong> María sufre un desmayo en el metro. Su
-              teléfono está bloqueado con Face ID pero lleva un sticker SafeTap
-              en la funda.
+              <strong>Situación:</strong> María sufre un desmayo en el metro.
+              Lleva un sticker SafeTap en la funda de su teléfono.
             </p>
             <p className="text-gray-700 mb-3">
               <strong>Solución:</strong> Los paramédicos escanean el código QR
-              del sticker y acceden instantáneamente a:
+              del sticker con sus propios dispositivos móviles y acceden
+              instantáneamente a:
             </p>
             <ul className="list-disc list-inside text-gray-600 space-y-1 ml-4">
               <li>Su información médica (diabetes tipo 2)</li>
@@ -130,12 +132,12 @@ export default function GuidePage() {
               🚗 Accidente de Tráfico
             </h3>
             <p className="text-gray-700 mb-3">
-              <strong>Situación:</strong> Carlos tiene un accidente de moto. Su
-              teléfono se ha roto pero lleva SafeTap en su casco.
+              <strong>Situación:</strong> Carlos tiene un accidente de moto.
+              Está inconsciente y lleva SafeTap en su casco.
             </p>
             <p className="text-gray-700 mb-3">
               <strong>Solución:</strong> Los servicios de emergencia escanean el
-              QR y obtienen:
+              QR con sus dispositivos móviles y obtienen:
             </p>
             <ul className="list-disc list-inside text-gray-600 space-y-1 ml-4">
               <li>Su grupo sanguíneo (O-)</li>
@@ -151,19 +153,18 @@ export default function GuidePage() {
               🏃‍♂️ Emergencia Durante Ejercicio
             </h3>
             <p className="text-gray-700 mb-3">
-              <strong>Situación:</strong> Ana sale a correr por la montaña.
-              Sufre una caída y queda inconsciente. Su teléfono no tiene
-              cobertura.
+              <strong>Situación:</strong> Ana sale a correr por el parque. Sufre
+              una caída y queda inconsciente. Lleva SafeTap en su pulsera
+              deportiva.
             </p>
             <p className="text-gray-700 mb-3">
-              <strong>Solución:</strong> Otros excursionistas encuentran su
-              SafeTap en la pulsera deportiva y cuando bajan a zona con
-              cobertura:
+              <strong>Solución:</strong> Otros corredores encuentran su SafeTap
+              en la pulsera deportiva y escanean el código con sus teléfonos:
             </p>
             <ul className="list-disc list-inside text-gray-600 space-y-1 ml-4">
               <li>Ven sus condiciones médicas (asma, inhalador de rescate)</li>
               <li>Contactan a su hermano directamente</li>
-              <li>Conocen su ubicación aproximada mediante GPS compartido</li>
+              <li>Obtienen información sobre su seguro médico</li>
             </ul>
           </div>
         </div>
