@@ -7,10 +7,11 @@ import { NextRequest, NextResponse } from 'next/server';
 // DELETE - Revocar invitación
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const invitationId = params.id;
+    const resolvedParams = await params;
+    const invitationId = resolvedParams.id;
 
     if (
       process.env.NODE_ENV === 'development' ||

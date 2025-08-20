@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  outputFileTracingRoot: process.cwd(),
   experimental: {
     serverActions: {
       allowedOrigins: ['localhost:3001', 'admin.safetap.com'],
@@ -8,7 +9,6 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
-  swcMinify: true,
   images: {
     domains: ['localhost', 'admin.safetap.com'],
     formats: ['image/webp', 'image/avif'],

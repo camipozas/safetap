@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/prisma';
 
-export async function GET(_: Request, { params }: { params: { slug: string } }) {
+export async function GET(_: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const resolvedParams = await params;
   const base = await prisma.emergencyProfile.findFirst({
-    where: { sticker: { slug: params.slug }, consentPublic: true },
+    where: { sticker: { slug: resolvedParams.slug }, consentPublic: true },
     select: {
       id: true,
       bloodType: true,

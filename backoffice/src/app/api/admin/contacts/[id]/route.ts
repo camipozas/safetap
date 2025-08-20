@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,7 +16,8 @@ export async function PUT(
     }
 
     const { name, relation, phone, country, preferred } = await request.json();
-    const contactId = params.id;
+    const resolvedParams = await params;
+    const contactId = resolvedParams.id;
 
     if (!name || !relation || !phone) {
       return NextResponse.json(
@@ -73,7 +74,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -82,7 +83,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const contactId = params.id;
+    const resolvedParams = await params;
+    const contactId = resolvedParams.id;
 
     const existingContact = await prisma.emergencyContact.findUnique({
       where: { id: contactId },
@@ -110,7 +112,7 @@ export async function DELETE(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -119,7 +121,8 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const contactId = params.id;
+    const resolvedParams = await params;
+    const contactId = resolvedParams.id;
 
     const contact = await prisma.emergencyContact.findUnique({
       where: { id: contactId },

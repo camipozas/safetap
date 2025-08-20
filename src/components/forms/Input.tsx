@@ -28,7 +28,7 @@ export function Input({
         id={id}
         name={name}
         type={type}
-        value={value as any}
+        value={value ?? ''}
         onChange={(e) => onChange?.(e.target.value)}
         className="input"
         placeholder={placeholder}

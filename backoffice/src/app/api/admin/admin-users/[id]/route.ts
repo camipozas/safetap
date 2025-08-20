@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     let currentUser: { role: string; id: string } | null = null;
@@ -36,7 +36,8 @@ export async function PUT(
     }
 
     const { role } = await request.json();
-    const { id } = params;
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
 
     if (!role) {
       return NextResponse.json({ error: 'Rol es requerido' }, { status: 400 });
@@ -88,7 +89,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     if (
@@ -115,8 +116,9 @@ export async function DELETE(
         return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
       }
 
+      const resolvedParams = await params;
       // Prevent self-deletion
-      if (user.id === params.id) {
+      if (user.id === resolvedParams.id) {
         return NextResponse.json(
           { error: 'No puedes eliminar tu propio acceso de admin' },
           { status: 400 }
@@ -124,7 +126,8 @@ export async function DELETE(
       }
     }
 
-    const { id } = params;
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
 
     // First, delete associated accounts (Google OAuth)
     await prisma.account.deleteMany({

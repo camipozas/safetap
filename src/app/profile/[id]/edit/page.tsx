@@ -7,14 +7,15 @@ import { prisma } from '@/lib/prisma';
 export default async function EditProfilePage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const session = await auth();
   if (!session?.user) {
     redirect('/login');
   }
+  const resolvedParams = await params;
   const profile = await prisma.emergencyProfile.findFirst({
-    where: { id: params.id, user: { email: session.user.email! } },
+    where: { id: resolvedParams.id, user: { email: session.user.email! } },
     include: { contacts: true },
   });
   if (!profile) {

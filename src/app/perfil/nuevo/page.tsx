@@ -6,13 +6,14 @@ import { auth } from '@/lib/auth';
 export default async function NuevoPerfilPage({
   searchParams,
 }: {
-  searchParams?: Record<string, string>;
+  searchParams?: Promise<Record<string, string>>;
 }) {
   const session = await auth();
   if (!session?.user) {
     redirect('/login');
   }
-  const stickerId = searchParams?.stickerId;
+  const resolvedSearchParams = await searchParams;
+  const stickerId = resolvedSearchParams?.stickerId;
   return (
     <div className="max-w-2xl">
       <h1 className="text-2xl font-semibold mb-4">Perfil de emergencia</h1>
