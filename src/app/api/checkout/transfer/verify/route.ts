@@ -63,40 +63,18 @@ export async function POST(req: Request) {
 
       let updatedSticker = payment.sticker;
 
-      // If transfer payment is confirmed, activate the sticker
+      // If transfer payment is confirmed, mark sticker as PAID (not ACTIVE yet)
       if (data.transferConfirmed && payment.sticker) {
         console.log(
-          '✅ Transfer payment confirmed, activating sticker:',
+          '✅ Transfer payment confirmed, updating sticker to PAID:',
           payment.sticker.id
         );
         updatedSticker = await tx.sticker.update({
           where: { id: payment.sticker.id },
           data: {
-            status: 'ACTIVE',
+            status: 'PAID',
           },
         });
-
-        // Create emergency profile if it doesn't exist
-        const existingProfile = await tx.emergencyProfile.findFirst({
-          where: {
-            userId: payment.userId,
-            stickerId: payment.sticker.id,
-          },
-        });
-
-        if (!existingProfile) {
-          console.log(
-            '🏥 Creating emergency profile for user:',
-            payment.userId
-          );
-          await tx.emergencyProfile.create({
-            data: {
-              userId: payment.userId,
-              stickerId: payment.sticker.id,
-              consentPublic: true, // Default to public for emergency access
-            },
-          });
-        }
       }
 
       return {

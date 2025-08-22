@@ -1,3 +1,5 @@
+import CloseWindowButton from '@/components/CloseWindowButton';
+
 export default async function DatosBancariosPage({
   searchParams,
 }: {
@@ -80,12 +82,9 @@ export default async function DatosBancariosPage({
           </div>
 
           <div className="mt-8 text-center">
-            <button
-              onClick={() => window.close()}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
-            >
+            <CloseWindowButton className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors">
               Cerrar ventana
-            </button>
+            </CloseWindowButton>
           </div>
         </div>
       </div>

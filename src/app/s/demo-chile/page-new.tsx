@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
-import { EmergencyProfileDisplay } from '@/components/EmergencyProfileDisplay';
-import { prisma } from '@/lib/prisma';
+import { EmergencyProfileDisplay } from '../../../components/EmergencyProfileDisplay';
+import { prisma } from '../../../lib/prisma';
 
 // Create demo profile if it doesn't exist
 async function ensureDemoProfile() {

@@ -15,11 +15,17 @@ export async function POST(
 
     const { stickerId } = await params;
 
-    // Verificar que el sticker pertenece al usuario
+    // Verificar que el sticker pertenece al usuario e incluir pagos
     const sticker = await prisma.sticker.findFirst({
       where: {
         id: stickerId,
         owner: { email: session.user.email },
+      },
+      include: {
+        payments: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
       },
     });
 
@@ -27,6 +33,21 @@ export async function POST(
       return NextResponse.json(
         { error: 'Sticker no encontrado' },
         { status: 404 }
+      );
+    }
+
+    // Verificar que hay un pago verificado o completado
+    const validPayment = sticker.payments.find(
+      (payment) => payment.status === 'VERIFIED' || payment.status === 'PAID'
+    );
+
+    if (!validPayment) {
+      return NextResponse.json(
+        {
+          error:
+            'El sticker debe tener un pago verificado antes de poder activarse',
+        },
+        { status: 400 }
       );
     }
 

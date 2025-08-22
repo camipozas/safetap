@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import ActivateStickerButton from '@/components/ActivateStickerButton';
+import { PaymentsTable } from '@/components/PaymentsTable';
 import StickerPreview from '@/components/StickerPreview';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -15,7 +16,6 @@ export default async function AccountPage({
   const session = await auth();
   const resolvedSearchParams = await searchParams;
 
-  // Special manage for dev-auth
   if (
     !session?.user?.email &&
     resolvedSearchParams?.['dev-auth'] &&
@@ -32,8 +32,15 @@ export default async function AccountPage({
         user = await prisma.user.findUnique({
           where: { id: devSession.userId },
           include: {
-            stickers: true,
-            payments: { orderBy: { createdAt: 'desc' } },
+            stickers: {
+              include: {
+                payments: {
+                  where: { status: 'VERIFIED' },
+                  orderBy: { createdAt: 'desc' },
+                },
+              },
+              orderBy: { createdAt: 'desc' },
+            },
           },
         });
       }
@@ -59,18 +66,6 @@ export default async function AccountPage({
             },
           },
           orderBy: { createdAt: 'desc' },
-        },
-        payments: {
-          orderBy: { createdAt: 'desc' },
-          include: {
-            sticker: {
-              select: {
-                nameOnSticker: true,
-                status: true,
-                serial: true,
-              },
-            },
-          },
         },
       },
     });
@@ -144,47 +139,25 @@ export default async function AccountPage({
                   <div className="mb-4">
                     <h3 className="text-lg font-semibold">{s.nameOnSticker}</h3>
                     <p className="text-sm text-slate-600">País: {s.flagCode}</p>
-                    <p className="text-sm text-slate-600">
-                      Serial: <span className="font-mono">{s.serial}</span>
-                    </p>
-                    <p className="text-sm text-slate-600">
-                      Estado:{' '}
-                      <span
-                        className={`font-medium px-2 py-1 rounded text-xs ${
-                          s.status === 'ACTIVE'
-                            ? 'bg-green-100 text-green-800'
-                            : s.status === 'SHIPPED'
-                              ? 'bg-blue-100 text-blue-800'
-                              : s.status === 'PRINTING'
-                                ? 'bg-orange-100 text-orange-800'
-                                : s.status === 'PAID'
-                                  ? 'bg-purple-100 text-purple-800'
-                                  : 'bg-yellow-100 text-yellow-800'
-                        }`}
-                      >
-                        {s.status === 'ORDERED' && '📝 Creada'}
-                        {s.status === 'PAID' && '💰 Pagada'}
-                        {s.status === 'PRINTING' && '🖨️ Imprimiendo'}
-                        {s.status === 'SHIPPED' && '📦 Enviada'}
-                        {s.status === 'ACTIVE' && '✅ Activa'}
-                        {s.status === 'LOST' && '❌ Perdida'}
-                      </span>
-                    </p>
 
-                    {/* Información adicional según el estado */}
+                    {/* Estado del sticker */}
                     {s.status === 'ORDERED' && (
-                      <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
-                        <p className="text-yellow-800">
-                          <strong>⏳ Pendiente de pago</strong>
-                        </p>
-                        <p className="text-yellow-700 text-xs mt-1">
-                          Realiza la transferencia bancaria para procesar tu
-                          pedido
-                        </p>
+                      <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div className="flex items-center">
+                          <span className="text-lg">⏳</span>
+                          <div className="ml-2">
+                            <p className="font-medium text-yellow-800">
+                              Pendiente de pago
+                            </p>
+                            <p className="text-yellow-700 text-sm mt-1">
+                              Realiza la transferencia bancaria para procesar tu
+                              pedido
+                            </p>
+                          </div>
+                        </div>
                         <Link
-                          className="mt-2 text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded transition-colors inline-block"
+                          className="mt-3 text-sm bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1.5 rounded transition-colors inline-block"
                           href="/datos-bancarios"
-                          target="_blank"
                         >
                           Ver datos bancarios
                         </Link>
@@ -192,68 +165,105 @@ export default async function AccountPage({
                     )}
 
                     {s.status === 'PAID' && (
-                      <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded text-sm">
-                        <p className="text-purple-800">
-                          <strong>✨ Pago confirmado</strong>
-                        </p>
-                        <p className="text-purple-700 text-xs mt-1">
-                          Tu sticker está en cola de impresión
-                        </p>
+                      <div className="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                        <div className="flex items-center">
+                          <span className="text-lg">💰</span>
+                          <div className="ml-2">
+                            <p className="font-medium text-purple-800">
+                              Pago confirmado
+                            </p>
+                            <p className="text-purple-700 text-sm mt-1">
+                              Tu sticker está en cola de impresión
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     )}
 
                     {s.status === 'PRINTING' && (
-                      <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-sm">
-                        <p className="text-orange-800">
-                          <strong>🖨️ En impresión</strong>
-                        </p>
-                        <p className="text-orange-700 text-xs mt-1">
-                          Tu sticker se está imprimiendo y será enviado pronto
-                        </p>
+                      <div className="mt-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                        <div className="flex items-center">
+                          <span className="text-lg">🖨️</span>
+                          <div className="ml-2">
+                            <p className="font-medium text-orange-800">
+                              En impresión
+                            </p>
+                            <p className="text-orange-700 text-sm mt-1">
+                              Tu sticker se está imprimiendo y será enviado
+                              pronto
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     )}
 
                     {s.status === 'SHIPPED' && (
-                      <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
-                        <p className="text-blue-800">
-                          <strong>📦 Enviado</strong>
-                        </p>
-                        <p className="text-blue-700 text-xs mt-1">
-                          Tu sticker está en camino. Revisa tu email para el
-                          tracking
-                        </p>
+                      <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-center">
+                          <span className="text-lg">📦</span>
+                          <div className="ml-2">
+                            <p className="font-medium text-blue-800">Enviado</p>
+                            <p className="text-blue-700 text-sm mt-1">
+                              Tu sticker está en camino. Revisa tu email para el
+                              tracking
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     )}
 
                     {s.status === 'ACTIVE' && (
-                      <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm">
-                        <p className="text-green-800">
-                          <strong>✅ Activo y funcionando</strong>
-                        </p>
-                        <p className="text-green-700 text-xs mt-1">
-                          Tu sticker está activo y listo para emergencias
-                        </p>
+                      <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-center">
+                          <span className="text-lg">✅</span>
+                          <div className="ml-2">
+                            <p className="font-medium text-green-800">
+                              Activo y funcionando
+                            </p>
+                            <p className="text-green-700 text-sm mt-1">
+                              Tu sticker está activo y listo para emergencias
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     )}
 
-                    {/* Información técnica oculta para usuarios finales */}
-                    {process.env.NODE_ENV === 'development' && (
-                      <>
-                        <p className="text-sm text-slate-600">
-                          URL pública:{' '}
-                          <span className="font-mono">/s/{s.slug}</span>
+                    {s.status === 'LOST' && (
+                      <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="flex items-center">
+                          <span className="text-lg">❌</span>
+                          <div className="ml-2">
+                            <p className="font-medium text-red-800">Perdido</p>
+                            <p className="text-red-700 text-sm mt-1">
+                              Contacta con soporte para solicitar un reemplazo
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Mostrar estado del pago más reciente para mayor claridad */}
+                    {s.payments.length > 0 && (
+                      <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded text-xs text-gray-600">
+                        <p>
+                          Estado del pago:{' '}
+                          <span className="font-medium">
+                            {s.payments[0].status === 'VERIFIED'
+                              ? '✅ Verificado'
+                              : s.payments[0].status === 'PAID'
+                                ? '💰 Confirmado'
+                                : s.payments[0].status === 'TRANSFERRED'
+                                  ? '💳 Transferido'
+                                  : s.payments[0].status === 'PENDING'
+                                    ? '⏳ Pendiente'
+                                    : s.payments[0].status === 'REJECTED'
+                                      ? '❌ Rechazado'
+                                      : s.payments[0].status === 'CANCELLED'
+                                        ? '🚫 Cancelado'
+                                        : s.payments[0].status}
+                          </span>
                         </p>
-                        <p className="text-xs text-slate-500 mt-1">
-                          Serial: {s.serial}
-                        </p>
-                        {s.stickerColor && (
-                          <p className="text-xs text-slate-500 mt-1">
-                            Colores:{' '}
-                            <span className="font-mono">{s.stickerColor}</span>{' '}
-                            / <span className="font-mono">{s.textColor}</span>
-                          </p>
-                        )}
-                      </>
+                      </div>
                     )}
                   </div>
 
@@ -271,30 +281,12 @@ export default async function AccountPage({
                     >
                       Editar información
                     </Link>
-                    {s.status === 'SHIPPED' ? (
-                      <span className="btn btn-primary opacity-50 cursor-not-allowed">
-                        Funcionalidad en desarrollo
-                      </span>
-                    ) : s.status !== 'ACTIVE' ? (
-                      <ActivateStickerButton stickerId={s.id} />
-                    ) : null}
-                    {s.status === 'ACTIVE' && (
-                      <Link
-                        className="btn btn-secondary text-sm"
-                        href={`/api/qr/generate?url=${encodeURIComponent(`${process.env.NEXTAUTH_URL}/s/${s.slug}`)}&format=png&size=512&dpi=300`}
-                        target="_blank"
-                      >
-                        Descargar QR PNG
-                      </Link>
-                    )}
-                    {s.status === 'ACTIVE' && (
-                      <Link
-                        className="btn btn-secondary text-sm"
-                        href={`/api/qr/generate?url=${encodeURIComponent(`${process.env.NEXTAUTH_URL}/s/${s.slug}`)}&format=svg`}
-                        target="_blank"
-                      >
-                        Descargar QR SVG
-                      </Link>
+                    {s.status === 'SHIPPED' && s.payments.length > 0 && (
+                      <ActivateStickerButton
+                        stickerId={s.id}
+                        hasValidPayment={s.payments.length > 0}
+                        status={s.status}
+                      />
                     )}
                   </div>
                 </div>
@@ -303,90 +295,9 @@ export default async function AccountPage({
           ))}
         </ul>
       </section>
-      <section>
-        <h2 className="text-xl font-semibold">Pagos</h2>
-        <div className="mt-4">
-          {user.payments.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <p>No hay pagos registrados</p>
-            </div>
-          ) : (
-            <div className="bg-white rounded-lg border overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">
-                      Fecha
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">
-                      Producto
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">
-                      Monto
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">
-                      Estado
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {user.payments.map((p) => (
-                    <tr key={p.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {new Date(p.createdAt).toLocaleDateString('es-ES', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                        })}
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            Sticker SafeTap
-                          </p>
-                          {/* Temporal: comentado hasta corregir tipos */}
-                          {/* {p.sticker && (
-                            <p className="text-gray-600 text-xs">
-                              {p.sticker.nameOnSticker} • {p.sticker.serial}
-                            </p>
-                          )} */}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        ${(p.amountCents / 100).toLocaleString('es-ES')}{' '}
-                        {p.currency}
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            p.status === 'VERIFIED' || p.status === 'PAID'
-                              ? 'bg-green-100 text-green-800'
-                              : p.status === 'PENDING' ||
-                                  p.status === 'TRANSFER_PAYMENT'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : p.status === 'REJECTED'
-                                  ? 'bg-red-100 text-red-800'
-                                  : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {(p.status === 'VERIFIED' || p.status === 'PAID') &&
-                            '✅ Confirmado'}
-                          {(p.status === 'PENDING' ||
-                            p.status === 'TRANSFER_PAYMENT') &&
-                            '⏳ Pendiente'}
-                          {p.status === 'REJECTED' && '❌ Rechazado'}
-                          {p.status === 'CANCELLED' && '🚫 Cancelado'}
-                          {p.status === 'TRANSFERRED' && '💸 Transferido'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </section>
+
+      {/* Payments section - now using API endpoint */}
+      <PaymentsTable />
     </div>
   );
 }

@@ -1,46 +1,28 @@
 'use client';
 
-import { formatCurrency, formatDateTime, getStatusColor } from '@/lib/utils';
-import { ChevronRight, Download, Eye } from 'lucide-react';
+import {
+  analyzePayments,
+  checkOrderConsistency,
+  getAvailableStatusTransitions,
+  getDisplayStatus,
+  getPaymentDisplayInfo,
+  type OrderStatus,
+  type OrderStatusTransition,
+} from '@/lib/order-helpers';
+import { formatDateTime, getStatusColor } from '@/lib/utils';
+import { Order } from '@/types/dashboard';
+import {
+  AlertCircle,
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Eye,
+} from 'lucide-react';
 import QRCode from 'qrcode';
 import { useState } from 'react';
 import { Button } from './button';
 import StickerPreview from './sticker-preview';
-
-type Order = {
-  id: string;
-  slug: string;
-  serial: string;
-  nameOnSticker: string;
-  flagCode: string;
-  stickerColor: string;
-  textColor: string;
-  status: 'ORDERED' | 'PAID' | 'PRINTING' | 'SHIPPED' | 'ACTIVE' | 'LOST';
-  createdAt: Date;
-  owner: {
-    id: string;
-    name: string | null;
-    email: string;
-    country: string | null;
-  };
-  profile?: {
-    bloodType: string | null;
-    allergies: string[];
-    conditions: string[];
-    medications: string[];
-    notes: string | null;
-    contacts: {
-      name: string;
-      phone: string;
-      relation: string;
-    }[];
-  } | null;
-  payments: {
-    amountCents: number;
-    currency: string;
-    createdAt: Date;
-  }[];
-};
 
 interface OrdersTableProps {
   orders: Order[];
@@ -51,15 +33,16 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
     {}
   );
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
-  const [statusFilter, setStatusFilter] = useState<Order['status'] | 'ALL'>(
-    'ALL'
-  );
+  const [statusFilter, setStatusFilter] = useState<OrderStatus | 'ALL'>('ALL');
   const [countryFilter, setCountryFilter] = useState<string>('ALL');
   const [showPreview, setShowPreview] = useState<Order | null>(null);
+  const [fixingInconsistencies, setFixingInconsistencies] = useState(false);
 
   // Filter orders based on selected filters
   const filteredOrders = orders.filter((order) => {
-    if (statusFilter !== 'ALL' && order.status !== statusFilter) return false;
+    // Use displayStatus for filtering if available, otherwise use status
+    const orderStatus = order.displayStatus || order.status;
+    if (statusFilter !== 'ALL' && orderStatus !== statusFilter) return false;
     if (countryFilter !== 'ALL' && order.owner.country !== countryFilter)
       return false;
     return true;
@@ -70,20 +53,16 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
     new Set(orders.map((o) => o.owner.country).filter(Boolean))
   );
 
-  const getNextStatus = (
-    currentStatus: Order['status']
-  ): Order['status'] | null => {
-    const flow: Record<string, Order['status']> = {
-      ORDERED: 'PAID',
-      PAID: 'PRINTING',
-      PRINTING: 'SHIPPED',
-      SHIPPED: 'ACTIVE',
-    };
-
-    return flow[currentStatus] || null;
+  // Get available transitions using the helper
+  const getAvailableTransitions = (
+    currentStatus: OrderStatus,
+    payments: Order['payments']
+  ): OrderStatusTransition[] => {
+    const paymentInfo = analyzePayments(payments);
+    return getAvailableStatusTransitions(currentStatus, paymentInfo);
   };
 
-  const getStatusLabel = (status: Order['status']) => {
+  const getStatusLabel = (status: OrderStatus) => {
     const labels = {
       ORDERED: 'Creada',
       PAID: 'Pagada',
@@ -91,14 +70,13 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
       SHIPPED: 'Enviada',
       ACTIVE: 'Activa',
       LOST: 'Perdida',
+      REJECTED: 'Rechazada',
+      CANCELLED: 'Cancelada',
     };
     return labels[status];
   };
 
-  const updateOrderStatus = async (
-    orderId: string,
-    newStatus: Order['status']
-  ) => {
+  const updateOrderStatus = async (orderId: string, newStatus: OrderStatus) => {
     setLoadingStates((prev) => ({ ...prev, [orderId]: true }));
 
     try {
@@ -357,9 +335,16 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
       selectedOrders.has(o.id)
     );
     const promises = selectedOrdersList.map((order) => {
-      const nextStatus = getNextStatus(order.status);
-      if (nextStatus) {
-        return updateOrderStatus(order.id, nextStatus);
+      const availableTransitions = getAvailableTransitions(
+        order.status,
+        order.payments
+      );
+      // Get the first available forward transition
+      const nextTransition = availableTransitions.find(
+        (t) => t.direction === 'forward'
+      );
+      if (nextTransition) {
+        return updateOrderStatus(order.id, nextTransition.status);
       }
       return Promise.resolve();
     });
@@ -379,6 +364,34 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
       await downloadStickerHighRes(order);
       // Add a small delay to prevent overwhelming the browser
       await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  };
+
+  // Fix inconsistencies automatically
+  const fixInconsistencies = async () => {
+    setFixingInconsistencies(true);
+    try {
+      const response = await fetch('/api/admin/orders/fix-inconsistencies', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al arreglar inconsistencias');
+      }
+
+      const result = await response.json();
+      alert(`Se arreglaron ${result.updates.length} inconsistencias`);
+
+      // Reload the page to reflect changes
+      window.location.reload();
+    } catch (err) {
+      console.error('Error al arreglar inconsistencias:', err);
+      alert('Error al arreglar inconsistencias');
+    } finally {
+      setFixingInconsistencies(false);
     }
   };
 
@@ -405,6 +418,8 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
               <option value="SHIPPED">Enviada</option>
               <option value="ACTIVE">Activa</option>
               <option value="LOST">Perdida</option>
+              <option value="REJECTED">Rechazada</option>
+              <option value="CANCELLED">Cancelada</option>
             </select>
           </div>
 
@@ -432,31 +447,47 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
         </div>
 
         {/* Bulk Actions */}
-        {selectedOrders.size > 0 && (
-          <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center pt-2 border-t">
-            <span className="text-sm font-medium">
-              {selectedOrders.size} seleccionadas
-            </span>
+        <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center pt-2 border-t">
+          {selectedOrders.size > 0 ? (
+            <>
+              <span className="text-sm font-medium">
+                {selectedOrders.size} seleccionadas
+              </span>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button
+                  onClick={bulkUpdateStatus}
+                  disabled={selectedOrders.size === 0}
+                  className="text-sm flex-1 sm:flex-none"
+                >
+                  Avanzar Estado
+                </Button>
+                <Button
+                  onClick={downloadSelectedStickers}
+                  disabled={selectedOrders.size === 0}
+                  variant="outline"
+                  className="text-sm flex-1 sm:flex-none"
+                >
+                  <Download className="w-4 h-4 mr-1" />
+                  Descargar
+                </Button>
+              </div>
+            </>
+          ) : (
             <div className="flex gap-2 w-full sm:w-auto">
               <Button
-                onClick={bulkUpdateStatus}
-                disabled={selectedOrders.size === 0}
-                className="text-sm flex-1 sm:flex-none"
-              >
-                Avanzar Estado
-              </Button>
-              <Button
-                onClick={downloadSelectedStickers}
-                disabled={selectedOrders.size === 0}
+                onClick={fixInconsistencies}
+                disabled={fixingInconsistencies}
                 variant="outline"
                 className="text-sm flex-1 sm:flex-none"
               >
-                <Download className="w-4 h-4 mr-1" />
-                Descargar
+                <AlertCircle className="w-4 h-4 mr-1" />
+                {fixingInconsistencies
+                  ? 'Arreglando...'
+                  : 'Arreglar Inconsistencias'}
               </Button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Orders Table - Desktop */}
@@ -488,10 +519,19 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
             </thead>
             <tbody>
               {filteredOrders.map((order) => {
-                const nextStatus = getNextStatus(order.status);
-                const totalPaid = order.payments.reduce(
-                  (sum, p) => sum + p.amountCents,
-                  0
+                const paymentInfo = analyzePayments(order.payments);
+                const displayStatus = getDisplayStatus(
+                  order.status,
+                  paymentInfo
+                );
+                const paymentDisplay = getPaymentDisplayInfo(paymentInfo);
+                const consistency = checkOrderConsistency(
+                  order.status,
+                  paymentInfo
+                );
+                const availableTransitions = getAvailableTransitions(
+                  order.status,
+                  order.payments
                 );
 
                 return (
@@ -516,25 +556,53 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                     </td>
                     <td className="p-2">
                       <div className="flex items-center space-x-2">
-                        <span
-                          className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(order.status)}`}
-                        >
-                          {getStatusLabel(order.status)}
-                        </span>
-                        {nextStatus && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              updateOrderStatus(order.id, nextStatus)
-                            }
-                            disabled={loadingStates[order.id]}
-                            className="text-xs flex items-center space-x-1"
+                        <div className="flex flex-col space-y-1">
+                          <span
+                            className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(displayStatus.primaryStatus)}`}
                           >
-                            <ChevronRight className="w-3 h-3" />
-                            <span>{getStatusLabel(nextStatus)}</span>
-                          </Button>
-                        )}
+                            {getStatusLabel(displayStatus.primaryStatus)}
+                          </span>
+                          {displayStatus.secondaryStatuses.length > 0 && (
+                            <span
+                              className={`inline-block px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600`}
+                            >
+                              ▲{' '}
+                              {getStatusLabel(
+                                displayStatus.secondaryStatuses[0]
+                              )}
+                            </span>
+                          )}
+                          {!consistency.isConsistent && (
+                            <div className="flex items-center space-x-1 text-xs text-red-600">
+                              <AlertCircle className="w-3 h-3" />
+                              <span>Inconsistencia</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {availableTransitions.map((transition) => (
+                            <Button
+                              key={transition.status}
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                updateOrderStatus(order.id, transition.status)
+                              }
+                              disabled={loadingStates[order.id]}
+                              className="text-xs flex items-center space-x-1"
+                              title={transition.description}
+                            >
+                              {transition.direction === 'backward' ? (
+                                <ChevronLeft className="w-3 h-3" />
+                              ) : transition.direction === 'special' ? (
+                                <AlertTriangle className="w-3 h-3" />
+                              ) : (
+                                <ChevronRight className="w-3 h-3" />
+                              )}
+                              <span>{getStatusLabel(transition.status)}</span>
+                            </Button>
+                          ))}
+                        </div>
                       </div>
                     </td>
                     <td className="p-2">
@@ -572,16 +640,21 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                       </div>
                     </td>
                     <td className="p-2">
-                      {totalPaid > 0 ? (
-                        <div className="text-sm font-medium text-green-600">
-                          {formatCurrency(
-                            totalPaid,
-                            order.payments[0]?.currency || 'EUR'
-                          )}
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium">
+                          {paymentDisplay.amount}
                         </div>
-                      ) : (
-                        <span className="text-xs text-gray-400">Sin pago</span>
-                      )}
+                        <div
+                          className={`text-xs ${paymentDisplay.statusColor}`}
+                        >
+                          {paymentDisplay.status}
+                        </div>
+                        {!consistency.isConsistent && (
+                          <div className="text-xs text-red-600">
+                            ⚠️ {consistency.issues[0]}
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="p-2">
                       <div className="text-xs">
@@ -680,10 +753,20 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
         )}
 
         {filteredOrders.map((order) => {
-          const nextStatus = getNextStatus(order.status);
-          const totalPaid = order.payments.reduce(
-            (sum, p) => sum + p.amountCents,
-            0
+          const paymentInfo = analyzePayments(order.payments);
+          // Use pre-processed display status if available, otherwise calculate it
+          const displayStatus = order.displayStatus
+            ? {
+                primaryStatus: order.displayStatus as any,
+                secondaryStatuses: order.displaySecondaryStatuses || [],
+                description: order.displayDescription || '',
+              }
+            : getDisplayStatus(order.status, paymentInfo);
+          const paymentDisplay = getPaymentDisplayInfo(paymentInfo);
+          const consistency = checkOrderConsistency(order.status, paymentInfo);
+          const availableTransitions = getAvailableTransitions(
+            order.status,
+            order.payments
           );
 
           return (
@@ -709,11 +792,29 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                     </div>
                   </div>
                 </div>
-                <span
-                  className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(order.status)}`}
-                >
-                  {getStatusLabel(order.status)}
-                </span>
+                <div className="flex flex-col items-end space-y-1">
+                  <span
+                    className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(displayStatus.primaryStatus)}`}
+                  >
+                    {getStatusLabel(displayStatus.primaryStatus)}
+                  </span>
+                  {displayStatus.secondaryStatuses.length > 0 && (
+                    <span
+                      className={`inline-block px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600`}
+                    >
+                      ▲{' '}
+                      {getStatusLabel(
+                        displayStatus.secondaryStatuses[0] as any
+                      )}
+                    </span>
+                  )}
+                  {!consistency.isConsistent && (
+                    <div className="flex items-center space-x-1 text-xs text-red-600">
+                      <AlertCircle className="w-3 h-3" />
+                      <span>Inconsistencia</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Main info */}
@@ -738,16 +839,21 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                   <div>
                     <span className="text-gray-500">Pago:</span>
                     <div>
-                      {totalPaid > 0 ? (
-                        <span className="text-green-600 font-medium">
-                          {formatCurrency(
-                            totalPaid,
-                            order.payments[0]?.currency || 'EUR'
-                          )}
+                      <div className="space-y-1">
+                        <span className="font-medium">
+                          {paymentDisplay.amount}
                         </span>
-                      ) : (
-                        <span className="text-gray-400">Sin pago</span>
-                      )}
+                        <div
+                          className={`text-xs ${paymentDisplay.statusColor}`}
+                        >
+                          {paymentDisplay.status}
+                        </div>
+                        {!consistency.isConsistent && (
+                          <div className="text-xs text-red-600">
+                            ⚠️ {consistency.issues[0]}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div>
@@ -770,18 +876,29 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
 
               {/* Actions */}
               <div className="space-y-2 pt-3 border-t">
-                {nextStatus && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => updateOrderStatus(order.id, nextStatus)}
-                    disabled={loadingStates[order.id]}
-                    className="text-xs flex items-center justify-center space-x-1 w-full"
-                  >
-                    <ChevronRight className="w-3 h-3" />
-                    <span>Avanzar a: {getStatusLabel(nextStatus)}</span>
-                  </Button>
-                )}
+                <div className="flex flex-wrap gap-2">
+                  {availableTransitions.map((transition) => (
+                    <Button
+                      key={transition.status}
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        updateOrderStatus(order.id, transition.status)
+                      }
+                      disabled={loadingStates[order.id]}
+                      className="text-xs flex items-center space-x-1"
+                    >
+                      {transition.direction === 'backward' ? (
+                        <ChevronLeft className="w-3 h-3" />
+                      ) : transition.direction === 'special' ? (
+                        <AlertTriangle className="w-3 h-3" />
+                      ) : (
+                        <ChevronRight className="w-3 h-3" />
+                      )}
+                      <span>{getStatusLabel(transition.status)}</span>
+                    </Button>
+                  ))}
+                </div>
                 <div className="grid grid-cols-2 gap-2">
                   <Button
                     variant="outline"

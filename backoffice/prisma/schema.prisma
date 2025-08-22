@@ -24,6 +24,8 @@ enum StickerStatus {
     SHIPPED
     ACTIVE
     LOST
+    REJECTED
+    CANCELLED
 }
 
 enum AccessVia {
