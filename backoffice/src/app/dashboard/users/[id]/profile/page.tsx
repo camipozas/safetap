@@ -12,7 +12,12 @@ import {
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { prisma } from '@/lib/prisma';
+import { PrismaClient } from '@prisma/client';
+
+// Create a direct Accelerate client to avoid any local caching
+const accelerateClient = new PrismaClient({
+  datasourceUrl: process.env.DATABASE_URL, // This ensures we use the Accelerate URL
+});
 
 interface ProfileViewPageProps {
   params: Promise<{ id: string }>;
@@ -31,7 +36,7 @@ export default async function ProfileViewPage({
 }: ProfileViewPageProps) {
   const { id } = await params;
 
-  const user = await prisma.user.findUnique({
+  const user = await accelerateClient.user.findUnique({
     where: { id },
     include: {
       stickers: true,

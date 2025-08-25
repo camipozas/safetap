@@ -375,7 +375,11 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
                     <td className="py-4 px-4">
                       <div>
                         <div className="font-medium text-gray-900">
-                          {order.owner.name || 'Sin nombre'}
+                          {order.owner.name ||
+                            (order.profile?.contacts &&
+                            order.profile.contacts.length > 0
+                              ? order.profile.contacts[0].name
+                              : 'Sin nombre')}
                         </div>
                         <div className="text-sm text-gray-500">
                           {order.owner.email}

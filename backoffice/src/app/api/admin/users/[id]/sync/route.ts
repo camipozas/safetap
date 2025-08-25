@@ -1,7 +1,7 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { hasPermission } from '@/types/shared';
-import { getServerSession } from 'next-auth';
-import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
 // Create a direct Accelerate client to avoid any local caching
@@ -14,26 +14,26 @@ export async function PUT(
   props: { params: Promise<{ id: string }> }
 ) {
   const params = await props.params;
+
   try {
-    if (process.env.NODE_ENV !== 'development') {
-      const session = await getServerSession(authOptions);
+    // Authentication check
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-      if (!session?.user?.email) {
-        return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
-      }
+    const adminUser = await accelerateClient.user.findUnique({
+      where: { email: session.user.email },
+    });
 
-      const adminUser = await accelerateClient.user.findUnique({
-        where: { email: session.user.email },
-      });
-
-      if (!adminUser || !hasPermission(adminUser.role, 'canManageUsers')) {
-        return NextResponse.json({ error: 'Access denied' }, { status: 403 });
-      }
+    if (!adminUser || !hasPermission(adminUser.role, 'canManageUsers')) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
     const { name, role, country } = await request.json();
     const userId = params.id;
 
+    // Find the user to update using Accelerate directly
     const userToUpdate = await accelerateClient.user.findUnique({
       where: { id: userId },
     });
@@ -42,6 +42,14 @@ export async function PUT(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    console.error('🔍 Current user data via Accelerate:', {
+      id: userToUpdate.id,
+      name: userToUpdate.name,
+      email: userToUpdate.email,
+      country: userToUpdate.country,
+    });
+
+    // Use a transaction with Accelerate to ensure data consistency
     const updatedUser = await accelerateClient.$transaction(async (tx) => {
       // Update user data
       const user = await tx.user.update({
@@ -63,37 +71,35 @@ export async function PUT(
         },
       });
 
-      console.error('User updated via Accelerate:', user);
-
       // If name is being updated and user has stickers, update sticker nameOnSticker too
       if (name !== undefined) {
-        const stickerUpdateResult = await tx.sticker.updateMany({
+        await tx.sticker.updateMany({
           where: { ownerId: userId },
           data: {
             nameOnSticker: name,
             updatedAt: new Date(),
           },
         });
-        console.error('Stickers updated via Accelerate:', stickerUpdateResult);
       }
 
       // If country is being updated and user has stickers, update sticker flagCode too
       if (country !== undefined) {
-        const flagUpdateResult = await tx.sticker.updateMany({
+        await tx.sticker.updateMany({
           where: { ownerId: userId },
           data: {
             flagCode: country,
             updatedAt: new Date(),
           },
         });
-        console.error(
-          'Sticker flags updated via Accelerate:',
-          flagUpdateResult
-        );
       }
 
       return user;
     });
+
+    // Force cache invalidation for Accelerate is not needed with direct connection
+    // await accelerateClient.$executeRaw`SELECT 1`;
+
+    console.error('✅ User updated via Accelerate:', updatedUser);
 
     return NextResponse.json({
       success: true,
@@ -101,7 +107,7 @@ export async function PUT(
       user: updatedUser,
     });
   } catch (error) {
-    console.error('Error updating user via Accelerate:', error);
+    console.error('Error updating user:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -114,6 +120,7 @@ export async function GET(
   props: { params: Promise<{ id: string }> }
 ) {
   const params = await props.params;
+
   try {
     const userId = params.id;
 
@@ -133,6 +140,14 @@ export async function GET(
             payments: true,
           },
         },
+        stickers: {
+          select: {
+            id: true,
+            nameOnSticker: true,
+            flagCode: true,
+            updatedAt: true,
+          },
+        },
       },
     });
 
@@ -142,7 +157,7 @@ export async function GET(
 
     return NextResponse.json({ user });
   } catch (error) {
-    console.error('Error fetching user via Accelerate:', error);
+    console.error('Error fetching user:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

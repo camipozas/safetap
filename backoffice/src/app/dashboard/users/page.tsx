@@ -1,9 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { prisma } from '@/lib/prisma';
+import { PrismaClient } from '@prisma/client';
 import UsersTable from '../../../components/ui/users-table';
 
+// Create a direct Accelerate client to avoid any local caching
+const accelerateClient = new PrismaClient({
+  datasourceUrl: process.env.DATABASE_URL, // This ensures we use the Accelerate URL
+});
+
 async function getUsers() {
-  return await prisma.user.findMany({
+  return await accelerateClient.user.findMany({
     include: {
       _count: {
         select: {

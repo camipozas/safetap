@@ -1,7 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { prisma } from '@/lib/prisma';
+import { PrismaClient } from '@prisma/client';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
+
+// Create a direct Accelerate client to avoid any local caching
+const accelerateClient = new PrismaClient({
+  datasourceUrl: process.env.DATABASE_URL, // This ensures we use the Accelerate URL
+});
+
 import {
   Calendar,
   CreditCard,
@@ -14,7 +20,7 @@ import {
 import Link from 'next/link';
 
 async function getUserDetails(userId: string) {
-  return await prisma.user.findUnique({
+  return await accelerateClient.user.findUnique({
     where: { id: userId },
     include: {
       _count: {

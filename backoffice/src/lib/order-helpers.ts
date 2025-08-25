@@ -404,73 +404,71 @@ export function getDisplayStatus(
       if (paymentInfo.hasConfirmedPayment) {
         return {
           primaryStatus: ORDER_STATUS.PAID,
-          secondaryStatuses: [ORDER_STATUS.ORDERED],
-          description: 'Pago confirmado - lista para impresión',
+          secondaryStatuses: [],
+          description: '',
         };
       }
       // If ORDERED but has rejected payment, should show as REJECTED
       if (paymentInfo.hasRejectedPayment) {
         return {
           primaryStatus: ORDER_STATUS.REJECTED,
-          secondaryStatuses: [ORDER_STATUS.ORDERED],
-          description: 'Pago rechazado - pendiente de reintento',
+          secondaryStatuses: [],
+          description: '',
         };
       }
       return {
         primaryStatus: ORDER_STATUS.ORDERED,
         secondaryStatuses: [],
-        description: paymentInfo.hasConfirmedPayment
-          ? 'Lista para avanzar a pagada'
-          : 'Pendiente de pago',
+        description: '',
       };
 
     case ORDER_STATUS.PAID:
       return {
         primaryStatus: ORDER_STATUS.PAID,
         secondaryStatuses: [],
-        description: 'Lista para impresión',
+        description: '',
       };
 
     case ORDER_STATUS.PRINTING:
       return {
         primaryStatus: ORDER_STATUS.PRINTING,
         secondaryStatuses: [],
-        description: 'En proceso de impresión',
+        description: '',
       };
 
     case ORDER_STATUS.SHIPPED:
       return {
         primaryStatus: ORDER_STATUS.SHIPPED,
         secondaryStatuses: [],
-        description: 'Enviada al cliente',
+        description: '',
       };
 
     case ORDER_STATUS.ACTIVE:
       return {
         primaryStatus: ORDER_STATUS.ACTIVE,
         secondaryStatuses: [],
-        description: 'Sticker activo y funcional',
+        description: '',
       };
 
     case ORDER_STATUS.LOST:
       return {
         primaryStatus: ORDER_STATUS.LOST,
         secondaryStatuses: [],
-        description: 'Sticker perdido o dañado',
+        description: '',
       };
 
     case ORDER_STATUS.REJECTED:
       return {
         primaryStatus: ORDER_STATUS.REJECTED,
         secondaryStatuses: [],
-        description: 'Pago rechazado - pendiente de reintento',
+        description: '',
       };
 
     case ORDER_STATUS.CANCELLED:
       return {
         primaryStatus: ORDER_STATUS.CANCELLED,
         secondaryStatuses: [],
-        description: 'Orden cancelada',
+        description: '',
       };
 
     default:
