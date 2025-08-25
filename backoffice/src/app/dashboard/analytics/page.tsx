@@ -21,7 +21,7 @@ async function getAnalyticsData() {
       },
     },
     _sum: {
-      amountCents: true,
+      amount: true,
     },
   });
 
@@ -77,7 +77,7 @@ async function getAnalyticsData() {
   const revenueByDay: { [key: string]: number } = {};
   revenueData.forEach((item) => {
     const day = format(item.createdAt, 'yyyy-MM-dd');
-    revenueByDay[day] = (revenueByDay[day] || 0) + (item._sum.amountCents || 0);
+    revenueByDay[day] = (revenueByDay[day] || 0) + (item._sum.amount || 0);
   });
 
   const ordersByDay: { [key: string]: number } = {};

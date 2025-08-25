@@ -32,7 +32,7 @@ interface EmergencyProfileData {
     payments?: {
       id: string;
       status: string;
-      amountCents: number;
+      amount: number;
       createdAt: Date;
     }[];
   } | null;

@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
           select: {
             id: true,
             status: true,
-            amountCents: true,
+            amount: true,
             currency: true,
             createdAt: true,
           },
@@ -139,7 +139,7 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             status: true,
-            amountCents: true,
+            amount: true,
             currency: true,
             createdAt: true,
           },

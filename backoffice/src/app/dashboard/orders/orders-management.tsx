@@ -42,7 +42,7 @@ interface Order {
   payments: Array<{
     id: string;
     status: string;
-    amountCents: number;
+    amount: number;
     currency: string;
     createdAt: Date;
   }>;
@@ -144,11 +144,11 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
     return Array.from(countrySet).sort();
   }, [orders]);
 
-  const formatCurrency = (amountCents: number, currency: string) => {
+  const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
       currency: currency,
-    }).format(amountCents / 100);
+    }).format(amount);
   };
 
   const formatDate = (date: Date) => {

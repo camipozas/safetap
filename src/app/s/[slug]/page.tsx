@@ -32,7 +32,7 @@ export default async function PublicProfile(props: {
             select: {
               id: true,
               status: true,
-              amountCents: true,
+              amount: true,
               createdAt: true,
             },
             orderBy: {

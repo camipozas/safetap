@@ -39,7 +39,7 @@ type Order = {
       | 'TRANSFERRED'
       | 'REJECTED'
       | 'CANCELLED';
-    amountCents: number;
+    amount: number;
     currency: string;
     createdAt: Date;
   }[];
@@ -147,11 +147,11 @@ const getAvailableTransitions = (
 // Create mock payment objects
 const createPayment = (
   status: Order['payments'][0]['status'],
-  amountCents = 6990
+  amount = 6990
 ): Order['payments'][0] => ({
   id: 'test-payment-id',
   status,
-  amountCents,
+  amount,
   currency: 'CLP',
   createdAt: new Date(),
 });

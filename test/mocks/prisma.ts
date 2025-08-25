@@ -36,7 +36,7 @@ export const mockEmergencyProfile = {
       {
         id: 'mock-payment-id',
         status: 'PAID',
-        amountCents: 2500000,
+        amount: 2500000,
         currency: 'CLP',
         reference: 'DEMO-PAYMENT',
         receivedAt: new Date('2023-01-01'),

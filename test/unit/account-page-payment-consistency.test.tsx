@@ -33,7 +33,7 @@ vi.mock('@/lib/prisma', () => ({
               {
                 id: 'payment-123',
                 status: 'VERIFIED',
-                amountCents: 6990,
+                amount: 6990,
                 createdAt: new Date('2025-08-20'),
               },
             ],

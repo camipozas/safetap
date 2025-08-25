@@ -34,7 +34,7 @@ async function getUserDetails(userId: string) {
           status: 'VERIFIED',
         },
         select: {
-          amountCents: true,
+          amount: true,
           createdAt: true,
         },
         orderBy: {
@@ -98,7 +98,7 @@ export default async function UserDetailsPage(props: {
 
   const profile = user.profiles[0];
   const totalSpent = user.payments.reduce(
-    (sum, payment) => sum + payment.amountCents,
+    (sum, payment) => sum + payment.amount,
     0
   );
 
@@ -332,7 +332,7 @@ export default async function UserDetailsPage(props: {
                   >
                     <div>
                       <div className="font-medium text-sm text-green-600">
-                        {formatCurrency(payment.amountCents)}
+                        {formatCurrency(payment.amount)}
                       </div>
                       <div className="text-xs text-gray-500">
                         {formatDateTime(payment.createdAt)}

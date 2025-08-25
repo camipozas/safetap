@@ -172,7 +172,7 @@ export async function GET(req: Request) {
         id: payment.id,
         status: payment.status,
         reference: payment.reference,
-        amountCents: payment.amountCents,
+        amount: payment.amount,
         currency: payment.currency,
         method: payment.method,
         receivedAt: payment.receivedAt,

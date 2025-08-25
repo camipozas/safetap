@@ -5,8 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // Mock the utils functions
 vi.mock('@/lib/utils', () => ({
   cn: (...inputs: unknown[]) => inputs.filter(Boolean).join(' '),
-  formatCurrency: (amount: number) =>
-    `$${(amount / 100).toLocaleString('es-CL')}`,
+  formatCurrency: (amount: number) => `$${amount.toLocaleString('es-CL')}`,
   formatDateTime: (date: Date) => new Date(date).toLocaleDateString(),
   getStatusColor: (_status: string) => 'bg-gray-100 text-gray-800',
 }));
@@ -50,7 +49,7 @@ const mockOrders = [
       {
         id: 'payment-1',
         status: 'VERIFIED',
-        amountCents: 699000, // $6,990 CLP in cents
+        amount: 699000, // $6,990 CLP in cents
         currency: 'CLP',
         createdAt: new Date('2024-01-01'),
       },

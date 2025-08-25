@@ -44,7 +44,7 @@ async function getOrdersData() {
         select: {
           id: true,
           status: true,
-          amountCents: true,
+          amount: true,
           currency: true,
           createdAt: true,
         },

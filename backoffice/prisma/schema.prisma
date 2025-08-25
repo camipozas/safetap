@@ -99,19 +99,19 @@ model ProfileAccessLog {
 }
 
 model Payment {
-  id          String        @id @default(cuid())
-  userId      String
-  stickerId   String?
-  amountCents Int
-  currency    String        @default("CLP")
-  method      String        @default("BANK_TRANSFER")
-  reference   String        @unique
-  status      PaymentStatus @default(PENDING)
-  receivedAt  DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  sticker     Sticker?      @relation(fields: [stickerId], references: [id])
-  user        User          @relation(fields: [userId], references: [id])
+  id         String        @id @default(cuid())
+  userId     String
+  stickerId  String?
+  amount     Int
+  currency   String        @default("CLP")
+  method     String        @default("BANK_TRANSFER")
+  reference  String        @unique
+  status     PaymentStatus @default(PENDING)
+  receivedAt DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  sticker    Sticker?      @relation(fields: [stickerId], references: [id])
+  user       User          @relation(fields: [userId], references: [id])
 
   @@index([userId, status])
 }

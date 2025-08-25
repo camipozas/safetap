@@ -29,7 +29,7 @@ async function getReportsData() {
         status: 'VERIFIED',
         createdAt: { gte: thisMonth },
       },
-      _sum: { amountCents: true },
+      _sum: { amount: true },
     }),
 
     prisma.payment.aggregate({
@@ -37,7 +37,7 @@ async function getReportsData() {
         status: 'VERIFIED',
         createdAt: { gte: lastMonth, lte: lastMonthEnd },
       },
-      _sum: { amountCents: true },
+      _sum: { amount: true },
     }),
 
     prisma.payment.aggregate({
@@ -45,7 +45,7 @@ async function getReportsData() {
         status: 'VERIFIED',
         createdAt: { gte: thisYear },
       },
-      _sum: { amountCents: true },
+      _sum: { amount: true },
     }),
 
     prisma.payment.count({
@@ -92,9 +92,9 @@ async function getReportsData() {
 
   return {
     revenue: {
-      thisMonth: monthlyRevenue._sum.amountCents || 0,
-      lastMonth: lastMonthRevenue._sum.amountCents || 0,
-      thisYear: yearlyRevenue._sum.amountCents || 0,
+      thisMonth: monthlyRevenue._sum.amount || 0,
+      lastMonth: lastMonthRevenue._sum.amount || 0,
+      thisYear: yearlyRevenue._sum.amount || 0,
     },
     orders: {
       thisMonth: monthlyOrders,
@@ -282,7 +282,7 @@ export default async function ReportsPage() {
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-medium">
-                      {formatCurrency(activity.amountCents)}
+                      {formatCurrency(activity.amount)}
                     </div>
                     <div className="text-xs text-gray-500">
                       {formatDate(activity.createdAt)}

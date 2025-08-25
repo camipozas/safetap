@@ -15,7 +15,7 @@ type Payment = {
     | 'TRANSFERRED'
     | 'REJECTED'
     | 'CANCELLED';
-  amountCents: number;
+  amount: number;
   currency: string;
   createdAt: Date;
   updatedAt: Date;
@@ -232,7 +232,7 @@ export default function PaymentsTable({ payments }: PaymentsTableProps) {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatCurrency(payment.amountCents, payment.currency)}
+                    {formatCurrency(payment.amount, payment.currency)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
@@ -311,7 +311,7 @@ export default function PaymentsTable({ payments }: PaymentsTableProps) {
               <div>
                 <span className="text-gray-500">Monto:</span>
                 <div className="font-medium">
-                  {formatCurrency(payment.amountCents, payment.currency)}
+                  {formatCurrency(payment.amount, payment.currency)}
                 </div>
               </div>
               <div>

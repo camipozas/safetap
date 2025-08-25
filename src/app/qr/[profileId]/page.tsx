@@ -45,7 +45,7 @@ export default async function QrProfilePage({ params }: QrProfilePageProps) {
             select: {
               id: true,
               status: true,
-              amountCents: true,
+              amount: true,
               createdAt: true,
             },
             orderBy: {

@@ -53,7 +53,7 @@ export async function PUT(
         ),
         hasPendingPayment: order.payments.some((p) => p.status === 'PENDING'),
         hasRejectedPayment: order.payments.some((p) => p.status === 'REJECTED'),
-        totalAmount: order.payments.reduce((sum, p) => sum + p.amountCents, 0),
+        totalAmount: order.payments.reduce((sum, p) => sum + p.amount, 0),
         currency: order.payments[0]?.currency || 'EUR',
         latestStatus: (order.payments[0]?.status as any) || null,
         paymentCount: order.payments.length,
@@ -82,7 +82,7 @@ export async function PUT(
           data: {
             userId: order.ownerId,
             stickerId: id,
-            amountCents: 6990, // Precio estándar del sticker
+            amount: 6990, // Precio estándar del sticker
             currency: 'CLP',
             reference: `STK-${id}-${Date.now()}`,
             status: 'VERIFIED',
@@ -108,7 +108,7 @@ export async function PUT(
           data: {
             userId: order.ownerId,
             stickerId: id,
-            amountCents: 6990, // Precio estándar del sticker
+            amount: 6990, // Precio estándar del sticker
             currency: 'CLP',
             reference: `STK-${id}-REJ-${Date.now()}`,
             status: 'REJECTED',

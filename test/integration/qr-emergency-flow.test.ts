@@ -51,7 +51,7 @@ describe('QR Emergency Profile Integration Flow', () => {
     stickerId: mockSticker.id,
     reference: 'SAFETAP-INTEGRATION',
     status: 'PENDING',
-    amountCents: 2990,
+    amount: 2990,
   };
 
   const mockProfile = {

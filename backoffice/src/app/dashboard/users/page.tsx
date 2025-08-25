@@ -21,7 +21,7 @@ async function getUsers() {
           status: 'VERIFIED',
         },
         select: {
-          amountCents: true,
+          amount: true,
         },
       },
       profiles: {
@@ -46,10 +46,7 @@ export default async function UsersPage() {
 
   const usersWithStats = users.map((user) => ({
     ...user,
-    totalSpent: user.payments.reduce(
-      (sum, payment) => sum + payment.amountCents,
-      0
-    ),
+    totalSpent: user.payments.reduce((sum, payment) => sum + payment.amount, 0),
   }));
 
   const stats = {

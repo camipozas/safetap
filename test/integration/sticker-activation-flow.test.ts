@@ -54,7 +54,7 @@ describe('Sticker Activation Integration Flow', () => {
       data: {
         userId: testUser.id,
         stickerId: testSticker.id,
-        amountCents: 2990,
+        amount: 2990,
         reference: 'test-ref-pending',
         status: 'PENDING',
       },
@@ -87,7 +87,7 @@ describe('Sticker Activation Integration Flow', () => {
       data: {
         userId: testUser.id,
         stickerId: testSticker.id,
-        amountCents: 2990,
+        amount: 2990,
         reference: 'test-ref-verified',
         status: 'VERIFIED',
       },
@@ -129,7 +129,7 @@ describe('Sticker Activation Integration Flow', () => {
       data: {
         userId: testUser.id,
         stickerId: testSticker.id,
-        amountCents: 2990,
+        amount: 2990,
         reference: 'test-ref-paid',
         status: 'PAID',
       },
@@ -158,7 +158,7 @@ describe('Sticker Activation Integration Flow', () => {
       data: {
         userId: testUser.id,
         stickerId: testSticker.id,
-        amountCents: 2990,
+        amount: 2990,
         reference: 'test-ref-not-shipped',
         status: 'VERIFIED',
       },
@@ -200,7 +200,7 @@ describe('Sticker Activation Integration Flow', () => {
       data: {
         userId: testUser.id,
         stickerId: testSticker.id,
-        amountCents: 2990,
+        amount: 2990,
         reference: 'test-ref-1',
         status: 'PENDING',
       },
@@ -210,7 +210,7 @@ describe('Sticker Activation Integration Flow', () => {
       data: {
         userId: testUser.id,
         stickerId: testSticker.id,
-        amountCents: 2990,
+        amount: 2990,
         reference: 'test-ref-2',
         status: 'CANCELLED',
       },
@@ -220,7 +220,7 @@ describe('Sticker Activation Integration Flow', () => {
       data: {
         userId: testUser.id,
         stickerId: testSticker.id,
-        amountCents: 2990,
+        amount: 2990,
         reference: 'test-ref-3',
         status: 'VERIFIED',
       },
@@ -251,7 +251,7 @@ describe('Sticker Activation Integration Flow', () => {
       data: {
         userId: testUser.id,
         stickerId: testSticker.id,
-        amountCents: 2990,
+        amount: 2990,
         reference: 'test-ref-integrity',
         status: 'VERIFIED',
       },

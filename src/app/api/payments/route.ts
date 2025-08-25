@@ -37,7 +37,7 @@ export async function GET() {
       id: payment.id,
       fecha: payment.createdAt.toLocaleDateString('es-CL'),
       producto: 'Sticker SafeTap',
-      monto: `$${(payment.amountCents / 100).toLocaleString('es-CL')} ${payment.currency}`,
+      monto: `$${payment.amount.toLocaleString('es-CL')} ${payment.currency}`,
       estado: payment.status,
       stickerSlug: payment.sticker?.slug,
       stickerName: payment.sticker?.nameOnSticker,

@@ -27,7 +27,7 @@ export interface OrderWithDetails {
     nameOnSticker: string;
     status: string;
   } | null;
-  amountCents: number;
+  amount: number;
   currency: string;
   method: string;
   reference: string;
@@ -76,7 +76,7 @@ export interface Order {
   payments: {
     id: string;
     status: string;
-    amountCents: number;
+    amount: number;
     currency: string;
     createdAt: Date;
   }[];

@@ -55,7 +55,7 @@ export interface PaymentInfo {
  * Analyzes payment information for an order
  */
 export function analyzePayments(payments: Order['payments']): PaymentInfo {
-  const totalAmount = payments.reduce((sum, p) => sum + p.amountCents, 0);
+  const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0);
   const currency = payments[0]?.currency || 'EUR';
 
   const hasConfirmedPayment = payments.some((p) =>

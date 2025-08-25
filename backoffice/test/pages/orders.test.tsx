@@ -53,7 +53,7 @@ const mockOrders = [
       {
         id: 'payment-1',
         status: 'VERIFIED',
-        amountCents: 699000, // $6,990 CLP in cents
+        amount: 699000, // $6,990 CLP in cents
         currency: 'CLP',
         createdAt: new Date('2024-01-01'),
       },
@@ -203,7 +203,7 @@ describe('Orders Page', () => {
             createdAt: 'desc',
           },
           select: {
-            amountCents: true,
+            amount: true,
             currency: true,
             createdAt: true,
             id: true,
