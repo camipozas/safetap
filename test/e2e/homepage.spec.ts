@@ -79,7 +79,9 @@ test.describe('Homepage', () => {
     await expect(page).toHaveURL('/s/demo-chile');
 
     // Should show María González profile
-    await expect(page.getByText('🚨 INFORMACIÓN DE EMERGENCIA')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Información de Emergencia' })
+    ).toBeVisible();
     await expect(page.getByText('María González')).toBeVisible();
   });
 

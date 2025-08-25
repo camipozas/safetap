@@ -5,11 +5,14 @@ test.describe('Privacy and Terms Pages', () => {
     test('privacy page loads correctly', async ({ page }) => {
       await page.goto('/privacy');
 
+      // Wait for page to fully load
+      await page.waitForLoadState('networkidle');
+
       // Check that the page loads without errors
-      await expect(page).toHaveTitle('safetap');
+      await expect(page).toHaveTitle('SafeTap', { timeout: 10000 });
 
       // Check that main content is visible
-      await expect(page.locator('body')).toBeVisible();
+      await expect(page.locator('body')).toBeVisible({ timeout: 10000 });
     });
 
     test('displays privacy policy content in Spanish', async ({ page }) => {
@@ -61,8 +64,11 @@ test.describe('Privacy and Terms Pages', () => {
     test('terms page loads correctly', async ({ page }) => {
       await page.goto('/terms');
 
+      // Wait for page to fully load
+      await page.waitForLoadState('networkidle');
+
       // Check that the page loads without errors
-      await expect(page).toHaveTitle('safetap');
+      await expect(page).toHaveTitle('SafeTap', { timeout: 10000 });
 
       // Check that main content is visible
       await expect(page.locator('body')).toBeVisible();

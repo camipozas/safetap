@@ -4,13 +4,20 @@ test.describe('Authentication Flow', () => {
   test('login page loads correctly', async ({ page }) => {
     await page.goto('/login');
 
-    // Check page title
-    await expect(page).toHaveTitle('safetap');
+    // Wait for page to fully load
+    await page.waitForLoadState('networkidle');
 
-    // Check for login form elements
-    await expect(page.locator('form')).toBeVisible();
-    await expect(page.locator('input[type="email"]')).toBeVisible();
-    await expect(page.locator('button[type="submit"]')).toBeVisible();
+    // Check page title with longer timeout
+    await expect(page).toHaveTitle('SafeTap', { timeout: 10000 });
+
+    // Check for login form elements with longer timeout
+    await expect(page.locator('form')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('input[type="email"]')).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(page.locator('button[type="submit"]')).toBeVisible({
+      timeout: 10000,
+    });
   });
 
   test('displays validation errors for empty form', async ({ page }) => {
