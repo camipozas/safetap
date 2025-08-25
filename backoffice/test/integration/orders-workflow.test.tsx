@@ -38,6 +38,8 @@ const mockOrder = {
   },
   payments: [
     {
+      id: 'payment-workflow-1',
+      status: 'TRANSFER_PAYMENT',
       amountCents: 699000, // $6,990 CLP in cents
       currency: 'CLP',
       createdAt: new Date('2024-01-01'),

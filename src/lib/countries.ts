@@ -52,10 +52,10 @@ export const FLAGS = Object.fromEntries(
 // Helper functions
 export const getCountryFlag = (countryCode: string): string => {
   if (!countryCode) {
-    return '';
+    return '🏳️';
   }
   const country = COUNTRIES[countryCode as keyof typeof COUNTRIES];
-  return country?.flag || '';
+  return country?.flag || '🏳️';
 };
 
 export const getCountryName = (countryCode: string): string => {

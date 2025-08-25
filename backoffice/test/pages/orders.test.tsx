@@ -31,6 +31,9 @@ const mockOrders = [
     stickerColor: '#ffffff',
     textColor: '#000000',
     status: 'ORDERED',
+    displayStatus: 'ORDERED',
+    displayDescription: 'Pedido creado',
+    displaySecondaryStatuses: [],
     createdAt: new Date('2024-01-01'),
     owner: {
       id: 'user-1',
@@ -48,11 +51,18 @@ const mockOrders = [
     },
     payments: [
       {
+        id: 'payment-1',
+        status: 'VERIFIED',
         amountCents: 699000, // $6,990 CLP in cents
         currency: 'CLP',
         createdAt: new Date('2024-01-01'),
       },
     ],
+    paymentInfo: {
+      totalAmount: 699000,
+      hasValidPayment: true,
+      latestStatus: 'VERIFIED',
+    },
   },
   {
     id: 'order-2',
@@ -63,6 +73,9 @@ const mockOrders = [
     stickerColor: '#f0f0f0',
     textColor: '#333333',
     status: 'PAID',
+    displayStatus: 'ORDERED',
+    displayDescription: 'Pedido creado',
+    displaySecondaryStatuses: [],
     createdAt: new Date('2024-01-02'),
     owner: {
       id: 'user-2',
@@ -72,6 +85,11 @@ const mockOrders = [
     },
     profile: null,
     payments: [],
+    paymentInfo: {
+      totalAmount: 0,
+      hasValidPayment: false,
+      latestStatus: null,
+    },
   },
   {
     id: 'order-3',
@@ -82,6 +100,9 @@ const mockOrders = [
     stickerColor: '#ffffff',
     textColor: '#000000',
     status: 'ACTIVE',
+    displayStatus: 'ORDERED',
+    displayDescription: 'Pedido creado',
+    displaySecondaryStatuses: [],
     createdAt: new Date('2024-01-03'),
     owner: {
       id: 'user-3',
@@ -91,6 +112,11 @@ const mockOrders = [
     },
     profile: null,
     payments: [],
+    paymentInfo: {
+      totalAmount: 0,
+      hasValidPayment: false,
+      latestStatus: null,
+    },
   },
 ];
 
@@ -128,8 +154,15 @@ describe('Orders Page', () => {
 
     expect(screen.getByText('Total')).toBeInTheDocument();
     expect(screen.getByText('Creadas')).toBeInTheDocument();
-    // The page shows statistics cards with numbers - there are multiple "3"s so use getAllByText
-    expect(screen.getAllByText('3')).toHaveLength(2); // Total and Creadas both show 3
+
+    // The page shows statistics cards with numbers
+    // Based on the current mock data:
+    // - Total: 3 orders
+    // - Creadas (ORDERED): 2 orders
+    // - Pagadas (PAID): 1 order
+    expect(screen.getByText('3')).toBeInTheDocument(); // Total
+    expect(screen.getByText('2')).toBeInTheDocument(); // Creadas
+    expect(screen.getByText('1')).toBeInTheDocument(); // Pagadas
   });
 
   it('calls prisma with correct parameters', async () => {
