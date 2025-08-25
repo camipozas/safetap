@@ -94,9 +94,42 @@ export function EmergencyProfileDisplay({
           <User className="h-5 w-5 text-gray-600" />
           <h2 className="text-lg font-semibold text-gray-900">{userName}</h2>
           {profile.user.country && (
-            <span className="text-xs bg-blue-200 text-blue-700 px-2 py-1 rounded">
-              {profile.user.country}
-            </span>
+            <div className="flex items-center gap-1">
+              <span className="text-lg">
+                {profile.user.country === 'CL'
+                  ? '🇨🇱'
+                  : profile.user.country === 'ES'
+                    ? '🇪🇸'
+                    : profile.user.country === 'US'
+                      ? '🇺🇸'
+                      : profile.user.country === 'AR'
+                        ? '🇦🇷'
+                        : profile.user.country === 'MX'
+                          ? '🇲🇽'
+                          : profile.user.country === 'PE'
+                            ? '🇵🇪'
+                            : profile.user.country === 'CO'
+                              ? '🇨🇴'
+                              : '🏳️'}
+              </span>
+              <span className="text-xs bg-blue-200 text-blue-700 px-2 py-1 rounded">
+                {profile.user.country === 'CL'
+                  ? 'Chile'
+                  : profile.user.country === 'ES'
+                    ? 'España'
+                    : profile.user.country === 'US'
+                      ? 'Estados Unidos'
+                      : profile.user.country === 'AR'
+                        ? 'Argentina'
+                        : profile.user.country === 'MX'
+                          ? 'México'
+                          : profile.user.country === 'PE'
+                            ? 'Perú'
+                            : profile.user.country === 'CO'
+                              ? 'Colombia'
+                              : profile.user.country}
+              </span>
+            </div>
           )}
           {profile.language && (
             <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
@@ -220,7 +253,7 @@ export function EmergencyProfileDisplay({
                     : 'bg-gray-50 border-gray-300'
                 }`}
               >
-                <div className="flex items-center justify-between">
+                <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <p className="font-bold text-gray-900">{contact.name}</p>
@@ -236,21 +269,18 @@ export function EmergencyProfileDisplay({
                     <p className="text-sm font-mono text-gray-900 font-bold bg-white px-2 py-1 rounded border">
                       {contact.phone}
                     </p>
-                    {contact.country && (
-                      <p className="text-xs text-gray-600 mt-1">
-                        {contact.country}
-                      </p>
-                    )}
                   </div>
 
-                  <a
-                    href={`tel:${contact.phone}`}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-bold transition-colors flex items-center gap-2 shadow-md"
-                    aria-label={`Llamar a ${contact.name}`}
-                  >
-                    <Phone className="h-4 w-4" />
-                    Llamar
-                  </a>
+                  <div className="flex items-center ml-4">
+                    <a
+                      href={`tel:${contact.phone}`}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-bold transition-colors flex items-center gap-2 shadow-md"
+                      aria-label={`Llamar a ${contact.name}`}
+                    >
+                      <Phone className="h-4 w-4" />
+                      Llamar
+                    </a>
+                  </div>
                 </div>
               </div>
             ))}

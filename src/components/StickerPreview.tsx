@@ -3,6 +3,7 @@
 import { memo } from 'react';
 
 import { StickerQrCode } from '@/components/StickerQrCode';
+import { getCountryFlag } from '@/lib/countries';
 
 interface StickerPreviewProps {
   name: string;
@@ -15,25 +16,6 @@ interface StickerPreviewProps {
   className?: string;
 }
 
-// Available flags
-const FLAGS = {
-  CL: '🇨🇱',
-  ES: '🇪🇸',
-  US: '🇺🇸',
-  AR: '🇦🇷',
-  MX: '🇲🇽',
-  PE: '🇵🇪',
-  CO: '🇨🇴',
-  VE: '🇻🇪',
-  EC: '🇪🇨',
-  UY: '🇺🇾',
-  BR: '🇧🇷',
-  FR: '🇫🇷',
-  DE: '🇩🇪',
-  IT: '🇮🇹',
-  GB: '🇬🇧',
-};
-
 const StickerPreviewComponent = ({
   name,
   flagCode,
@@ -44,7 +26,7 @@ const StickerPreviewComponent = ({
   serial,
   className = '',
 }: StickerPreviewProps) => {
-  const flag = FLAGS[flagCode as keyof typeof FLAGS] || '🏳️';
+  const flag = getCountryFlag(flagCode);
 
   return (
     <div className={`relative ${className}`} data-testid="sticker-preview">
