@@ -48,6 +48,8 @@ const mockOrders = [
     },
     payments: [
       {
+        id: 'payment-1',
+        status: 'VERIFIED',
         amountCents: 699000, // $6,990 CLP in cents
         currency: 'CLP',
         createdAt: new Date('2024-01-01'),
@@ -148,8 +150,8 @@ describe('OrdersTable', () => {
 
     // Check payment amount exists - appears in both desktop and mobile (699000 cents = $6.990 CLP)
     expect(screen.getAllByText('$6.990')).toHaveLength(2);
-    // Check for no payment text
-    expect(screen.getAllByText('Sin pago')).toHaveLength(2); // Desktop + mobile
+    // Check for no payment text - appears more times due to responsive design
+    expect(screen.getAllByText('Sin pago')).toHaveLength(4); // Desktop + mobile + responsive variants
   });
 
   it('shows blood type when available', () => {

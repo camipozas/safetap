@@ -124,7 +124,7 @@ describe('Sticker Activation Integration Flow', () => {
   });
 
   it('should accept PAID payment status for activation', async () => {
-    // Create paid payment
+    // Create paid payment (using valid enum value)
     await prisma.payment.create({
       data: {
         userId: testUser.id,

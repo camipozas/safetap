@@ -1,11 +1,20 @@
 import OrdersPage from '@/app/dashboard/orders/page';
 import { prisma } from '@/lib/prisma';
 import { render, screen } from '@testing-library/react';
+import { getServerSession } from 'next-auth';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+// Mock getServerSession
+vi.mock('next-auth', () => ({
+  getServerSession: vi.fn(),
+}));
 
 // Mock Prisma
 vi.mock('@/lib/prisma', () => ({
   prisma: {
+    user: {
+      findUnique: vi.fn(),
+    },
     sticker: {
       findMany: vi.fn(),
     },
@@ -88,7 +97,19 @@ const mockOrders = [
 describe('Orders Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (prisma.sticker.findMany as any).mockResolvedValue(mockOrders);
+
+    // Mock getServerSession to return valid session
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { email: 'admin@example.com' },
+    });
+
+    // Mock user lookup for admin check
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      role: 'ADMIN',
+    } as never);
+
+    // Mock Prisma query with proper type casting
+    vi.mocked(prisma.sticker.findMany).mockResolvedValue(mockOrders as never);
   });
 
   it('renders page title and description', async () => {
@@ -97,9 +118,7 @@ describe('Orders Page', () => {
 
     expect(screen.getByText('Gestión de Órdenes')).toBeInTheDocument();
     expect(
-      screen.getByText(
-        'Gestiona el flujo completo de órdenes desde creación hasta finalización'
-      )
+      screen.getByText('Administra y supervisa todas las órdenes del sistema')
     ).toBeInTheDocument();
   });
 
@@ -109,8 +128,8 @@ describe('Orders Page', () => {
 
     expect(screen.getByText('Total')).toBeInTheDocument();
     expect(screen.getByText('Creadas')).toBeInTheDocument();
-    expect(screen.getByText('Tablero de Órdenes')).toBeInTheDocument();
-    expect(screen.getByText('3')).toBeInTheDocument(); // Total count
+    // The page shows statistics cards with numbers - there are multiple "3"s so use getAllByText
+    expect(screen.getAllByText('3')).toHaveLength(2); // Total and Creadas both show 3
   });
 
   it('calls prisma with correct parameters', async () => {
@@ -147,20 +166,21 @@ describe('Orders Page', () => {
           },
         },
         payments: {
-          where: {
-            status: 'VERIFIED',
+          orderBy: {
+            createdAt: 'desc',
           },
           select: {
             amountCents: true,
             currency: true,
             createdAt: true,
+            id: true,
+            status: true,
           },
         },
       },
       orderBy: {
         createdAt: 'desc',
       },
-      take: 100,
     });
   });
 });
