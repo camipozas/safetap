@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PrismaClient } from '@prisma/client';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { PrismaClient } from '@prisma/client';
 
 // Create a direct Accelerate client to avoid any local caching
 const accelerateClient = new PrismaClient({

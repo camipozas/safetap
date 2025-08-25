@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { hasPermission } from '@/types/shared';
 import { PrismaClient } from '@prisma/client';
+import { getServerSession } from 'next-auth';
+import { NextRequest, NextResponse } from 'next/server';
 
 // Create a direct Accelerate client to avoid any local caching
 const accelerateClient = new PrismaClient({
