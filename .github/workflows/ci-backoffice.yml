@@ -46,6 +46,7 @@ jobs:
         run: npx prisma migrate deploy --schema=prisma/schema.prisma
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://user:password@localhost:5432/test' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://user:password@localhost:5432/test' }}
 
       - name: Verify migrations sync with main project
         run: |
@@ -84,9 +85,16 @@ jobs:
         run: npm run test:ci
         env:
           DATABASE_URL: 'postgresql://user:password@localhost:5432/test'
+          DIRECT_URL: 'postgresql://user:password@localhost:5432/test'
           NEXTAUTH_SECRET: 'test-secret-key'
           NEXTAUTH_URL: 'http://localhost:3001'
           NEXTAUTH_BACKOFFICE_URL: 'http://localhost:3001'
 
       - name: Build check
         run: npm run build:vercel
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://user:password@localhost:5432/test' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || secrets.DATABASE_URL || 'postgresql://user:password@localhost:5432/test' }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'test-secret-key' }}
+          NEXTAUTH_URL: 'http://localhost:3001'
+          NEXTAUTH_BACKOFFICE_URL: 'http://localhost:3001'
