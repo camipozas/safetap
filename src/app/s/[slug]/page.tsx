@@ -1,6 +1,65 @@
+import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { prisma } from '@/lib/prisma';
+
+export async function generateMetadata(props: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const params = await props.params;
+  const profile = await prisma.emergencyProfile.findFirst({
+    where: { sticker: { slug: params.slug }, consentPublic: true },
+    include: {
+      user: true,
+    },
+  });
+
+  if (!profile) {
+    return {
+      title: 'Perfil no encontrado | SafeTap',
+      description: 'El perfil de emergencia solicitado no está disponible.',
+    };
+  }
+
+  const userName =
+    profile.user.name ?? profile.user.email?.split('@')[0] ?? 'Usuario';
+  const title = `${userName} - Perfil de Emergencia | SafeTap`;
+  const description = `Información de emergencia de ${userName}. Acceso rápido a datos médicos vitales y contactos de emergencia a través de SafeTap.`;
+  const url = `https://safetap.cl/s/${params.slug}`;
+  // TODO: Crear una imagen PNG optimizada (1200x630) para Open Graph en /public/og-image.png
+  // Por ahora usamos el favicon, pero se recomienda una imagen específica para redes sociales
+  const imageUrl = 'https://safetap.cl/favicon.svg';
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: 'SafeTap',
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: 'SafeTap - Información de Emergencia',
+        },
+      ],
+      type: 'profile',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [imageUrl],
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
+}
 
 export default async function PublicProfile(props: {
   params: Promise<{ slug: string }>;

@@ -1,3 +1,38 @@
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Carlos Herrera - Demo Perfil de Emergencia | SafeTap',
+  description:
+    'Ejemplo de perfil de emergencia de SafeTap. Muestra cómo se ve la información médica vital y contactos de emergencia.',
+  openGraph: {
+    title: 'Carlos Herrera - Demo Perfil de Emergencia | SafeTap',
+    description:
+      'Ejemplo de perfil de emergencia de SafeTap. Muestra cómo se ve la información médica vital y contactos de emergencia.',
+    url: 'https://safetap.cl/s/demo-chile',
+    siteName: 'SafeTap',
+    images: [
+      {
+        url: 'https://safetap.cl/favicon.svg',
+        width: 1200,
+        height: 630,
+        alt: 'SafeTap - Demo de Información de Emergencia',
+      },
+    ],
+    type: 'profile',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Carlos Herrera - Demo Perfil de Emergencia | SafeTap',
+    description:
+      'Ejemplo de perfil de emergencia de SafeTap. Muestra cómo se ve la información médica vital y contactos de emergencia.',
+    images: ['https://safetap.cl/favicon.svg'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
 export default function DemoChilePage() {
   return (
     <article className="max-w-2xl mx-auto">
