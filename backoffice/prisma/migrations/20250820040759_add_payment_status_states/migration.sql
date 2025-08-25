@@ -5,7 +5,13 @@
 -- multiple migrations, each migration adding only one value to
 -- the enum.
 
-
 ALTER TYPE "public"."PaymentStatus" ADD VALUE 'PAID';
 ALTER TYPE "public"."PaymentStatus" ADD VALUE 'TRANSFERRED';
-ALTER TYPE "public"."PaymentStatus" ADD VALUE 'CANCELLED';
+
+-- CANCELLED might already exist from previous migration, adding conditionally
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'CANCELLED' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'PaymentStatus')) THEN
+        ALTER TYPE "public"."PaymentStatus" ADD VALUE 'CANCELLED';
+    END IF;
+END $$;
