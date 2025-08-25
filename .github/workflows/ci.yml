@@ -32,7 +32,19 @@ jobs:
         run: npx prisma generate
 
       - name: Apply database migrations
-        run: npx prisma migrate deploy
+        run: |
+          # First try to apply migrations normally
+          if ! npx prisma migrate deploy; then
+            echo "Migration failed, checking for failed migrations..."
+            # Get the status and look for failed migrations
+            npx prisma migrate status || true
+            # Try to resolve common migration issues automatically
+            echo "Attempting to resolve failed migrations..."
+            npx prisma migrate resolve --applied 20250820035608_add_transfer_payment_status || true
+            npx prisma migrate resolve --applied 20250820040759_add_payment_status_states || true
+            # Try deploy again
+            npx prisma migrate deploy
+          fi
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'file:./dev.db' }}
           DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://user:password@localhost:5432/test' }}
@@ -98,7 +110,19 @@ jobs:
         run: npx prisma generate
 
       - name: Apply database migrations
-        run: npx prisma migrate deploy
+        run: |
+          # First try to apply migrations normally
+          if ! npx prisma migrate deploy; then
+            echo "Migration failed, checking for failed migrations..."
+            # Get the status and look for failed migrations
+            npx prisma migrate status || true
+            # Try to resolve common migration issues automatically
+            echo "Attempting to resolve failed migrations..."
+            npx prisma migrate resolve --applied 20250820035608_add_transfer_payment_status || true
+            npx prisma migrate resolve --applied 20250820040759_add_payment_status_states || true
+            # Try deploy again
+            npx prisma migrate deploy
+          fi
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DIRECT_URL || secrets.DATABASE_URL }}

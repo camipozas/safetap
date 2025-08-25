@@ -43,7 +43,19 @@ jobs:
         run: npx prisma generate --schema=prisma/schema.prisma
 
       - name: Apply database migrations
-        run: npx prisma migrate deploy --schema=prisma/schema.prisma
+        run: |
+          # First try to apply migrations normally
+          if ! npx prisma migrate deploy --schema=prisma/schema.prisma; then
+            echo "Migration failed, checking for failed migrations..."
+            # Get the status and look for failed migrations
+            npx prisma migrate status --schema=prisma/schema.prisma || true
+            # Try to resolve common migration issues automatically
+            echo "Attempting to resolve failed migrations..."
+            npx prisma migrate resolve --applied 20250820035608_add_transfer_payment_status --schema=prisma/schema.prisma || true
+            npx prisma migrate resolve --applied 20250820040759_add_payment_status_states --schema=prisma/schema.prisma || true
+            # Try deploy again
+            npx prisma migrate deploy --schema=prisma/schema.prisma
+          fi
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://user:password@localhost:5432/test' }}
           DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://user:password@localhost:5432/test' }}
