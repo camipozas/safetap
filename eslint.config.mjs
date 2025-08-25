@@ -18,7 +18,8 @@ const eslintConfig = [
       '.next/**/*',
     ],
   },
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
+  ...compat.extends('next/core-web-vitals'),
+  ...compat.extends('next/typescript'),
   ...compat.extends('prettier'),
   {
     rules: {
