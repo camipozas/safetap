@@ -2,43 +2,6 @@
 
 import { AlertTriangle, Heart, Phone, Shield, User } from 'lucide-react';
 
-// Utility functions for payment status (consistent with PaymentsTable)
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'PAID':
-      return 'bg-purple-100 text-purple-800 border-purple-300'; // Consistente con "Pago confirmado"
-    case 'VERIFIED':
-    case 'TRANSFERRED':
-      return 'bg-green-100 text-green-800 border-green-300'; // Pagos procesados
-    case 'PENDING':
-      return 'bg-yellow-100 text-yellow-800 border-yellow-300'; // Pendientes
-    case 'REJECTED':
-    case 'CANCELLED':
-      return 'bg-red-100 text-red-800 border-red-300'; // Fallidos
-    default:
-      return 'bg-gray-100 text-gray-800 border-gray-300';
-  }
-};
-
-const getStatusText = (status: string) => {
-  switch (status) {
-    case 'PAID':
-      return 'Pago confirmado'; // Consistente con UI principal
-    case 'VERIFIED':
-      return 'Pago verificado';
-    case 'TRANSFERRED':
-      return 'Pago transferido';
-    case 'PENDING':
-      return 'Pago pendiente';
-    case 'REJECTED':
-      return 'Pago rechazado';
-    case 'CANCELLED':
-      return 'Pago cancelado';
-    default:
-      return `Estado: ${status}`;
-  }
-};
-
 interface EmergencyContact {
   id: string;
   name: string;
@@ -61,6 +24,7 @@ interface EmergencyProfileData {
   user: {
     name?: string | null;
     email?: string | null;
+    country?: string | null;
   };
   sticker?: {
     slug: string;
@@ -87,17 +51,6 @@ export function EmergencyProfileDisplay({
 }: EmergencyProfileDisplayProps) {
   const userName =
     profile.user.name ?? profile.user.email?.split('@')[0] ?? 'Usuario';
-
-  // Check payment status
-  const latestPayment = profile.sticker?.payments?.[0]; // Already ordered by createdAt desc
-
-  // Format payment date
-  const paymentDate = latestPayment?.createdAt
-    ? new Date(latestPayment.createdAt).toLocaleDateString('es-CL')
-    : null;
-  const paymentAmount = latestPayment?.amountCents
-    ? (latestPayment.amountCents / 100).toLocaleString('es-CL')
-    : null;
 
   return (
     <div className="max-w-2xl mx-auto bg-gray-50 min-h-screen">
@@ -135,71 +88,16 @@ export function EmergencyProfileDisplay({
         </div>
       </div>
 
-      {/* Payment status banner - only for non-demo profiles */}
-      {!isDemoMode && latestPayment && (
-        <div
-          className={`border-b-2 p-4 ${getStatusColor(latestPayment.status)}`}
-        >
-          <div className="flex items-start gap-3">
-            <AlertTriangle
-              className={`h-5 w-5 mt-0.5 ${
-                latestPayment.status === 'PAID'
-                  ? 'text-purple-600'
-                  : latestPayment.status === 'VERIFIED' ||
-                      latestPayment.status === 'TRANSFERRED'
-                    ? 'text-green-600'
-                    : latestPayment.status === 'PENDING'
-                      ? 'text-yellow-600'
-                      : 'text-red-600'
-              }`}
-            />
-            <div className="flex-1">
-              <h3 className="text-sm font-semibold">
-                {getStatusText(latestPayment.status)}
-              </h3>
-              <div className="text-sm space-y-1">
-                {paymentAmount && <p>Monto: ${paymentAmount} CLP</p>}
-                {paymentDate && <p>Fecha: {paymentDate}</p>}
-                {latestPayment.status === 'PENDING' && (
-                  <p className="mt-2">
-                    El pago está pendiente de verificación.
-                  </p>
-                )}
-                {(latestPayment.status === 'PAID' ||
-                  latestPayment.status === 'VERIFIED' ||
-                  latestPayment.status === 'TRANSFERRED') && (
-                  <p className="mt-2">
-                    Pago verificado y procesado correctamente.
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Show message if no payment info */}
-      {!isDemoMode && !latestPayment && (
-        <div className="bg-gray-50 border-b-2 border-gray-300 p-4">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-gray-600" />
-            <div>
-              <h3 className="text-sm font-semibold text-gray-800">
-                Sin información de pago
-              </h3>
-              <p className="text-gray-700 text-sm">
-                No se encontró información de pago para este perfil.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* User Info */}
       <div className="bg-white p-6 border-b border-gray-300 shadow-sm">
         <div className="flex items-center gap-2 mb-2">
           <User className="h-5 w-5 text-gray-600" />
           <h2 className="text-lg font-semibold text-gray-900">{userName}</h2>
+          {profile.user.country && (
+            <span className="text-xs bg-blue-200 text-blue-700 px-2 py-1 rounded">
+              {profile.user.country}
+            </span>
+          )}
           {profile.language && (
             <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
               {profile.language.toUpperCase()}

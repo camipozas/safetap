@@ -21,6 +21,7 @@ export default async function PublicProfile(props: {
         select: {
           name: true,
           email: true,
+          country: true,
         },
       },
       sticker: {
@@ -79,6 +80,7 @@ export async function generateMetadata(props: {
         select: {
           name: true,
           email: true,
+          country: true,
         },
       },
     },

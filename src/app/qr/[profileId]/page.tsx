@@ -34,6 +34,7 @@ export default async function QrProfilePage({ params }: QrProfilePageProps) {
         select: {
           name: true,
           email: true,
+          country: true,
         },
       },
       sticker: {
@@ -100,6 +101,7 @@ export async function generateMetadata({ params }: QrProfilePageProps) {
         select: {
           name: true,
           email: true,
+          country: true,
         },
       },
     },
