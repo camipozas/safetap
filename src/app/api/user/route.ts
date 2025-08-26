@@ -37,7 +37,6 @@ export async function PUT(req: Request) {
       where: { id: user.id },
       data: {
         name,
-        updatedAt: new Date(),
       },
     });
 
