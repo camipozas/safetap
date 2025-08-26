@@ -139,8 +139,8 @@ export async function generateMetadata({ params }: QrProfilePageProps) {
       images: [
         {
           url: 'https://safetap.cl/favicon.svg',
-          width: 512,
-          height: 512,
+          width: 1200,
+          height: 630,
           alt: `Perfil de emergencia de ${userName} - SafeTap`,
         },
       ],
