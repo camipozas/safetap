@@ -51,12 +51,30 @@ export default function LoginForm() {
 
     try {
       console.log('🔗 Initiating Google OAuth with callback to /account');
-      await signIn('google', {
+      console.log('🌍 Environment:', process.env.NODE_ENV);
+      console.log('🔗 Base URL:', window.location.origin);
+
+      const result = await signIn('google', {
         callbackUrl: '/account',
+        redirect: false,
       });
+
+      console.log('📡 Google sign-in result:', result);
+
+      if (result?.error) {
+        console.error('❌ Google sign-in error:', result.error);
+        throw new Error(result.error);
+      }
+
+      if (result?.url) {
+        console.log('✅ Redirecting to:', result.url);
+        window.location.href = result.url;
+      }
     } catch (err) {
       console.error('❌ Error signing in with Google:', err);
-      setError('No se pudo iniciar sesión con Google. Inténtalo de nuevo.');
+      const errorMessage =
+        err instanceof Error ? err.message : 'Error desconocido';
+      setError(`No se pudo iniciar sesión con Google: ${errorMessage}`);
     } finally {
       setIsGoogleLoading(false);
     }

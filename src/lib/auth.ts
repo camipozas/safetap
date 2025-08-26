@@ -12,22 +12,60 @@ export const authOptions: NextAuthOptions = {
       clientId: environment.auth.googleClientId!,
       clientSecret: environment.auth.googleClientSecret!,
       allowDangerousEmailAccountLinking: true,
+      authorization: {
+        params: {
+          prompt: 'consent',
+          access_type: 'offline',
+          response_type: 'code',
+        },
+      },
+      httpOptions: {
+        timeout: 40000,
+      },
     }),
   ],
   pages: {
     signIn: '/login',
-    error: '/login',
+    error: '/auth/error',
+    signOut: '/login',
+    verifyRequest: '/login',
   },
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       console.log('🔐 Sign-in attempt:', {
         email: user.email,
         provider: account?.provider,
+        accountId: account?.providerAccountId,
+        profileId: profile?.sub,
+        environment: process.env.NODE_ENV,
+        nextauthUrl: process.env.NEXTAUTH_URL,
       });
+
       if (account?.provider === 'google') {
-        console.log('✅ Google sign-in allowed for:', user.email);
-        return true;
+        try {
+          // Check if user exists in database
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email! },
+          });
+
+          if (existingUser) {
+            console.log('✅ Existing user found:', {
+              id: existingUser.id,
+              email: existingUser.email,
+              role: existingUser.role,
+            });
+          } else {
+            console.log('ℹ️ New user will be created:', user.email);
+          }
+
+          console.log('✅ Google sign-in allowed for:', user.email);
+          return true;
+        } catch (error) {
+          console.error('❌ Error during sign-in check:', error);
+          return false;
+        }
       }
+
       console.log(
         '❌ Sign-in rejected - unsupported provider:',
         account?.provider
