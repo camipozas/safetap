@@ -186,7 +186,7 @@ export async function GET(
             status: 'VERIFIED',
           },
           select: {
-            amountCents: true,
+            amount: true,
             currency: true,
             createdAt: true,
           },

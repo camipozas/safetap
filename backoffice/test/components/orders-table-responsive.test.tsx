@@ -4,8 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/lib/utils', () => ({
   cn: (...inputs: unknown[]) => inputs.filter(Boolean).join(' '),
-  formatCurrency: (amount: number) =>
-    `$${(amount / 100).toLocaleString('es-CL')}`,
+  formatCurrency: (amount: number) => `$${amount.toLocaleString('es-CL')}`,
   formatDateTime: (date: Date) => new Date(date).toLocaleDateString(),
   getStatusColor: (_status: string) => 'bg-gray-100 text-gray-800',
 }));
@@ -59,7 +58,7 @@ interface MockOrder {
   } | null;
   payments: Array<{
     id: string;
-    amountCents: number;
+    amount: number;
     currency: string;
     status: string;
     createdAt: Date;
@@ -100,7 +99,7 @@ const mockOrder: MockOrder = {
   payments: [
     {
       id: '1',
-      amountCents: 2500,
+      amount: 2500,
       currency: 'CLP',
       status: 'VERIFIED',
       createdAt: new Date('2023-01-01'),

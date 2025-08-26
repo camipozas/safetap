@@ -56,8 +56,8 @@ export const STATUS_LABELS = {
   ORDERED: '📝 Creada',
   PAID: '💰 Pagada',
   PRINTING: '🖨️ Imprimiendo',
-  SHIPPED: '📦 Enviada',
-  ACTIVE: '✅ Activa',
+  SHIPPED: '📦 Enviado',
+  ACTIVE: '✅ Activo',
   LOST: '❌ Perdida',
 } as const;
 

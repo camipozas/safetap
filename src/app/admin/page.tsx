@@ -3,6 +3,9 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+// Force dynamic rendering for auth-protected page
+export const dynamic = 'force-dynamic';
+
 export default async function AdminPage() {
   const session = await auth();
   if (!session?.user?.email) {
@@ -37,8 +40,7 @@ export default async function AdminPage() {
                   {p.user.email} — Ref {p.reference}
                 </p>
                 <p className="text-sm text-slate-600">
-                  Sticker: {p.sticker?.serial ?? '-'} · {p.amountCents / 100}{' '}
-                  {p.currency}
+                  Sticker: {p.sticker?.serial ?? '-'} · {p.amount} {p.currency}
                 </p>
               </div>
               <form action={`/api/admin/payments/${p.id}/verify`} method="post">

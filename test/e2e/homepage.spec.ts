@@ -5,7 +5,7 @@ test.describe('Homepage', () => {
     await page.goto('/');
 
     // Check that the page loads without errors
-    await expect(page).toHaveTitle('safetap');
+    await expect(page).toHaveTitle('SafeTap');
 
     // Check that main content is visible
     await expect(page.locator('body')).toBeVisible();
@@ -16,7 +16,7 @@ test.describe('Homepage', () => {
 
     // Check for key navigation elements
     await expect(
-      page.locator('header').getByRole('link', { name: 'Inicio safetap' })
+      page.locator('header').getByRole('link', { name: 'Inicio SafeTap' })
     ).toBeVisible();
 
     // Check for main action buttons - should only have "Comprar ahora" now
@@ -78,8 +78,11 @@ test.describe('Homepage', () => {
     // Should navigate to demo emergency page
     await expect(page).toHaveURL('/s/demo-chile');
 
-    // Should show Carlos Herrera profile
-    await expect(page.locator('h1')).toContainText('🇨🇱 Carlos Herrera');
+    // Should show María González profile
+    await expect(
+      page.getByRole('heading', { name: 'Información de Emergencia' })
+    ).toBeVisible();
+    await expect(page.getByText('María González')).toBeVisible();
   });
 
   test('footer contains privacy and terms links', async ({ page }) => {

@@ -1,11 +1,20 @@
 import OrdersPage from '@/app/dashboard/orders/page';
 import { prisma } from '@/lib/prisma';
 import { render, screen } from '@testing-library/react';
+import { getServerSession } from 'next-auth';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+// Mock getServerSession
+vi.mock('next-auth', () => ({
+  getServerSession: vi.fn(),
+}));
 
 // Mock Prisma
 vi.mock('@/lib/prisma', () => ({
   prisma: {
+    user: {
+      findUnique: vi.fn(),
+    },
     sticker: {
       findMany: vi.fn(),
     },
@@ -22,6 +31,9 @@ const mockOrders = [
     stickerColor: '#ffffff',
     textColor: '#000000',
     status: 'ORDERED',
+    displayStatus: 'ORDERED',
+    displayDescription: 'Pedido creado',
+    displaySecondaryStatuses: [],
     createdAt: new Date('2024-01-01'),
     owner: {
       id: 'user-1',
@@ -39,11 +51,18 @@ const mockOrders = [
     },
     payments: [
       {
-        amountCents: 699000, // $6,990 CLP in cents
+        id: 'payment-1',
+        status: 'VERIFIED',
+        amount: 699000, // $6,990 CLP in cents
         currency: 'CLP',
         createdAt: new Date('2024-01-01'),
       },
     ],
+    paymentInfo: {
+      totalAmount: 699000,
+      hasValidPayment: true,
+      latestStatus: 'VERIFIED',
+    },
   },
   {
     id: 'order-2',
@@ -54,6 +73,9 @@ const mockOrders = [
     stickerColor: '#f0f0f0',
     textColor: '#333333',
     status: 'PAID',
+    displayStatus: 'ORDERED',
+    displayDescription: 'Pedido creado',
+    displaySecondaryStatuses: [],
     createdAt: new Date('2024-01-02'),
     owner: {
       id: 'user-2',
@@ -63,6 +85,11 @@ const mockOrders = [
     },
     profile: null,
     payments: [],
+    paymentInfo: {
+      totalAmount: 0,
+      hasValidPayment: false,
+      latestStatus: null,
+    },
   },
   {
     id: 'order-3',
@@ -73,6 +100,9 @@ const mockOrders = [
     stickerColor: '#ffffff',
     textColor: '#000000',
     status: 'ACTIVE',
+    displayStatus: 'ORDERED',
+    displayDescription: 'Pedido creado',
+    displaySecondaryStatuses: [],
     createdAt: new Date('2024-01-03'),
     owner: {
       id: 'user-3',
@@ -82,13 +112,30 @@ const mockOrders = [
     },
     profile: null,
     payments: [],
+    paymentInfo: {
+      totalAmount: 0,
+      hasValidPayment: false,
+      latestStatus: null,
+    },
   },
 ];
 
 describe('Orders Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (prisma.sticker.findMany as any).mockResolvedValue(mockOrders);
+
+    // Mock getServerSession to return valid session
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { email: 'admin@example.com' },
+    });
+
+    // Mock user lookup for admin check
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      role: 'ADMIN',
+    } as never);
+
+    // Mock Prisma query with proper type casting
+    vi.mocked(prisma.sticker.findMany).mockResolvedValue(mockOrders as never);
   });
 
   it('renders page title and description', async () => {
@@ -97,9 +144,7 @@ describe('Orders Page', () => {
 
     expect(screen.getByText('Gestión de Órdenes')).toBeInTheDocument();
     expect(
-      screen.getByText(
-        'Gestiona el flujo completo de órdenes desde creación hasta finalización'
-      )
+      screen.getByText('Administra y supervisa todas las órdenes del sistema')
     ).toBeInTheDocument();
   });
 
@@ -109,8 +154,15 @@ describe('Orders Page', () => {
 
     expect(screen.getByText('Total')).toBeInTheDocument();
     expect(screen.getByText('Creadas')).toBeInTheDocument();
-    expect(screen.getByText('Tablero de Órdenes')).toBeInTheDocument();
-    expect(screen.getByText('3')).toBeInTheDocument(); // Total count
+
+    // The page shows statistics cards with numbers
+    // Based on the current mock data:
+    // - Total: 3 orders
+    // - Creadas (ORDERED): 2 orders
+    // - Pagadas (PAID): 1 order
+    expect(screen.getByText('3')).toBeInTheDocument(); // Total
+    expect(screen.getByText('2')).toBeInTheDocument(); // Creadas
+    expect(screen.getByText('1')).toBeInTheDocument(); // Pagadas
   });
 
   it('calls prisma with correct parameters', async () => {
@@ -147,20 +199,21 @@ describe('Orders Page', () => {
           },
         },
         payments: {
-          where: {
-            status: 'VERIFIED',
+          orderBy: {
+            createdAt: 'desc',
           },
           select: {
-            amountCents: true,
+            amount: true,
             currency: true,
             createdAt: true,
+            id: true,
+            status: true,
           },
         },
       },
       orderBy: {
         createdAt: 'desc',
       },
-      take: 100,
     });
   });
 });

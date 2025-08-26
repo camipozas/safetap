@@ -27,7 +27,7 @@ export interface OrderWithDetails {
     nameOnSticker: string;
     status: string;
   } | null;
-  amountCents: number;
+  amount: number;
   currency: string;
   method: string;
   reference: string;
@@ -35,6 +35,55 @@ export interface OrderWithDetails {
   receivedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface Order {
+  id: string;
+  slug: string;
+  serial: string;
+  nameOnSticker: string;
+  flagCode: string;
+  stickerColor: string;
+  textColor: string;
+  status:
+    | 'ORDERED'
+    | 'PAID'
+    | 'PRINTING'
+    | 'SHIPPED'
+    | 'ACTIVE'
+    | 'LOST'
+    | 'REJECTED'
+    | 'CANCELLED';
+  createdAt: Date;
+  owner: {
+    id: string;
+    name: string | null;
+    email: string;
+    country: string | null;
+  };
+  profile?: {
+    bloodType: string | null;
+    allergies: string[];
+    conditions: string[];
+    medications: string[];
+    notes: string | null;
+    contacts: {
+      name: string;
+      phone: string;
+      relation: string;
+    }[];
+  } | null;
+  payments: {
+    id: string;
+    status: string;
+    amount: number;
+    currency: string;
+    createdAt: Date;
+  }[];
+  // Display status fields for processed status
+  displayStatus?: string;
+  displayDescription?: string;
+  displaySecondaryStatuses?: string[];
 }
 
 export interface AnalyticsData {

@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { StickerQrCode } from './sticker-qr-code';
 
 interface StickerPreviewProps {
@@ -21,6 +22,7 @@ interface StickerPreviewProps {
     } | null;
   };
   size?: number;
+  className?: string;
 }
 
 // Available flags
@@ -42,52 +44,36 @@ const FLAGS = {
   GB: '🇬🇧',
 } as const;
 
-export default function StickerPreview({
+const StickerPreviewComponent = ({
   sticker,
-  size = 200,
-}: StickerPreviewProps) {
+  className = '',
+}: StickerPreviewProps) => {
   const flag = FLAGS[sticker.flagCode as keyof typeof FLAGS] || '🏳️';
 
-  // Calculate dimensions based on size
-  const width = size;
-  const height = size;
-
   return (
-    <div className="relative">
-      {/* Sticker container */}
+    <div className={`relative ${className}`} data-testid="sticker-preview">
+      {/* Sticker container - usando las mismas clases que SafeTap */}
       <div
-        className="rounded-xl shadow-md border border-gray-200 p-3 flex flex-col justify-between"
-        style={{
-          backgroundColor: sticker.stickerColor,
-          width: `${width}px`,
-          height: `${height}px`,
-        }}
+        className="w-40 h-40 sm:w-48 sm:h-48 rounded-xl shadow-md border border-gray-200 p-2 sm:p-3 flex flex-col justify-between"
+        style={{ backgroundColor: sticker.stickerColor }}
       >
         {/* Header */}
         <div className="text-center">
           <h1
-            className="font-bold mb-1"
-            style={{
-              color: sticker.textColor,
-              fontSize: `${Math.max(size * 0.08, 10)}px`,
-            }}
+            className="text-sm sm:text-lg font-bold mb-1"
+            style={{ color: sticker.textColor }}
           >
             SafeTap
           </h1>
         </div>
 
         {/* Personal info */}
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <span style={{ fontSize: `${Math.max(size * 0.12, 16)}px` }}>
-            {flag}
-          </span>
+        <div className="flex items-center justify-center gap-1 sm:gap-2 mb-2 sm:mb-3">
+          <span className="text-xl sm:text-2xl">{flag}</span>
           <div className="text-center">
             <p
-              className="font-semibold leading-tight"
-              style={{
-                color: sticker.textColor,
-                fontSize: `${Math.max(size * 0.06, 10)}px`,
-              }}
+              className="text-sm sm:text-base font-semibold leading-tight"
+              style={{ color: sticker.textColor }}
             >
               {sticker.nameOnSticker || 'Sin nombre'}
             </p>
@@ -99,7 +85,7 @@ export default function StickerPreview({
           <div className="flex-1">
             <StickerQrCode
               slug={sticker.slug}
-              size={Math.max(size * 0.32, 32)}
+              size={64}
               isPreview={false}
               className="mx-auto"
             />
@@ -109,11 +95,7 @@ export default function StickerPreview({
             {/* NFC Icon */}
             <div className="mb-1">
               <svg
-                className="mx-auto"
-                style={{
-                  width: `${Math.max(size * 0.16, 16)}px`,
-                  height: `${Math.max(size * 0.16, 16)}px`,
-                }}
+                className="w-6 h-6 sm:w-8 sm:h-8 mx-auto"
                 fill={sticker.textColor}
                 viewBox="0 0 24 24"
               >
@@ -122,20 +104,14 @@ export default function StickerPreview({
               </svg>
             </div>
             <p
-              className="font-medium leading-tight"
-              style={{
-                color: sticker.textColor,
-                fontSize: `${Math.max(size * 0.04, 8)}px`,
-              }}
+              className="text-xs font-normal leading-none"
+              style={{ color: sticker.textColor, fontSize: '0.75rem' }}
             >
               INFORMACIÓN
             </p>
             <p
-              className="font-medium leading-tight"
-              style={{
-                color: sticker.textColor,
-                fontSize: `${Math.max(size * 0.04, 8)}px`,
-              }}
+              className="text-xs font-normal leading-none"
+              style={{ color: sticker.textColor, fontSize: '0.75rem' }}
             >
               DE EMERGENCIA
             </p>
@@ -144,4 +120,7 @@ export default function StickerPreview({
       </div>
     </div>
   );
-}
+};
+
+const StickerPreview = memo(StickerPreviewComponent);
+export default StickerPreview;

@@ -1,98 +1,176 @@
-import { Metadata } from 'next';
+import Link from 'next/link';
 
-export const metadata: Metadata = {
-  title: 'Carlos Herrera - Demo Perfil de Emergencia | SafeTap',
-  description:
-    'Ejemplo de perfil de emergencia de SafeTap. Muestra cómo se ve la información médica vital y contactos de emergencia.',
-  openGraph: {
-    title: 'Carlos Herrera - Demo Perfil de Emergencia | SafeTap',
-    description:
-      'Ejemplo de perfil de emergencia de SafeTap. Muestra cómo se ve la información médica vital y contactos de emergencia.',
-    url: 'https://safetap.cl/s/demo-chile',
-    siteName: 'SafeTap',
-    images: [
-      {
-        url: 'https://safetap.cl/favicon.svg',
-        width: 1200,
-        height: 630,
-        alt: 'SafeTap - Demo de Información de Emergencia',
+import { EmergencyProfileDisplay } from '@/components/EmergencyProfileDisplay';
+import { prisma } from '@/lib/prisma';
+
+// Force dynamic rendering to avoid database connection during build
+export const dynamic = 'force-dynamic';
+
+// Create demo profile if it doesn't exist
+async function ensureDemoProfile() {
+  const existingProfile = await prisma.emergencyProfile.findFirst({
+    where: { sticker: { slug: 'demo-chile' } },
+    include: {
+      contacts: { orderBy: [{ preferred: 'desc' }, { createdAt: 'asc' }] },
+      user: true,
+      sticker: true,
+    },
+  });
+
+  if (existingProfile) {
+    return existingProfile;
+  }
+
+  // Create demo user
+  const demoUser = await prisma.user.upsert({
+    where: { email: 'demo@safetap.cl' },
+    update: {},
+    create: {
+      email: 'demo@safetap.cl',
+      name: 'María González',
+      country: 'CL',
+    },
+  });
+
+  // Create demo sticker
+  const demoSticker = await prisma.sticker.upsert({
+    where: { slug: 'demo-chile' },
+    update: {},
+    create: {
+      slug: 'demo-chile',
+      serial: 'DEMO001',
+      ownerId: demoUser.id,
+      nameOnSticker: 'María González',
+      flagCode: 'CL',
+      colorPresetId: 'light-gray',
+      stickerColor: '#f1f5f9',
+      textColor: '#000000',
+      status: 'ACTIVE',
+    },
+  });
+
+  // Create demo profile
+  const demoProfile = await prisma.emergencyProfile.create({
+    data: {
+      userId: demoUser.id,
+      stickerId: demoSticker.id,
+      bloodType: 'O+',
+      allergies: ['Penicilina', 'Mariscos', 'Frutos secos'],
+      conditions: ['Diabetes Tipo 1', 'Asma'],
+      medications: ['Insulina Lantus', 'Inhalador Salbutamol'],
+      notes:
+        'Diabética tipo 1 desde los 12 años. Requiere glucagón en caso de hipoglucemia severa. Siempre lleva inhalador para asma. Alérgica severa a mariscos.',
+      language: 'es',
+      organDonor: true,
+      consentPublic: true,
+      contacts: {
+        create: [
+          {
+            name: 'Carlos González',
+            relation: 'Esposo',
+            phone: '+56912345678',
+            country: 'Chile',
+            preferred: true,
+          },
+          {
+            name: 'Ana González',
+            relation: 'Hija',
+            phone: '+56987654321',
+            country: 'Chile',
+            preferred: false,
+          },
+          {
+            name: 'Dr. Pedro Ramírez',
+            relation: 'Endocrinólogo',
+            phone: '+56222334455',
+            country: 'Chile',
+            preferred: false,
+          },
+          {
+            name: 'Dra. Carmen López',
+            relation: 'Médico de cabecera',
+            phone: '+56233445566',
+            country: 'Chile',
+            preferred: false,
+          },
+        ],
       },
-    ],
-    type: 'profile',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Carlos Herrera - Demo Perfil de Emergencia | SafeTap',
-    description:
-      'Ejemplo de perfil de emergencia de SafeTap. Muestra cómo se ve la información médica vital y contactos de emergencia.',
-    images: ['https://safetap.cl/favicon.svg'],
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+    },
+    include: {
+      contacts: { orderBy: [{ preferred: 'desc' }, { createdAt: 'asc' }] },
+      user: true,
+      sticker: true,
+    },
+  });
 
-export default function DemoChilePage() {
+  return demoProfile;
+}
+
+export default async function DemoChilePage() {
+  const profile = await ensureDemoProfile();
+
   return (
-    <article className="max-w-2xl mx-auto">
-      <header className="mb-4">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          🇨🇱 Carlos Herrera
-        </h1>
-      </header>
-
-      <section className="grid gap-2">
-        <p>
-          <strong>Sangre:</strong> O+
-        </p>
-        <p>
-          <strong>Alergias:</strong> Penicilina, Nueces
-        </p>
-        <p>
-          <strong>Condiciones:</strong> Diabetes tipo 2
-        </p>
-        <p>
-          <strong>Medicaciones:</strong> Metformina 850mg
-        </p>
-        <p>
-          <strong>Notas:</strong> En caso de emergencia, verificar niveles de
-          glucosa. Lleva siempre kit de emergencia para diabetes.
-        </p>
-      </section>
-
-      <section className="mt-6">
-        <h2 className="text-xl font-semibold mb-2">Contactos de emergencia</h2>
-        <div className="space-y-4">
-          <div className="p-4 border rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <div className="font-medium">María Elena Herrera</div>
-              <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                Preferido
-              </span>
-            </div>
-            <div className="text-sm text-gray-600">Esposa</div>
-            <div className="text-sm text-gray-600">+56 9 1234 5678</div>
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100">
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        {/* Demo Banner */}
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-3 h-3 bg-blue-500 rounded-full" />
+            <p className="font-semibold text-blue-900">
+              Ejemplo de perfil SafeTap
+            </p>
           </div>
-
-          <div className="p-4 border rounded-lg">
-            <div className="font-medium">Dr. José Martinez</div>
-            <div className="text-sm text-gray-600">Médico tratante</div>
-            <div className="text-sm text-gray-600">+56 9 8765 4321</div>
-          </div>
-
-          <div className="p-4 border rounded-lg">
-            <div className="font-medium">Ana Herrera</div>
-            <div className="text-sm text-gray-600">Hija</div>
-            <div className="text-sm text-gray-600">+56 9 5555 6666</div>
+          <p className="text-blue-800 text-sm">
+            Este es un ejemplo de cómo se ve la información de emergencia cuando
+            alguien escanea tu código QR.
+          </p>
+          <div className="mt-3">
+            <Link
+              href="/buy"
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+            >
+              🛒 Conseguir mi SafeTap
+            </Link>
           </div>
         </div>
-      </section>
 
-      <footer className="mt-8 pt-4 border-t text-center text-sm text-slate-500">
-        <p>Esta es una página de demostración de SafeTap</p>
-        <p>En producción, esta información se generaría dinámicamente</p>
-      </footer>
-    </article>
+        {/* Emergency Profile Display */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <EmergencyProfileDisplay
+            profile={profile}
+            showSafeTapId={true}
+            isDemoMode={true}
+          />
+        </div>
+
+        {/* CTA Section */}
+        <div className="mt-8 text-center">
+          <div className="bg-white rounded-2xl p-6 shadow-lg">
+            <h3 className="text-xl font-semibold text-slate-900 mb-2">
+              ¿Te gusta cómo se ve?
+            </h3>
+            <p className="text-slate-600 mb-4">
+              Consigue tu propio SafeTap y ten tu información de emergencia
+              siempre contigo
+            </p>
+            <Link
+              href="/buy"
+              className="inline-flex items-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+            >
+              🛒 Conseguir mi SafeTap
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
   );
+}
+
+export async function generateMetadata() {
+  return {
+    title: 'Demo SafeTap Chile - Información de Emergencia',
+    description:
+      'Ejemplo de perfil de emergencia SafeTap para usuarios de Chile',
+    robots: 'index, follow',
+  };
 }

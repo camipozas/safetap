@@ -32,6 +32,7 @@ import { GET as validateInvitation } from '@/app/api/admin/invitations/validate/
 
 import { EmailService } from '@/lib/email';
 import { prisma as _mockPrisma } from '@/lib/prisma';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma = _mockPrisma as any;
 
 vi.mock('next-auth', () => ({
@@ -452,7 +453,7 @@ describe('Invitations API', () => {
       );
 
       const response = await revokeInvitation(request, {
-        params: { id: 'invite-1' },
+        params: Promise.resolve({ id: 'invite-1' }),
       });
       const data = await response.json();
 
@@ -472,7 +473,7 @@ describe('Invitations API', () => {
       );
 
       const response = await revokeInvitation(request, {
-        params: { id: 'invalid-id' },
+        params: Promise.resolve({ id: 'invalid-id' }),
       });
       const data = await response.json();
 

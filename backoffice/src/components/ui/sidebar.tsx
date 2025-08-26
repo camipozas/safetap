@@ -134,13 +134,18 @@ export function MobileHeader({ onToggle }: { onToggle: () => void }) {
         </div>
         <button
           onClick={onToggle}
-          className="p-3 rounded-md hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            onToggle();
+          }}
+          className="p-3 rounded-md hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
           data-testid="mobile-toggle"
           aria-label="Toggle menu"
           style={{
             WebkitTouchCallout: 'none',
             WebkitUserSelect: 'none',
             WebkitTapHighlightColor: 'transparent',
+            touchAction: 'manipulation',
           }}
         >
           <Menu className="h-6 w-6 text-gray-600" />

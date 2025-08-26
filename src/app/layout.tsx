@@ -10,19 +10,8 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'SafeTap - Tu información vital, en un tap',
-  description:
-    'Sistema de emergencia personal con códigos QR inteligentes. Acceso rápido a información médica vital y contactos de emergencia.',
-  keywords: [
-    'emergencia',
-    'perfil médico',
-    'qr code',
-    'información vital',
-    'contactos emergencia',
-  ],
-  authors: [{ name: 'SafeTap' }],
-  creator: 'SafeTap',
-  publisher: 'SafeTap',
+  title: 'SafeTap',
+  description: 'Tu información vital, en un tap.',
   icons: {
     icon: '/favicon.svg',
   },
@@ -88,7 +77,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                     />
                   </svg>
                 </div>
-                safetap
+                SafeTap
               </Link>
 
               {/* Desktop navigation */}
@@ -145,7 +134,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                         />
                       </svg>
                     </div>
-                    <span className="font-bold text-xl">safetap</span>
+                    <span className="font-bold text-xl">SafeTap</span>
                   </div>
                   <p className="text-slate-400 max-w-md">
                     Tu información vital siempre contigo. Tecnología que salva
@@ -200,7 +189,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
               <div className="border-t border-slate-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
                 <p className="text-slate-400 text-sm">
-                  © {new Date().getFullYear()} safetap. Todos los derechos
+                  © {new Date().getFullYear()} SafeTap. Todos los derechos
                   reservados.
                 </p>
                 <div className="flex space-x-6 mt-4 md:mt-0">

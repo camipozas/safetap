@@ -21,6 +21,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
+      <head>
+        <style>{`
+          body {
+            background-color: white !important;
+            color: black !important;
+            font-family: system-ui, -apple-system, sans-serif;
+          }
+        `}</style>
+      </head>
       <body className={inter.className}>
         <SessionProviderWrapper>{children}</SessionProviderWrapper>
       </body>

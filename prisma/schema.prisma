@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -98,19 +99,19 @@ model ProfileAccessLog {
 }
 
 model Payment {
-  id          String        @id @default(cuid())
-  userId      String
-  stickerId   String?
-  amountCents Int
-  currency    String        @default("CLP")
-  method      String        @default("BANK_TRANSFER")
-  reference   String        @unique
-  status      PaymentStatus @default(PENDING)
-  receivedAt  DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  sticker     Sticker?      @relation(fields: [stickerId], references: [id])
-  user        User          @relation(fields: [userId], references: [id])
+  id         String        @id @default(cuid())
+  userId     String
+  stickerId  String?
+  amount     Int
+  currency   String        @default("CLP")
+  method     String        @default("BANK_TRANSFER")
+  reference  String        @unique
+  status     PaymentStatus @default(PENDING)
+  receivedAt DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  sticker    Sticker?      @relation(fields: [stickerId], references: [id])
+  user       User          @relation(fields: [userId], references: [id])
 
   @@index([userId, status])
 }
@@ -193,6 +194,8 @@ enum StickerStatus {
   SHIPPED
   ACTIVE
   LOST
+  REJECTED
+  CANCELLED
 }
 
 enum AccessVia {
@@ -202,7 +205,11 @@ enum AccessVia {
 }
 
 enum PaymentStatus {
-  PENDING
-  VERIFIED
-  REJECTED
+  PENDING              // Pago pendiente
+  TRANSFER_PAYMENT     // Pago por transferencia confirmado
+  VERIFIED             // Pago verificado por el sistema
+  PAID                 // Pago completado
+  TRANSFERRED          // Transferencia realizada
+  REJECTED             // Pago rechazado
+  CANCELLED            // Pago cancelado
 }

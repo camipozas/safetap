@@ -96,7 +96,7 @@ async function seedTestData() {
       data: {
         userId,
         stickerId,
-        amountCents: [2990, 3990, 4990][Math.floor(Math.random() * 3)], // 29.90, 39.90, 49.90 EUR
+        amount: [2990, 3990, 4990][Math.floor(Math.random() * 3)], // 2990, 3990, 4990 CLP
         currency: 'EUR',
         method: ['BANK_TRANSFER', 'STRIPE', 'PAYPAL'][
           Math.floor(Math.random() * 3)

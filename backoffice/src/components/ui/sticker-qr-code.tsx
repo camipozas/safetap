@@ -1,13 +1,13 @@
 'use client';
 
+import Image from 'next/image';
 import QRCode from 'qrcode';
 import { memo, useEffect, useRef, useState } from 'react';
 
-const QR_SMALL_SIZE_THRESHOLD = 64;
-const QR_SMALL_IMAGE_QUALITY = 0.8;
-const QR_STANDARD_IMAGE_QUALITY = 0.92;
-const HIGH_RESOLUTION_SCALE_FACTOR = 2;
-const LOW_RESOLUTION_SCALE_FACTOR = 1.5;
+// Configuration constants for high-quality QR generation
+const QR_HIGH_QUALITY = 1.0;
+const RESOLUTION_SCALE_FACTOR = 4; // Higher scale for crisp rendering
+const ERROR_CORRECTION_LEVEL = 'H'; // High error correction for better readability
 
 interface StickerQrCodeProps {
   slug?: string;
@@ -42,7 +42,7 @@ const getBaseUrl = () => {
 
 export const StickerQrCode = memo(function StickerQrCode({
   slug,
-  size = 64,
+  size = 120,
   isPreview = false,
   className = '',
 }: StickerQrCodeProps) {
@@ -66,25 +66,19 @@ export const StickerQrCode = memo(function StickerQrCode({
 
       try {
         const qrUrl = `${getBaseUrl()}/s/${slug}`;
+
+        // High-quality QR code options
         const qrOptions = {
-          width:
-            size <= QR_SMALL_SIZE_THRESHOLD
-              ? size * LOW_RESOLUTION_SCALE_FACTOR
-              : size * HIGH_RESOLUTION_SCALE_FACTOR, // Optimized scaling for small QRs
-          margin: 1,
+          width: size * RESOLUTION_SCALE_FACTOR, // High resolution for crisp rendering
+          margin: 2,
           color: {
             dark: '#000000',
             light: '#FFFFFF',
           },
-          quality:
-            size <= QR_SMALL_SIZE_THRESHOLD
-              ? QR_SMALL_IMAGE_QUALITY
-              : QR_STANDARD_IMAGE_QUALITY, // Lower quality for small QRs
+          errorCorrectionLevel: ERROR_CORRECTION_LEVEL as 'L' | 'M' | 'Q' | 'H',
+          type: 'image/png' as const,
           rendererOpts: {
-            quality:
-              size <= QR_SMALL_SIZE_THRESHOLD
-                ? QR_SMALL_IMAGE_QUALITY
-                : QR_STANDARD_IMAGE_QUALITY,
+            quality: QR_HIGH_QUALITY,
           },
         };
 
@@ -94,7 +88,7 @@ export const StickerQrCode = memo(function StickerQrCode({
         if (isMounted) {
           setQrDataUrl(dataUrl);
         }
-      } catch (error) {
+      } catch {
         // Silent error handling - show loading state instead
         if (isMounted) {
           setQrDataUrl('');
@@ -196,12 +190,19 @@ export const StickerQrCode = memo(function StickerQrCode({
   // Show real QR code
   return (
     <div className={`relative ${className}`}>
-      <img
+      <Image
         src={qrDataUrl}
         alt="QR Code"
-        className="rounded"
-        style={{ width: `${size}px`, height: `${size}px` }}
-        loading="lazy"
+        width={size}
+        height={size}
+        className="rounded border border-gray-200 shadow-sm"
+        style={{
+          width: `${size}px`,
+          height: `${size}px`,
+          imageRendering: 'crisp-edges', // Better rendering for QR codes
+        }}
+        priority={size > 100} // Prioritize larger QR codes
+        unoptimized // Don't compress QR codes as they need to remain precise
       />
     </div>
   );

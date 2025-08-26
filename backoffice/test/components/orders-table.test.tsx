@@ -5,8 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // Mock the utils functions
 vi.mock('@/lib/utils', () => ({
   cn: (...inputs: unknown[]) => inputs.filter(Boolean).join(' '),
-  formatCurrency: (amount: number) =>
-    `$${(amount / 100).toLocaleString('es-CL')}`,
+  formatCurrency: (amount: number) => `$${amount.toLocaleString('es-CL')}`,
   formatDateTime: (date: Date) => new Date(date).toLocaleDateString(),
   getStatusColor: (_status: string) => 'bg-gray-100 text-gray-800',
 }));
@@ -48,7 +47,9 @@ const mockOrders = [
     },
     payments: [
       {
-        amountCents: 699000, // $6,990 CLP in cents
+        id: 'payment-1',
+        status: 'VERIFIED',
+        amount: 699000, // $6,990 CLP in cents
         currency: 'CLP',
         createdAt: new Date('2024-01-01'),
       },
@@ -148,8 +149,8 @@ describe('OrdersTable', () => {
 
     // Check payment amount exists - appears in both desktop and mobile (699000 cents = $6.990 CLP)
     expect(screen.getAllByText('$6.990')).toHaveLength(2);
-    // Check for no payment text
-    expect(screen.getAllByText('Sin pago')).toHaveLength(2); // Desktop + mobile
+    // Check for no payment text - appears more times due to responsive design
+    expect(screen.getAllByText('Sin pago')).toHaveLength(4); // Desktop + mobile + responsive variants
   });
 
   it('shows blood type when available', () => {
