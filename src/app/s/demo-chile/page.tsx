@@ -3,6 +3,9 @@ import Link from 'next/link';
 import { EmergencyProfileDisplay } from '@/components/EmergencyProfileDisplay';
 import { prisma } from '@/lib/prisma';
 
+// Force dynamic rendering to avoid database connection during build
+export const dynamic = 'force-dynamic';
+
 // Create demo profile if it doesn't exist
 async function ensureDemoProfile() {
   const existingProfile = await prisma.emergencyProfile.findFirst({

@@ -3,6 +3,9 @@ import { notFound } from 'next/navigation';
 import { EmergencyProfileDisplay } from '@/components/EmergencyProfileDisplay';
 import { prisma } from '@/lib/prisma';
 
+// Force dynamic rendering to avoid database connection during build
+export const dynamic = 'force-dynamic';
+
 interface QrProfilePageProps {
   params: Promise<{ profileId: string }>;
 }

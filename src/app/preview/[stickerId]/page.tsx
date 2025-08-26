@@ -4,6 +4,9 @@ import StickerPreview from '@/components/StickerPreview';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+// Force dynamic rendering for auth-protected page
+export const dynamic = 'force-dynamic';
+
 type EmergencyContact = {
   id: string;
   name: string;

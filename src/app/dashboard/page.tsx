@@ -4,6 +4,9 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { hasPermission } from '@/types/shared';
 
+// Force dynamic rendering for auth-protected page
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardRedirectPage() {
   const session = await auth();
 
