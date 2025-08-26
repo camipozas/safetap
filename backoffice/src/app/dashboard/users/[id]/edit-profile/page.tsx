@@ -46,17 +46,57 @@ export default async function EditProfilePage({
     const profile = sticker.profile;
     if (!profile) return;
 
+    const userName = formData.get('userName') as string;
     const bloodType = formData.get('bloodType') as string;
-    const allergies = formData.getAll('allergies') as string[];
-    const conditions = formData.getAll('conditions') as string[];
-    const medications = formData.getAll('medications') as string[];
+    const organDonor = formData.get('organDonor') === 'on';
+    const allergiesString = formData.get('allergies') as string;
+    const conditionsString = formData.get('conditions') as string;
+    const medicationsString = formData.get('medications') as string;
     const notes = formData.get('notes') as string;
 
+    const allergies = allergiesString
+      ? allergiesString
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+    const conditions = conditionsString
+      ? conditionsString
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+    const medications = medicationsString
+      ? medicationsString
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+
     try {
+      if (userName && userName !== user.name) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            name: userName,
+            updatedAt: new Date(),
+          },
+        });
+
+        await prisma.sticker.updateMany({
+          where: { ownerId: user.id },
+          data: {
+            nameOnSticker: userName,
+            updatedAt: new Date(),
+          },
+        });
+      }
+
       await prisma.emergencyProfile.update({
         where: { id: profile.id },
         data: {
           bloodType: bloodType || null,
+          organDonor,
           allergies,
           conditions,
           medications,
@@ -105,6 +145,29 @@ export default async function EditProfilePage({
       </div>
 
       <form action={handleSubmit} className="space-y-6">
+        {/* Información del Usuario */}
+        <div className="bg-white p-6 rounded-lg border">
+          <h2 className="text-lg font-semibold mb-4">Información Personal</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Nombre Completo
+              </label>
+              <input
+                type="text"
+                name="userName"
+                defaultValue={user.name || ''}
+                className="w-full border rounded px-3 py-2"
+                placeholder="Nombre completo del usuario"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Este nombre aparecerá en el perfil de emergencia y stickers
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Información médica */}
         <div className="bg-white p-6 rounded-lg border">
           <h2 className="text-lg font-semibold mb-4">Información Médica</h2>
@@ -130,18 +193,71 @@ export default async function EditProfilePage({
                 <option value="O-">O-</option>
               </select>
             </div>
+
+            <div>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  name="organDonor"
+                  defaultChecked={sticker.profile?.organDonor || false}
+                  className="rounded"
+                />
+                <span className="text-sm font-medium">Donante de Órganos</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Alergias (separadas por coma)
+              </label>
+              <input
+                type="text"
+                name="allergies"
+                defaultValue={sticker.profile?.allergies?.join(', ') || ''}
+                className="w-full border rounded px-3 py-2"
+                placeholder="Ej. Penicilina, Mariscos"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Condiciones Médicas (separadas por coma)
+              </label>
+              <input
+                type="text"
+                name="conditions"
+                defaultValue={sticker.profile?.conditions?.join(', ') || ''}
+                className="w-full border rounded px-3 py-2"
+                placeholder="Ej. Diabetes, Hipertensión"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Medicamentos (separados por coma)
+              </label>
+              <input
+                type="text"
+                name="medications"
+                defaultValue={sticker.profile?.medications?.join(', ') || ''}
+                className="w-full border rounded px-3 py-2"
+                placeholder="Ej. Metformina, Lisinopril"
+              />
+            </div>
           </div>
 
           <div className="mt-4">
             <label className="block text-sm font-medium mb-1">
-              Notas Adicionales
+              Notas Importantes
             </label>
             <textarea
               name="notes"
               defaultValue={sticker.profile?.notes || ''}
               rows={3}
               className="w-full border rounded px-3 py-2"
-              placeholder="Información adicional relevante..."
+              placeholder="Información adicional relevante para emergencias..."
             />
           </div>
         </div>
