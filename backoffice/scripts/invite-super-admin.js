@@ -1,9 +1,29 @@
 #!/usr/bin/env node
 
+// Force production environment first
+process.env.NODE_ENV = 'production';
+
+// Load production .env file explicitly (try .env.production first)
+require('dotenv').config({ path: '.env.production', override: true });
+
+console.log('🔍 Verificando configuración de base de datos...');
+console.log(
+  'DATABASE_URL:',
+  process.env.DATABASE_URL?.substring(0, 50) + '...'
+);
+console.log('DIRECT_URL:', process.env.DIRECT_URL?.substring(0, 50) + '...');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+
 const { PrismaClient } = require('@prisma/client');
 const { config } = require('./config');
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+});
 
 async function inviteSuperAdmin() {
   console.log('👑 Invitando como SUPER_ADMIN en producción...\n');
@@ -41,9 +61,33 @@ async function inviteSuperAdmin() {
       if (existingUser.role === config.roles.SUPER_ADMIN) {
         console.log('⚠️  El usuario ya es SUPER_ADMIN');
         return;
+      } else {
+        // Update user role to SUPER_ADMIN
+        console.log(`🔄 Actualizando rol de ${existingUser.role} a ${role}...`);
+        await prisma.user.update({
+          where: { email },
+          data: { role },
+        });
+        console.log('✅ Rol actualizado a SUPER_ADMIN');
       }
     } else {
-      console.log('✅ Usuario no existe, procediendo con invitación');
+      console.log('❌ Usuario no existe, creándolo primero...');
+
+      // Create the user first
+      const newUser = await prisma.user.create({
+        data: {
+          email,
+          name: email.split('@')[0], // Use email prefix as name
+          role,
+          emailVerified: new Date(), // Set as verified since it's an admin
+        },
+      });
+
+      console.log('✅ Usuario creado exitosamente:');
+      console.log('   ID:', newUser.id);
+      console.log('   Email:', newUser.email);
+      console.log('   Name:', newUser.name);
+      console.log('   Role:', newUser.role);
     }
 
     // Limpiar invitaciones expiradas o usadas

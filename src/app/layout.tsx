@@ -10,10 +10,46 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'SafeTap',
+  title: {
+    default: 'SafeTap - Tu información vital, en un tap',
+    template: '%s | SafeTap',
+  },
   description: 'Tu información vital, en un tap.',
   icons: {
     icon: '/favicon.svg',
+  },
+  openGraph: {
+    title: 'SafeTap - Tu información vital, en un tap',
+    description:
+      'Sistema de emergencia personal con códigos QR inteligentes. Acceso rápido a información médica vital y contactos de emergencia.',
+    url: 'https://safetap.cl',
+    siteName: 'SafeTap',
+    images: [
+      {
+        url: 'https://safetap.cl/favicon.svg',
+        width: 1200,
+        height: 630,
+        alt: 'SafeTap - Sistema de emergencia personal',
+      },
+    ],
+    locale: 'es_ES',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SafeTap - Tu información vital, en un tap',
+    description:
+      'Sistema de emergencia personal con códigos QR inteligentes. Acceso rápido a información médica vital y contactos de emergencia.',
+    images: ['https://safetap.cl/favicon.svg'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  verification: {
+    // Agrega aquí tus códigos de verificación cuando los tengas
+    // google: 'google-verification-code',
+    // yandex: 'yandex-verification-code',
   },
 };
 

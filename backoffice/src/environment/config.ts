@@ -6,7 +6,10 @@ export const environment = {
   },
 
   nextauth: {
-    url: process.env.NEXTAUTH_URL || 'http://localhost:3001',
+    url:
+      process.env.NEXTAUTH_BACKOFFICE_URL ||
+      process.env.NEXTAUTH_URL ||
+      'http://localhost:3001',
   },
 
   emails: {
