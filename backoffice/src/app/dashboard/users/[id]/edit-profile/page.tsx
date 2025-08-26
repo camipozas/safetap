@@ -79,7 +79,6 @@ export default async function EditProfilePage({
           where: { id: user.id },
           data: {
             name: userName,
-            updatedAt: new Date(),
           },
         });
 
