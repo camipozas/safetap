@@ -5,14 +5,32 @@ import { config } from 'dotenv';
 
 function loadEnvironmentVariables() {
   const projectRoot = path.join(__dirname, '../..');
-  const envPath = path.join(projectRoot, '.env');
-  const envLocalPath = path.join(projectRoot, '.env.local');
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  let envFile: string;
+
+  if (isProduction) {
+    envFile = '.env.production';
+  } else {
+    const localPath = path.join(projectRoot, '.env.local');
+    const devPath = path.join(projectRoot, '.env.development');
+
+    if (fs.existsSync(localPath)) {
+      envFile = '.env.local';
+    } else if (fs.existsSync(devPath)) {
+      envFile = '.env.development';
+    } else {
+      envFile = '.env';
+    }
+  }
+
+  const envPath = path.join(projectRoot, envFile);
 
   if (fs.existsSync(envPath)) {
     config({ path: envPath });
-  }
-  if (fs.existsSync(envLocalPath)) {
-    config({ path: envLocalPath });
+    console.log(`🔧 Loaded environment from: ${envFile}`);
+  } else {
+    console.warn(`⚠️ Environment file not found: ${envFile}`);
   }
 }
 

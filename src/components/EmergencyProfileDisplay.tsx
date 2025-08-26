@@ -79,11 +79,8 @@ export function EmergencyProfileDisplay({
           <AlertTriangle className="h-6 w-6 text-red-700" />
           <div>
             <h1 className="text-xl font-bold text-red-900">
-              Información de Emergencia
+              Información de Emergencia - SafeTap
             </h1>
-            <p className="text-red-700 text-sm">
-              Perfil médico de emergencia - SafeTap
-            </p>
           </div>
         </div>
       </div>

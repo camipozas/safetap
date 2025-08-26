@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import ProfileForm from '@/app/perfil/ui/ProfileForm';
+import ProfileForm from '@/app/profile/ui/ProfileForm';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
@@ -18,8 +18,7 @@ export default async function EditProfilePage({
   }
   const resolvedParams = await params;
   const profile = await prisma.emergencyProfile.findFirst({
-    where: { id: resolvedParams.id, user: { email: session.user.email! } },
-    include: { contacts: true },
+    where: { id: resolvedParams.id, User: { email: session.user.email! } },
   });
   if (!profile) {
     redirect('/account');
