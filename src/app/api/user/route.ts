@@ -37,7 +37,6 @@ export async function PUT(req: Request) {
       where: { id: user.id },
       data: {
         name,
-        updatedAt: new Date(),
       },
     });
 
@@ -46,7 +45,6 @@ export async function PUT(req: Request) {
       where: { ownerId: user.id },
       data: {
         nameOnSticker: name,
-        updatedAt: new Date(),
       },
     });
 

@@ -79,7 +79,6 @@ export default async function EditProfilePage({
           where: { id: user.id },
           data: {
             name: userName,
-            updatedAt: new Date(),
           },
         });
 
@@ -87,7 +86,6 @@ export default async function EditProfilePage({
           where: { ownerId: user.id },
           data: {
             nameOnSticker: userName,
-            updatedAt: new Date(),
           },
         });
       }
