@@ -13,25 +13,27 @@ export default async function PublicProfile(props: {
   const profile = await prisma.emergencyProfile.findFirst({
     where: {
       consentPublic: true,
-      sticker: {
+      Sticker: {
         slug: params.slug,
         // Remove status filter to show all profiles regardless of payment status
       },
     },
     include: {
-      contacts: { orderBy: [{ preferred: 'desc' }, { createdAt: 'asc' }] },
-      user: {
+      EmergencyContact: {
+        orderBy: [{ preferred: 'desc' }, { createdAt: 'asc' }],
+      },
+      User: {
         select: {
           name: true,
           email: true,
           country: true,
         },
       },
-      sticker: {
+      Sticker: {
         select: {
           slug: true,
           status: true,
-          payments: {
+          Payment: {
             select: {
               id: true,
               status: true,
@@ -53,12 +55,26 @@ export default async function PublicProfile(props: {
 
   // Log the access
   await prisma.profileAccessLog.create({
-    data: { profileId: profile.id, via: 'DIRECT' },
+    data: {
+      id: crypto.randomUUID(),
+      profileId: profile.id,
+      via: 'DIRECT',
+    },
   });
 
   return (
     <EmergencyProfileDisplay
-      profile={profile}
+      profile={{
+        ...profile,
+        contacts: profile.EmergencyContact,
+        user: profile.User,
+        sticker: profile.Sticker
+          ? {
+              ...profile.Sticker,
+              payments: profile.Sticker.Payment,
+            }
+          : null,
+      }}
       showSafeTapId={false}
       isDemoMode={false}
     />
@@ -73,13 +89,13 @@ export async function generateMetadata(props: {
   const profile = await prisma.emergencyProfile.findFirst({
     where: {
       consentPublic: true,
-      sticker: {
+      Sticker: {
         slug: params.slug,
         // Remove filters to be consistent with main function
       },
     },
     include: {
-      user: {
+      User: {
         select: {
           name: true,
           email: true,
@@ -97,7 +113,7 @@ export async function generateMetadata(props: {
   }
 
   const userName =
-    profile.user.name ?? profile.user.email?.split('@')[0] ?? 'Usuario';
+    profile.User.name ?? profile.User.email?.split('@')[0] ?? 'Usuario';
 
   const profileUrl = `https://safetap.cl/s/${params.slug}`;
   const profileDescription = `Información de emergencia de ${userName}. Acceso rápido a datos médicos vitales y contactos de emergencia a través de SafeTap.`;

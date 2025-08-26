@@ -10,10 +10,10 @@ export async function GET() {
   }
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
-    include: { stickers: true },
+    include: { Sticker: true },
   });
   if (!user) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
-  return NextResponse.json({ stickers: user.stickers });
+  return NextResponse.json({ stickers: user.Sticker });
 }

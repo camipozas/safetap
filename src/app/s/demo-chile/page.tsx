@@ -9,11 +9,13 @@ export const dynamic = 'force-dynamic';
 // Create demo profile if it doesn't exist
 async function ensureDemoProfile() {
   const existingProfile = await prisma.emergencyProfile.findFirst({
-    where: { sticker: { slug: 'demo-chile' } },
+    where: { Sticker: { slug: 'demo-chile' } },
     include: {
-      contacts: { orderBy: [{ preferred: 'desc' }, { createdAt: 'asc' }] },
-      user: true,
-      sticker: true,
+      EmergencyContact: {
+        orderBy: [{ preferred: 'desc' }, { createdAt: 'asc' }],
+      },
+      User: true,
+      Sticker: true,
     },
   });
 
@@ -26,9 +28,11 @@ async function ensureDemoProfile() {
     where: { email: 'demo@safetap.cl' },
     update: {},
     create: {
+      id: `demo-user-${Date.now()}`,
       email: 'demo@safetap.cl',
       name: 'María González',
       country: 'CL',
+      updatedAt: new Date(),
     },
   });
 
@@ -37,6 +41,7 @@ async function ensureDemoProfile() {
     where: { slug: 'demo-chile' },
     update: {},
     create: {
+      id: `demo-sticker-${Date.now()}`,
       slug: 'demo-chile',
       serial: 'DEMO001',
       ownerId: demoUser.id,
@@ -46,12 +51,14 @@ async function ensureDemoProfile() {
       stickerColor: '#f1f5f9',
       textColor: '#000000',
       status: 'ACTIVE',
+      updatedAt: new Date(),
     },
   });
 
   // Create demo profile
   const demoProfile = await prisma.emergencyProfile.create({
     data: {
+      id: `demo-profile-${Date.now()}`,
       userId: demoUser.id,
       stickerId: demoSticker.id,
       bloodType: 'O+',
@@ -63,51 +70,88 @@ async function ensureDemoProfile() {
       language: 'es',
       organDonor: true,
       consentPublic: true,
-      contacts: {
-        create: [
-          {
-            name: 'Carlos González',
-            relation: 'Esposo',
-            phone: '+56912345678',
-            country: 'Chile',
-            preferred: true,
-          },
-          {
-            name: 'Ana González',
-            relation: 'Hija',
-            phone: '+56987654321',
-            country: 'Chile',
-            preferred: false,
-          },
-          {
-            name: 'Dr. Pedro Ramírez',
-            relation: 'Endocrinólogo',
-            phone: '+56222334455',
-            country: 'Chile',
-            preferred: false,
-          },
-          {
-            name: 'Dra. Carmen López',
-            relation: 'Médico de cabecera',
-            phone: '+56233445566',
-            country: 'Chile',
-            preferred: false,
-          },
-        ],
-      },
+      updatedAt: new Date(),
     },
     include: {
-      contacts: { orderBy: [{ preferred: 'desc' }, { createdAt: 'asc' }] },
-      user: true,
-      sticker: true,
+      EmergencyContact: {
+        orderBy: [{ preferred: 'desc' }, { createdAt: 'asc' }],
+      },
+      User: true,
+      Sticker: true,
     },
   });
 
-  return demoProfile;
+  // Create demo contacts separately
+  await prisma.emergencyContact.createMany({
+    data: [
+      {
+        id: `demo-contact-1-${Date.now()}`,
+        profileId: demoProfile.id,
+        name: 'Carlos González',
+        relation: 'Esposo',
+        phone: '+56912345678',
+        country: 'Chile',
+        preferred: true,
+        updatedAt: new Date(),
+      },
+      {
+        id: `demo-contact-2-${Date.now()}`,
+        profileId: demoProfile.id,
+        name: 'Ana González',
+        relation: 'Hija',
+        phone: '+56987654321',
+        country: 'Chile',
+        preferred: false,
+        updatedAt: new Date(),
+      },
+      {
+        id: `demo-contact-3-${Date.now()}`,
+        profileId: demoProfile.id,
+        name: 'Dr. Pedro Ramírez',
+        relation: 'Endocrinólogo',
+        phone: '+56222334455',
+        country: 'Chile',
+        preferred: false,
+        updatedAt: new Date(),
+      },
+      {
+        id: `demo-contact-4-${Date.now()}`,
+        profileId: demoProfile.id,
+        name: 'Dra. Carmen López',
+        relation: 'Médico de cabecera',
+        phone: '+56233445566',
+        country: 'Chile',
+        preferred: false,
+        updatedAt: new Date(),
+      },
+    ],
+  });
+
+  // Fetch the complete profile with contacts
+  const completeProfile = await prisma.emergencyProfile.findUnique({
+    where: { id: demoProfile.id },
+    include: {
+      EmergencyContact: {
+        orderBy: [{ preferred: 'desc' }, { createdAt: 'asc' }],
+      },
+      User: true,
+      Sticker: true,
+    },
+  });
+
+  return completeProfile!;
 }
 
 export default async function DemoChilePage() {
   const profile = await ensureDemoProfile();
+
+  // Transform the data to match the expected interface
+  const profileData = {
+    ...profile,
+    contacts: profile.EmergencyContact || [],
+    user: profile.User || {},
+    sticker: profile.Sticker,
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100">
@@ -137,7 +181,7 @@ export default async function DemoChilePage() {
         {/* Emergency Profile Display */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           <EmergencyProfileDisplay
-            profile={profile}
+            profile={profileData}
             showSafeTapId={true}
             isDemoMode={true}
           />

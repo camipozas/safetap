@@ -9,11 +9,16 @@ describe('Sticker Activation Integration Flow', () => {
 
   beforeEach(async () => {
     // Clean up any existing test data
+    const users = await prisma.user.findMany({
+      where: { email: 'integration-test@safetap.cl' },
+      select: { id: true },
+    });
+    const userIds = users.map((u) => u.id);
     await prisma.payment.deleteMany({
-      where: { user: { email: 'integration-test@safetap.cl' } },
+      where: { userId: { in: userIds } },
     });
     await prisma.sticker.deleteMany({
-      where: { owner: { email: 'integration-test@safetap.cl' } },
+      where: { ownerId: testUser?.id },
     });
     await prisma.user.deleteMany({
       where: { email: 'integration-test@safetap.cl' },
@@ -22,21 +27,25 @@ describe('Sticker Activation Integration Flow', () => {
     // Create test user
     testUser = await prisma.user.create({
       data: {
+        id: crypto.randomUUID(),
         email: 'integration-test@safetap.cl',
         name: 'Integration Test User',
         country: 'CL',
+        updatedAt: new Date(),
       },
     });
 
     // Create test sticker
     testSticker = await prisma.sticker.create({
       data: {
+        id: crypto.randomUUID(),
         slug: 'test-integration-slug',
         serial: 'TEST-INTEGRATION-001',
         ownerId: testUser.id,
         nameOnSticker: 'Test Integration',
         flagCode: 'CL',
         status: 'SHIPPED',
+        updatedAt: new Date(),
       },
     });
   });
@@ -52,11 +61,13 @@ describe('Sticker Activation Integration Flow', () => {
     // Create pending payment
     await prisma.payment.create({
       data: {
+        id: crypto.randomUUID(),
         userId: testUser.id,
         stickerId: testSticker.id,
         amount: 2990,
         reference: 'test-ref-pending',
         status: 'PENDING',
+        updatedAt: new Date(),
       },
     });
 
@@ -64,18 +75,18 @@ describe('Sticker Activation Integration Flow', () => {
     const stickerWithPayments = await prisma.sticker.findFirst({
       where: { id: testSticker.id },
       include: {
-        payments: {
+        Payment: {
           orderBy: { createdAt: 'desc' },
         },
       },
     });
 
     expect(stickerWithPayments).toBeTruthy();
-    expect(stickerWithPayments?.payments).toHaveLength(1);
-    expect(stickerWithPayments?.payments[0].status).toBe('PENDING');
+    expect(stickerWithPayments?.Payment).toHaveLength(1);
+    expect(stickerWithPayments?.Payment[0].status).toBe('PENDING');
 
     // Check that payment is not valid for activation
-    const hasValidPayment = stickerWithPayments?.payments.some(
+    const hasValidPayment = stickerWithPayments?.Payment.some(
       (p) => p.status === 'VERIFIED' || p.status === 'PAID'
     );
     expect(hasValidPayment).toBe(false);
@@ -85,11 +96,13 @@ describe('Sticker Activation Integration Flow', () => {
     // Create verified payment
     await prisma.payment.create({
       data: {
+        id: crypto.randomUUID(),
         userId: testUser.id,
         stickerId: testSticker.id,
         amount: 2990,
         reference: 'test-ref-verified',
         status: 'VERIFIED',
+        updatedAt: new Date(),
       },
     });
 
@@ -97,7 +110,7 @@ describe('Sticker Activation Integration Flow', () => {
     const stickerWithPayments = await prisma.sticker.findFirst({
       where: { id: testSticker.id },
       include: {
-        payments: {
+        Payment: {
           orderBy: { createdAt: 'desc' },
         },
       },
@@ -105,11 +118,11 @@ describe('Sticker Activation Integration Flow', () => {
 
     expect(stickerWithPayments).toBeTruthy();
     expect(stickerWithPayments?.status).toBe('SHIPPED');
-    expect(stickerWithPayments?.payments).toHaveLength(1);
-    expect(stickerWithPayments?.payments[0].status).toBe('VERIFIED');
+    expect(stickerWithPayments?.Payment).toHaveLength(1);
+    expect(stickerWithPayments?.Payment[0].status).toBe('VERIFIED');
 
     // Check that payment is valid for activation
-    const hasValidPayment = stickerWithPayments?.payments.some(
+    const hasValidPayment = stickerWithPayments?.Payment.some(
       (p) => p.status === 'VERIFIED' || p.status === 'PAID'
     );
     expect(hasValidPayment).toBe(true);
@@ -127,11 +140,13 @@ describe('Sticker Activation Integration Flow', () => {
     // Create paid payment (using valid enum value)
     await prisma.payment.create({
       data: {
+        id: crypto.randomUUID(),
         userId: testUser.id,
         stickerId: testSticker.id,
         amount: 2990,
         reference: 'test-ref-paid',
         status: 'PAID',
+        updatedAt: new Date(),
       },
     });
 
@@ -139,14 +154,14 @@ describe('Sticker Activation Integration Flow', () => {
     const stickerWithPayments = await prisma.sticker.findFirst({
       where: { id: testSticker.id },
       include: {
-        payments: {
+        Payment: {
           orderBy: { createdAt: 'desc' },
         },
       },
     });
 
     // Check that PAID status is valid for activation
-    const hasValidPayment = stickerWithPayments?.payments.some(
+    const hasValidPayment = stickerWithPayments?.Payment.some(
       (p) => p.status === 'VERIFIED' || p.status === 'PAID'
     );
     expect(hasValidPayment).toBe(true);
@@ -156,11 +171,13 @@ describe('Sticker Activation Integration Flow', () => {
     // Create verified payment
     await prisma.payment.create({
       data: {
+        id: crypto.randomUUID(),
         userId: testUser.id,
         stickerId: testSticker.id,
         amount: 2990,
         reference: 'test-ref-not-shipped',
         status: 'VERIFIED',
+        updatedAt: new Date(),
       },
     });
 
@@ -174,7 +191,7 @@ describe('Sticker Activation Integration Flow', () => {
     const stickerWithPayments = await prisma.sticker.findFirst({
       where: { id: testSticker.id },
       include: {
-        payments: {
+        Payment: {
           orderBy: { createdAt: 'desc' },
         },
       },
@@ -183,7 +200,7 @@ describe('Sticker Activation Integration Flow', () => {
     expect(stickerWithPayments?.status).toBe('PAID');
 
     // Even with valid payment, activation should not be allowed if not SHIPPED
-    const hasValidPayment = stickerWithPayments?.payments.some(
+    const hasValidPayment = stickerWithPayments?.Payment.some(
       (p) => p.status === 'VERIFIED' || p.status === 'PAID'
     );
     expect(hasValidPayment).toBe(true);
@@ -198,31 +215,37 @@ describe('Sticker Activation Integration Flow', () => {
     // Create multiple payments: pending, cancelled, then verified
     await prisma.payment.create({
       data: {
+        id: crypto.randomUUID(),
         userId: testUser.id,
         stickerId: testSticker.id,
         amount: 2990,
         reference: 'test-ref-1',
         status: 'PENDING',
+        updatedAt: new Date(),
       },
     });
 
     await prisma.payment.create({
       data: {
+        id: crypto.randomUUID(),
         userId: testUser.id,
         stickerId: testSticker.id,
         amount: 2990,
         reference: 'test-ref-2',
         status: 'CANCELLED',
+        updatedAt: new Date(),
       },
     });
 
     await prisma.payment.create({
       data: {
+        id: crypto.randomUUID(),
         userId: testUser.id,
         stickerId: testSticker.id,
         amount: 2990,
         reference: 'test-ref-3',
         status: 'VERIFIED',
+        updatedAt: new Date(),
       },
     });
 
@@ -230,16 +253,16 @@ describe('Sticker Activation Integration Flow', () => {
     const stickerWithPayments = await prisma.sticker.findFirst({
       where: { id: testSticker.id },
       include: {
-        payments: {
+        Payment: {
           orderBy: { createdAt: 'desc' },
         },
       },
     });
 
-    expect(stickerWithPayments?.payments).toHaveLength(3);
+    expect(stickerWithPayments?.Payment).toHaveLength(3);
 
     // Should find at least one valid payment
-    const hasValidPayment = stickerWithPayments?.payments.some(
+    const hasValidPayment = stickerWithPayments?.Payment.some(
       (p) => p.status === 'VERIFIED' || p.status === 'PAID'
     );
     expect(hasValidPayment).toBe(true);
@@ -249,11 +272,13 @@ describe('Sticker Activation Integration Flow', () => {
     // Create verified payment
     await prisma.payment.create({
       data: {
+        id: crypto.randomUUID(),
         userId: testUser.id,
         stickerId: testSticker.id,
         amount: 2990,
         reference: 'test-ref-integrity',
         status: 'VERIFIED',
+        updatedAt: new Date(),
       },
     });
 
@@ -261,14 +286,14 @@ describe('Sticker Activation Integration Flow', () => {
     const beforeActivation = await prisma.sticker.findFirst({
       where: { id: testSticker.id },
       include: {
-        owner: true,
-        payments: true,
+        User: true,
+        Payment: true,
       },
     });
 
-    expect(beforeActivation?.owner.id).toBe(testUser.id);
-    expect(beforeActivation?.payments).toHaveLength(1);
-    expect(beforeActivation?.payments[0].userId).toBe(testUser.id);
+    expect(beforeActivation?.User.id).toBe(testUser.id);
+    expect(beforeActivation?.Payment).toHaveLength(1);
+    expect(beforeActivation?.Payment[0].userId).toBe(testUser.id);
 
     // Activate sticker
     await prisma.sticker.update({
@@ -280,15 +305,15 @@ describe('Sticker Activation Integration Flow', () => {
     const afterActivation = await prisma.sticker.findFirst({
       where: { id: testSticker.id },
       include: {
-        owner: true,
-        payments: true,
+        User: true,
+        Payment: true,
       },
     });
 
     expect(afterActivation?.status).toBe('ACTIVE');
-    expect(afterActivation?.owner.id).toBe(testUser.id);
-    expect(afterActivation?.payments).toHaveLength(1);
-    expect(afterActivation?.payments[0].userId).toBe(testUser.id);
-    expect(afterActivation?.payments[0].status).toBe('VERIFIED');
+    expect(afterActivation?.User.id).toBe(testUser.id);
+    expect(afterActivation?.Payment).toHaveLength(1);
+    expect(afterActivation?.Payment[0].userId).toBe(testUser.id);
+    expect(afterActivation?.Payment[0].status).toBe('VERIFIED');
   });
 });

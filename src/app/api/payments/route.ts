@@ -14,16 +14,15 @@ export async function GET() {
     // Get payments for the authenticated user
     const payments = await prisma.payment.findMany({
       where: {
-        user: {
+        User: {
           email: session.user.email,
         },
       },
       include: {
-        sticker: {
+        Sticker: {
           select: {
             slug: true,
             nameOnSticker: true,
-            status: true, // Incluir el estado del sticker
           },
         },
       },
@@ -37,11 +36,10 @@ export async function GET() {
       id: payment.id,
       fecha: payment.createdAt.toLocaleDateString('es-CL'),
       producto: 'Sticker SafeTap',
-      monto: `$${payment.amount.toLocaleString('es-CL')} ${payment.currency}`,
+      monto: `$${(payment.amount / 100).toLocaleString('es-CL')} ${payment.currency}`,
       estado: payment.status,
-      stickerSlug: payment.sticker?.slug,
-      stickerName: payment.sticker?.nameOnSticker,
-      stickerStatus: payment.sticker?.status, // Incluir el estado del sticker
+      stickerSlug: payment.Sticker?.slug,
+      stickerName: payment.Sticker?.nameOnSticker,
     }));
 
     return NextResponse.json(formattedPayments);

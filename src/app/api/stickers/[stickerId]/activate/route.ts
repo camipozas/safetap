@@ -19,10 +19,12 @@ export async function POST(
     const sticker = await prisma.sticker.findFirst({
       where: {
         id: stickerId,
-        owner: { email: session.user.email },
+        User: {
+          email: session.user.email,
+        },
       },
       include: {
-        payments: {
+        Payment: {
           orderBy: { createdAt: 'desc' },
           take: 1,
         },
@@ -37,7 +39,7 @@ export async function POST(
     }
 
     // Verificar que hay un pago verificado o completado
-    const validPayment = sticker.payments.find(
+    const validPayment = sticker.Payment.find(
       (payment) => payment.status === 'VERIFIED' || payment.status === 'PAID'
     );
 

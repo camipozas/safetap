@@ -130,7 +130,7 @@ describe('Complete SafeTap Flow Integration Test', () => {
     mockPrisma.emergencyProfile.findUniqueOrThrow.mockResolvedValue({
       ...testProfile,
       bloodType: 'O+',
-      contacts: [
+      EmergencyContact: [
         {
           id: 'test-contact-id',
           name: 'María Gonzalez',
@@ -230,13 +230,17 @@ describe('Complete SafeTap Flow Integration Test', () => {
     // These calls will return the mocked objects set up in beforeEach
     const createdUser = await prisma.user.create({
       data: {
+        id: 'test-user-id',
         email: 'test-flow@safetap.cl',
         name: 'Test User',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     });
 
     const createdSticker = await prisma.sticker.create({
       data: {
+        id: 'test-sticker-id',
         slug: 'test-chile-flow',
         serial: 'TEST123FLOW',
         nameOnSticker: 'Test Chile',
@@ -245,14 +249,18 @@ describe('Complete SafeTap Flow Integration Test', () => {
         textColor: '#ffffff',
         status: 'ORDERED',
         ownerId: createdUser.id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     });
 
     const createdProfile = await prisma.emergencyProfile.create({
       data: {
+        id: 'test-profile-id',
         userId: createdUser.id,
         stickerId: createdSticker.id,
         consentPublic: true,
+        updatedAt: new Date(),
       },
     });
 
@@ -357,11 +365,14 @@ describe('Complete SafeTap Flow Integration Test', () => {
 
     await prisma.emergencyContact.create({
       data: {
+        id: 'test-contact-id',
         name: 'María Gonzalez',
         phone: '+56912345678',
         relation: 'Madre',
         preferred: true,
         profileId: createdProfile.id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     });
 
@@ -369,13 +380,15 @@ describe('Complete SafeTap Flow Integration Test', () => {
     const updatedProfileWithContacts =
       await prisma.emergencyProfile.findUniqueOrThrow({
         where: { id: createdProfile.id },
-        include: { contacts: true },
+        include: { EmergencyContact: true },
       });
 
     expect(updatedProfileWithContacts.bloodType).toBe('O+');
     expect(updatedProfileWithContacts.consentPublic).toBe(true);
-    expect(updatedProfileWithContacts.contacts).toHaveLength(1);
-    expect(updatedProfileWithContacts.contacts[0].name).toBe('María Gonzalez');
+    expect(updatedProfileWithContacts.EmergencyContact).toHaveLength(1);
+    expect(updatedProfileWithContacts.EmergencyContact[0].name).toBe(
+      'María Gonzalez'
+    );
 
     // Step 5: Test QR generation (mocked)
     const qrResponse = await fetch(
@@ -400,26 +413,41 @@ describe('Complete SafeTap Flow Integration Test', () => {
     // Setup mocks for QR generation
     const mockFetch = global.fetch as ReturnType<typeof vi.fn>;
 
-    mockFetch.mockImplementation(() =>
-      Promise.resolve({
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            qrUrl: '/s/test-chile-consistency',
-          }),
-      } as Response)
-    );
+    // Mock both QR generation calls to return the same result
+    mockFetch
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              qrUrl: '/s/test-chile-consistency',
+            }),
+        } as Response)
+      )
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              qrUrl: '/s/test-chile-consistency',
+            }),
+        } as Response)
+      );
 
     // Create test data (mocked)
     const createdUser = await prisma.user.create({
       data: {
+        id: 'test-user-id-consistency',
         email: 'test-flow@safetap.cl',
         name: 'Test User',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     });
 
     const createdSticker = await prisma.sticker.create({
       data: {
+        id: 'test-sticker-id-consistency',
         slug: 'test-chile-consistency',
         serial: 'TEST123CONS',
         nameOnSticker: 'Test Consistency',
@@ -428,15 +456,19 @@ describe('Complete SafeTap Flow Integration Test', () => {
         textColor: '#ffffff',
         status: 'ACTIVE',
         ownerId: createdUser.id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     });
 
     const createdProfile = await prisma.emergencyProfile.create({
       data: {
+        id: 'test-profile-id-consistency',
         userId: createdUser.id,
         stickerId: createdSticker.id,
         bloodType: 'A+',
         consentPublic: true,
+        updatedAt: new Date(),
       },
     });
 

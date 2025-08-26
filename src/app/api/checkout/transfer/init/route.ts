@@ -30,7 +30,11 @@ export async function POST(req: Request) {
     console.log('🔍 Creating or finding user:', data.email);
     const user = await prisma.user.upsert({
       where: { email: data.email },
-      create: { email: data.email },
+      create: {
+        email: data.email,
+        id: crypto.randomUUID(),
+        updatedAt: new Date(),
+      },
       update: {},
     });
     console.log('✅ User ready:', { id: user.id, email: user.email });
@@ -50,6 +54,7 @@ export async function POST(req: Request) {
       });
       const sticker = await tx.sticker.create({
         data: {
+          id: crypto.randomUUID(),
           slug: stickerSlug,
           serial: stickerSerial,
           ownerId: user.id,
@@ -59,6 +64,7 @@ export async function POST(req: Request) {
           stickerColor: data.stickerColor || '#f1f5f9',
           textColor: data.textColor || '#000000',
           status: 'ORDERED',
+          updatedAt: new Date(),
         },
       });
 
@@ -72,6 +78,7 @@ export async function POST(req: Request) {
 
       const payment = await tx.payment.create({
         data: {
+          id: crypto.randomUUID(),
           userId: user.id,
           stickerId: sticker.id,
           amount,
@@ -79,6 +86,7 @@ export async function POST(req: Request) {
           method: PAYMENT_METHOD,
           reference,
           status: 'PENDING',
+          updatedAt: new Date(),
         },
       });
       return { sticker, payment };

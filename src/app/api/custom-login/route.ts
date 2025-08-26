@@ -82,6 +82,8 @@ export async function POST(req: Request) {
         data: {
           email,
           name: email.split('@')[0], // Use email prefix as default name
+          id: crypto.randomUUID(), // Generate a unique id
+          updatedAt: new Date(), // Set updatedAt to now
         },
       });
     }
@@ -97,6 +99,7 @@ export async function POST(req: Request) {
     // Create new verification token in the database
     await prisma.verificationToken.create({
       data: {
+        id: crypto.randomUUID(),
         identifier: email,
         token: hashedToken,
         expires,

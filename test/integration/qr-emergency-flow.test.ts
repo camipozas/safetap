@@ -154,12 +154,13 @@ describe('QR Emergency Profile Integration Flow', () => {
     // Step 3: Profile access via QR
     const activeProfile = {
       ...mockProfile,
-      sticker: {
+      consentPublic: true,
+      Sticker: {
         ...mockSticker,
         status: 'ACTIVE',
-        payments: [{ status: 'TRANSFER_PAYMENT' }],
+        Payment: [{ status: 'TRANSFER_PAYMENT' }],
       },
-      user: mockUser,
+      User: mockUser,
     };
 
     vi.mocked(prisma.emergencyProfile.findFirst).mockResolvedValue(

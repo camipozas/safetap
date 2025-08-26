@@ -68,8 +68,10 @@ export async function GET(req: Request) {
       console.log('👤 Creating new user:', email);
       user = await prisma.user.create({
         data: {
+          id: crypto.randomUUID(),
           email,
           name: email.split('@')[0],
+          updatedAt: new Date(),
         },
       });
     } else {
@@ -88,6 +90,7 @@ export async function GET(req: Request) {
     // Create new session
     await prisma.session.create({
       data: {
+        id: crypto.randomUUID(),
         sessionToken,
         userId: user.id,
         expires,
