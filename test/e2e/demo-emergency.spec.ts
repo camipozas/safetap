@@ -9,7 +9,7 @@ test.describe('Demo Emergency Page', () => {
 
     // Check that the page loads without errors
     await expect(page).toHaveTitle(
-      'Demo SafeTap Chile - Información de Emergencia',
+      'Demo SafeTap Chile - Información de Emergencia | SafeTap',
       { timeout: 10000 }
     );
 

@@ -9,7 +9,10 @@ test.describe('Privacy and Terms Pages', () => {
       await page.waitForLoadState('networkidle');
 
       // Check that the page loads without errors
-      await expect(page).toHaveTitle('SafeTap', { timeout: 10000 });
+      await expect(page).toHaveTitle(
+        'SafeTap - Tu información vital, en un tap',
+        { timeout: 10000 }
+      );
 
       // Check that main content is visible
       await expect(page.locator('body')).toBeVisible({ timeout: 10000 });
@@ -68,7 +71,10 @@ test.describe('Privacy and Terms Pages', () => {
       await page.waitForLoadState('networkidle');
 
       // Check that the page loads without errors
-      await expect(page).toHaveTitle('SafeTap', { timeout: 10000 });
+      await expect(page).toHaveTitle(
+        'SafeTap - Tu información vital, en un tap',
+        { timeout: 10000 }
+      );
 
       // Check that main content is visible
       await expect(page.locator('body')).toBeVisible();

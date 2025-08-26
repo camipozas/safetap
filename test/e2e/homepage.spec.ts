@@ -5,7 +5,7 @@ test.describe('Homepage', () => {
     await page.goto('/');
 
     // Check that the page loads without errors
-    await expect(page).toHaveTitle('SafeTap');
+    await expect(page).toHaveTitle('SafeTap - Tu información vital, en un tap');
 
     // Check that main content is visible
     await expect(page.locator('body')).toBeVisible();

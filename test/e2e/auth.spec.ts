@@ -8,7 +8,10 @@ test.describe('Authentication Flow', () => {
     await page.waitForLoadState('networkidle');
 
     // Check page title with longer timeout
-    await expect(page).toHaveTitle('SafeTap', { timeout: 10000 });
+    await expect(page).toHaveTitle(
+      'SafeTap - Tu información vital, en un tap',
+      { timeout: 10000 }
+    );
 
     // Check for login form elements with longer timeout
     await expect(page.locator('form')).toBeVisible({ timeout: 10000 });
