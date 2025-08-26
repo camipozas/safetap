@@ -186,7 +186,7 @@ export async function generateMetadata() {
       type: 'website',
       images: [
         {
-          url: 'https://safetap.cl/favicon.svg',
+          url: 'https://safetap.cl/og-image.png',
           width: 1200,
           height: 630,
           alt: 'Demo SafeTap Chile - Sistema de emergencia personal',
@@ -198,7 +198,7 @@ export async function generateMetadata() {
       card: 'summary_large_image',
       title: 'Demo SafeTap Chile - Información de Emergencia',
       description: demoDescription,
-      images: ['https://safetap.cl/favicon.svg'],
+      images: ['https://safetap.cl/twitter-image.png'],
     },
   };
 }

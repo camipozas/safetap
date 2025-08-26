@@ -132,7 +132,7 @@ test.describe('Homepage', () => {
     const ogImage = page.locator('meta[property="og:image"]');
     await expect(ogImage).toHaveAttribute(
       'content',
-      'https://safetap.cl/favicon.svg'
+      'https://safetap.cl/og-image.png'
     );
 
     // Check Twitter Card meta tags

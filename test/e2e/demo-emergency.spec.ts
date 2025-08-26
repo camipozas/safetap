@@ -155,7 +155,7 @@ test.describe('Demo Emergency Page', () => {
     const ogImage = page.locator('meta[property="og:image"]');
     await expect(ogImage).toHaveAttribute(
       'content',
-      'https://safetap.cl/favicon.svg'
+      'https://safetap.cl/og-image.png'
     );
 
     const ogType = page.locator('meta[property="og:type"]');

@@ -11,9 +11,12 @@ test.describe('Social Media Images Verification', () => {
     const ogImageUrl = await ogImage.getAttribute('content');
     expect(ogImageUrl).toBeTruthy();
 
-    // Verify the image URL is reachable
+    // Verify the image URL is reachable (convert absolute URL to relative for local testing)
     if (ogImageUrl) {
-      const response = await page.request.get(ogImageUrl);
+      const imageUrl = ogImageUrl.startsWith('https://safetap.cl')
+        ? ogImageUrl.replace('https://safetap.cl', '')
+        : ogImageUrl;
+      const response = await page.request.get(imageUrl);
       expect(response.status()).toBe(200);
 
       // Check that it's an image
@@ -37,9 +40,12 @@ test.describe('Social Media Images Verification', () => {
     const twitterImageUrl = await twitterImage.getAttribute('content');
     expect(twitterImageUrl).toBeTruthy();
 
-    // Verify the image URL is reachable
+    // Verify the image URL is reachable (convert absolute URL to relative for local testing)
     if (twitterImageUrl) {
-      const response = await page.request.get(twitterImageUrl);
+      const imageUrl = twitterImageUrl.startsWith('https://safetap.cl')
+        ? twitterImageUrl.replace('https://safetap.cl', '')
+        : twitterImageUrl;
+      const response = await page.request.get(imageUrl);
       expect(response.status()).toBe(200);
 
       // Check that it's an image
@@ -56,14 +62,15 @@ test.describe('Social Media Images Verification', () => {
     const ogImageUrl = await ogImage.getAttribute('content');
     expect(ogImageUrl).toBeTruthy();
 
-    // Should not be the same as main site
-    expect(ogImageUrl).not.toBe(
-      'https://safetap.cl/api/og-image?title=SafeTap&type=og'
-    );
+    // Should use the same global image for consistency
+    expect(ogImageUrl).toBe('https://safetap.cl/og-image.png');
 
     // Verify accessibility
     if (ogImageUrl) {
-      const response = await page.request.get(ogImageUrl);
+      const imageUrl = ogImageUrl.startsWith('https://safetap.cl')
+        ? ogImageUrl.replace('https://safetap.cl', '')
+        : ogImageUrl;
+      const response = await page.request.get(imageUrl);
       expect(response.status()).toBe(200);
     }
   });

@@ -117,7 +117,7 @@ export async function generateMetadata(props: {
       type: 'profile',
       images: [
         {
-          url: 'https://safetap.cl/favicon.svg',
+          url: 'https://safetap.cl/og-image.png',
           width: 1200,
           height: 630,
           alt: `Perfil de emergencia de ${userName} - SafeTap`,
@@ -129,7 +129,7 @@ export async function generateMetadata(props: {
       card: 'summary_large_image',
       title: `${userName} - Perfil de Emergencia`,
       description: profileDescription,
-      images: ['https://safetap.cl/favicon.svg'],
+      images: ['https://safetap.cl/twitter-image.png'],
     },
   };
 }

@@ -61,7 +61,7 @@ test.describe('Profile SEO Meta Tags', () => {
     const ogImage = page.locator('meta[property="og:image"]');
     await expect(ogImage).toHaveAttribute(
       'content',
-      'https://safetap.cl/favicon.svg'
+      'https://safetap.cl/og-image.png'
     );
 
     // Check image dimensions are specified
@@ -103,7 +103,7 @@ test.describe('Profile SEO Meta Tags', () => {
     const twitterImage = page.locator('meta[name="twitter:image"]');
     await expect(twitterImage).toHaveAttribute(
       'content',
-      'https://safetap.cl/favicon.svg'
+      'https://safetap.cl/twitter-image.png'
     );
   });
 
