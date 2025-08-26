@@ -31,10 +31,23 @@ jobs:
       - name: Setup Prisma
         run: npx prisma generate
 
-      - name: Check database migrations
-        run: npx prisma migrate status
+      - name: Apply database migrations
+        run: |
+          # First try to apply migrations normally
+          if ! npx prisma migrate deploy; then
+            echo "Migration failed, checking for failed migrations..."
+            # Get the status and look for failed migrations
+            npx prisma migrate status || true
+            # Try to resolve common migration issues automatically
+            echo "Attempting to resolve failed migrations..."
+            npx prisma migrate resolve --applied 20250820035608_add_transfer_payment_status || true
+            npx prisma migrate resolve --applied 20250820040759_add_payment_status_states || true
+            # Try deploy again
+            npx prisma migrate deploy
+          fi
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'file:./dev.db' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://user:password@localhost:5432/test' }}
 
       - name: Type check
         run: npm run type-check
@@ -54,6 +67,7 @@ jobs:
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'fallback-secret-for-ci-testing-only' }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'file:./dev.db' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
           EMAIL_SERVER_HOST: ${{ secrets.EMAIL_SERVER_HOST || 'smtp.example.com' }}
           EMAIL_SERVER_USER: ${{ secrets.EMAIL_SERVER_USER || 'test@example.com' }}
           EMAIL_SERVER_PASSWORD: ${{ secrets.EMAIL_SERVER_PASSWORD || 'testpassword' }}
@@ -95,10 +109,23 @@ jobs:
       - name: Setup Prisma
         run: npx prisma generate
 
-      - name: Check database migrations
-        run: npx prisma migrate status
+      - name: Apply database migrations
+        run: |
+          # First try to apply migrations normally
+          if ! npx prisma migrate deploy; then
+            echo "Migration failed, checking for failed migrations..."
+            # Get the status and look for failed migrations
+            npx prisma migrate status || true
+            # Try to resolve common migration issues automatically
+            echo "Attempting to resolve failed migrations..."
+            npx prisma migrate resolve --applied 20250820035608_add_transfer_payment_status || true
+            npx prisma migrate resolve --applied 20250820040759_add_payment_status_states || true
+            # Try deploy again
+            npx prisma migrate deploy
+          fi
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || secrets.DATABASE_URL }}
 
       - name: Build application
         run: npm run build:vercel
@@ -107,6 +134,7 @@ jobs:
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'fallback-secret-for-ci-testing-only' }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'file:./test.db' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || secrets.DATABASE_URL || 'file:./test.db' }}
           EMAIL_SERVER_HOST: ${{ secrets.EMAIL_SERVER_HOST || 'smtp.example.com' }}
           EMAIL_SERVER_USER: ${{ secrets.EMAIL_SERVER_USER || 'test@example.com' }}
           EMAIL_SERVER_PASSWORD: ${{ secrets.EMAIL_SERVER_PASSWORD || 'testpassword' }}

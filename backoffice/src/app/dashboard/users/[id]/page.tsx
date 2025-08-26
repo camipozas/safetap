@@ -1,7 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { prisma } from '@/lib/prisma';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { PrismaClient } from '@prisma/client';
+
+// Create a direct Accelerate client to avoid any local caching
+const accelerateClient = new PrismaClient({
+  datasourceUrl: process.env.DATABASE_URL, // This ensures we use the Accelerate URL
+});
+
 import {
   Calendar,
   CreditCard,
@@ -14,7 +20,7 @@ import {
 import Link from 'next/link';
 
 async function getUserDetails(userId: string) {
-  return await prisma.user.findUnique({
+  return await accelerateClient.user.findUnique({
     where: { id: userId },
     include: {
       _count: {
@@ -28,7 +34,7 @@ async function getUserDetails(userId: string) {
           status: 'VERIFIED',
         },
         select: {
-          amountCents: true,
+          amount: true,
           createdAt: true,
         },
         orderBy: {
@@ -92,7 +98,7 @@ export default async function UserDetailsPage(props: {
 
   const profile = user.profiles[0];
   const totalSpent = user.payments.reduce(
-    (sum, payment) => sum + payment.amountCents,
+    (sum, payment) => sum + payment.amount,
     0
   );
 
@@ -326,7 +332,7 @@ export default async function UserDetailsPage(props: {
                   >
                     <div>
                       <div className="font-medium text-sm text-green-600">
-                        {formatCurrency(payment.amountCents)}
+                        {formatCurrency(payment.amount)}
                       </div>
                       <div className="text-xs text-gray-500">
                         {formatDateTime(payment.createdAt)}

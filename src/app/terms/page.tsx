@@ -8,7 +8,7 @@ export default function TermsPage() {
 
         <div className="prose prose-slate max-w-none">
           <p className="text-lg text-slate-600 mb-8">
-            Estos términos y condiciones rigen el uso del servicio safetap. Al
+            Estos términos y condiciones rigen el uso del servicio SafeTap. Al
             usar nuestro servicio, aceptas estos términos en su totalidad.
           </p>
 
@@ -18,7 +18,7 @@ export default function TermsPage() {
             </h2>
             <div className="space-y-4 text-slate-700">
               <p>
-                safetap es un servicio que proporciona stickers inteligentes con
+                SafeTap es un servicio que proporciona stickers inteligentes con
                 códigos QR y tecnología de proximidad (NFC) que permiten acceso
                 rápido a información de emergencia personalizada.
               </p>
@@ -41,7 +41,7 @@ export default function TermsPage() {
             </h2>
             <div className="space-y-4 text-slate-700">
               <p>
-                Para usar safetap, debes crear una cuenta proporcionando
+                Para usar SafeTap, debes crear una cuenta proporcionando
                 información exacta y completa. Eres responsable de mantener la
                 confidencialidad de tu cuenta y contraseña.
               </p>
@@ -132,7 +132,7 @@ export default function TermsPage() {
             </h2>
             <div className="space-y-4 text-slate-700">
               <p>
-                safetap y todos sus contenidos, características y
+                SafeTap y todos sus contenidos, características y
                 funcionalidades son propiedad de la empresa y están protegidos
                 por derechos de autor, marcas comerciales y otras leyes de
                 propiedad intelectual.
@@ -170,7 +170,7 @@ export default function TermsPage() {
             </h2>
             <div className="space-y-4 text-slate-700">
               <p>
-                safetap es una herramienta de asistencia y no reemplaza los
+                SafeTap es una herramienta de asistencia y no reemplaza los
                 servicios médicos profesionales o de emergencia. En caso de
                 emergencia real, siempre contacta primero a los servicios de
                 emergencia locales.

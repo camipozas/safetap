@@ -65,7 +65,7 @@ describe('Utils', () => {
     it('returns correct colors for payment statuses', () => {
       expect(getStatusColor('PENDING')).toBe('bg-yellow-100 text-yellow-800');
       expect(getStatusColor('VERIFIED')).toBe('bg-green-100 text-green-800');
-      expect(getStatusColor('REJECTED')).toBe('bg-red-100 text-red-800');
+      expect(getStatusColor('REJECTED')).toBe('bg-orange-100 text-orange-800');
     });
 
     it('returns default color for unknown status', () => {

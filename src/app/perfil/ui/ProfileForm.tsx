@@ -137,14 +137,19 @@ export default function ProfileForm({
       </div>
       <div>
         <label className="label" htmlFor="notes">
-          Notas
+          Información para el sticker
         </label>
         <textarea
           id="notes"
           className="input"
           rows={3}
+          placeholder="Información que aparecerá en tu sticker físico (ej. condiciones médicas importantes, alergias críticas, etc.)"
           {...register('notes')}
         />
+        <p className="text-xs text-gray-600 mt-1">
+          Esta información aparecerá tanto en tu sticker físico como en tu
+          perfil público
+        </p>
       </div>
       <fieldset className="border rounded-md p-3">
         <legend className="font-medium">Contactos de emergencia</legend>
@@ -164,11 +169,27 @@ export default function ProfileForm({
               <label className="label" htmlFor={`crel-${i}`}>
                 Relación
               </label>
-              <input
+              <select
                 id={`crel-${i}`}
                 className="input"
                 {...register(`contacts.${i}.relation` as const)}
-              />
+              >
+                <option value="">Seleccionar relación</option>
+                <option value="Padre/Madre">Padre/Madre</option>
+                <option value="Hermano/a">Hermano/a</option>
+                <option value="Hijo/a">Hijo/a</option>
+                <option value="Esposo/a">Esposo/a</option>
+                <option value="Pareja">Pareja</option>
+                <option value="Amigo/a">Amigo/a</option>
+                <option value="Compañero/a de trabajo">
+                  Compañero/a de trabajo
+                </option>
+                <option value="Médico">Médico</option>
+                <option value="Contacto de emergencia">
+                  Contacto de emergencia
+                </option>
+                <option value="Otro">Otro</option>
+              </select>
             </div>
             <div>
               <label className="label" htmlFor={`cphone-${i}`}>

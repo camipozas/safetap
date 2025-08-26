@@ -5,7 +5,6 @@ import {
   DEFAULT_CURRENCY,
   PAYMENT_METHOD,
   PRICE_PER_STICKER_CLP,
-  toCents,
 } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 import { generateSlug } from '@/lib/slug';
@@ -63,9 +62,9 @@ export async function POST(req: Request) {
         },
       });
 
-      const amountCents = toCents(PRICE_PER_STICKER_CLP) * data.quantity;
+      const amount = PRICE_PER_STICKER_CLP * data.quantity;
       console.log('💰 Creating payment:', {
-        amount: amountCents,
+        amount,
         currency: DEFAULT_CURRENCY,
         reference,
         method: PAYMENT_METHOD,
@@ -75,7 +74,7 @@ export async function POST(req: Request) {
         data: {
           userId: user.id,
           stickerId: sticker.id,
-          amountCents,
+          amount,
           currency: DEFAULT_CURRENCY,
           method: PAYMENT_METHOD,
           reference,

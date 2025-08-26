@@ -27,7 +27,7 @@ async function getDashboardStats() {
     prisma.payment.count(),
     prisma.payment.aggregate({
       where: { status: 'VERIFIED' },
-      _sum: { amountCents: true },
+      _sum: { amount: true },
     }),
     prisma.sticker.count({ where: { status: 'ACTIVE' } }),
     prisma.payment.count({ where: { status: 'PENDING' } }),
@@ -46,7 +46,7 @@ async function getDashboardStats() {
           status: 'VERIFIED',
           createdAt: { gte: thisMonth },
         },
-        _sum: { amountCents: true },
+        _sum: { amount: true },
       }),
     ]
   );
@@ -77,7 +77,7 @@ async function getDashboardStats() {
             lte: lastMonthEnd,
           },
         },
-        _sum: { amountCents: true },
+        _sum: { amount: true },
       }),
     ]
   );
@@ -85,20 +85,20 @@ async function getDashboardStats() {
   return {
     totalUsers,
     totalOrders,
-    totalRevenue: totalRevenue._sum.amountCents || 0,
+    totalRevenue: totalRevenue._sum.amount || 0,
     activeStickers,
     pendingPayments,
     thisMonthUsers,
     thisMonthOrders,
-    thisMonthRevenue: thisMonthRevenue._sum.amountCents || 0,
+    thisMonthRevenue: thisMonthRevenue._sum.amount || 0,
     lastMonthUsers,
     lastMonthOrders,
-    lastMonthRevenue: lastMonthRevenue._sum.amountCents || 0,
+    lastMonthRevenue: lastMonthRevenue._sum.amount || 0,
     userGrowth: calculateGrowthPercentage(thisMonthUsers, lastMonthUsers),
     orderGrowth: calculateGrowthPercentage(thisMonthOrders, lastMonthOrders),
     revenueGrowth: calculateGrowthPercentage(
-      thisMonthRevenue._sum.amountCents || 0,
-      lastMonthRevenue._sum.amountCents || 0
+      thisMonthRevenue._sum.amount || 0,
+      lastMonthRevenue._sum.amount || 0
     ),
   };
 }

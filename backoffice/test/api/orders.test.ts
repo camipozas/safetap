@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PUT } from '@/app/api/admin/orders/[id]/route';
 import { prisma } from '@/lib/prisma';
 import { NextRequest } from 'next/server';
@@ -52,7 +53,9 @@ describe('/api/admin/orders/[id] PUT', () => {
       }
     );
 
-    const response = await PUT(request, { params: { id: 'test-id' } });
+    const response = await PUT(request, {
+      params: Promise.resolve({ id: 'test-id' }),
+    });
     const responseData = await response.json();
 
     expect(response.status).toBe(200);
@@ -85,7 +88,9 @@ describe('/api/admin/orders/[id] PUT', () => {
       }
     );
 
-    const response = await PUT(request, { params: { id: 'test-id' } });
+    const response = await PUT(request, {
+      params: Promise.resolve({ id: 'test-id' }),
+    });
     const responseData = await response.json();
 
     expect(response.status).toBe(400);
@@ -106,7 +111,9 @@ describe('/api/admin/orders/[id] PUT', () => {
       }
     );
 
-    const response = await PUT(request, { params: { id: 'test-id' } });
+    const response = await PUT(request, {
+      params: Promise.resolve({ id: 'test-id' }),
+    });
     const responseData = await response.json();
 
     expect(response.status).toBe(500);
@@ -128,7 +135,9 @@ describe('/api/admin/orders/[id] PUT', () => {
       }
     );
 
-    const response = await PUT(request, { params: { id: 'test-id' } });
+    const response = await PUT(request, {
+      params: Promise.resolve({ id: 'test-id' }),
+    });
     const responseData = await response.json();
 
     expect(response.status).toBe(404);
@@ -169,7 +178,9 @@ describe('/api/admin/orders/[id] PUT', () => {
         }
       );
 
-      const response = await PUT(request, { params: { id: 'test-id' } });
+      const response = await PUT(request, {
+        params: Promise.resolve({ id: 'test-id' }),
+      });
       expect(response.status).toBe(200);
     }
   });

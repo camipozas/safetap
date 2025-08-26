@@ -20,14 +20,12 @@ export function StickerQrCode({
   highQuality = false,
   baseUrl,
 }: StickerQrCodeProps) {
-  // Use the baseUrl prop, fallback to default if not provided
-  const resolvedBaseUrl = baseUrl || 'https://safetap.cl';
+  const defaultBaseUrl = 'https://safetap.cl';
+  const resolvedBaseUrl = baseUrl || defaultBaseUrl;
 
-  // Use serial for the public URL, fallback to stickerId for development
   const identifier = serial || stickerId || 'demo-sticker';
   const qrUrl = `${resolvedBaseUrl}/s/${identifier}`;
 
-  // Create a unique key to force re-render when props change
   const qrKey = `${identifier}-${size}-${isPreview}-${highQuality}`;
 
   if (isPreview) {
@@ -37,7 +35,7 @@ export function StickerQrCode({
       <div className={`relative ${className}`}>
         <QrCanvas
           key={qrKey}
-          url="https://safetap.cl/s/preview-demo"
+          url={`${resolvedBaseUrl}/s/preview-demo`}
           size={size}
           className=""
           highResolution={size <= 64}
@@ -45,6 +43,25 @@ export function StickerQrCode({
           backgroundColor="#ffffff"
           foregroundColor="#000000"
         />
+        {/* Perfectly centered watermark for preview */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            className="bg-white/90 text-gray-700 font-bold tracking-wider select-none px-1 py-0.5 rounded shadow-sm border border-gray-200"
+            style={{
+              fontSize: size > 64 ? '10px' : size > 32 ? '8px' : '6px',
+              transform: 'rotate(-45deg)',
+            }}
+          >
+            PREVIEW
+          </div>
+        </div>
       </div>
     );
   }

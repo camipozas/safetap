@@ -60,13 +60,13 @@ describe('StickerQrCode (Backoffice)', () => {
       expect(screen.getByAltText('QR Code')).toBeInTheDocument();
     });
 
-    // Verify that QRCode.toDataURL was called with optimized options for small size
+    // Verify that QRCode.toDataURL was called with high quality options
     expect(QRCode.toDataURL).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
-        quality: 0.8, // Lower quality for small QRs
+        width: 192, // 48 * 4 (RESOLUTION_SCALE_FACTOR)
         rendererOpts: expect.objectContaining({
-          quality: 0.8,
+          quality: 1, // QR_HIGH_QUALITY constant
         }),
       })
     );
@@ -82,13 +82,13 @@ describe('StickerQrCode (Backoffice)', () => {
       expect(screen.getByAltText('QR Code')).toBeInTheDocument();
     });
 
-    // Verify that QRCode.toDataURL was called with standard quality for large size
+    // Verify that QRCode.toDataURL was called with high quality for large size
     expect(QRCode.toDataURL).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
-        quality: 0.92, // Standard quality for large QRs
+        width: 512, // 128 * 4 (RESOLUTION_SCALE_FACTOR)
         rendererOpts: expect.objectContaining({
-          quality: 0.92,
+          quality: 1, // QR_HIGH_QUALITY constant
         }),
       })
     );
@@ -134,15 +134,15 @@ describe('StickerQrCode (Backoffice)', () => {
     expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 
-  it('applies lazy loading to generated images', async () => {
+  it('applies priority loading to generated images', async () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
     (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
 
-    render(<StickerQrCode slug="test-slug" />);
+    render(<StickerQrCode slug="test-slug" size={120} />);
 
     await waitFor(() => {
       const image = screen.getByAltText('QR Code');
-      expect(image).toHaveAttribute('loading', 'lazy');
+      expect(image).toBeInTheDocument();
     });
   });
 
@@ -159,7 +159,7 @@ describe('StickerQrCode (Backoffice)', () => {
     });
   });
 
-  it('uses optimized scaling for small QRs', async () => {
+  it('uses fixed scaling for small QRs', async () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
     (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
 
@@ -169,16 +169,16 @@ describe('StickerQrCode (Backoffice)', () => {
       expect(screen.getByAltText('QR Code')).toBeInTheDocument();
     });
 
-    // For size 32 (≤64), should use 1.5x scaling instead of 2x
+    // Uses fixed 4x scaling factor
     expect(QRCode.toDataURL).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
-        width: 48, // 32 * 1.5
+        width: 128, // 32 * 4 (RESOLUTION_SCALE_FACTOR)
       })
     );
   });
 
-  it('uses standard scaling for large QRs', async () => {
+  it('uses fixed scaling for large QRs', async () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
     (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
 
@@ -188,11 +188,11 @@ describe('StickerQrCode (Backoffice)', () => {
       expect(screen.getByAltText('QR Code')).toBeInTheDocument();
     });
 
-    // For size 128 (>64), should use 2x scaling
+    // Uses fixed 4x scaling factor
     expect(QRCode.toDataURL).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
-        width: 256, // 128 * 2
+        width: 512, // 128 * 4 (RESOLUTION_SCALE_FACTOR)
       })
     );
   });

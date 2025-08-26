@@ -8,7 +8,7 @@ export default function PrivacyPage() {
 
         <div className="prose prose-slate max-w-none">
           <p className="text-lg text-slate-600 mb-8">
-            En safetap, valoramos y protegemos tu privacidad. Esta política
+            En SafeTap, valoramos y protegemos tu privacidad. Esta política
             explica cómo recopilamos, usamos y protegemos tu información
             personal.
           </p>
@@ -22,7 +22,7 @@ export default function PrivacyPage() {
                 <strong>Información de perfil:</strong> Nombre, información de
                 contacto de emergencia, condiciones médicas relevantes, y
                 cualquier otra información que elijas compartir en tu perfil de
-                safetap.
+                SafeTap.
               </p>
               <p>
                 <strong>Información de cuenta:</strong> Dirección de correo
@@ -158,7 +158,7 @@ export default function PrivacyPage() {
             <p className="text-slate-700">
               Nuestro servicio está dirigido a personas mayores de 18 años. Si
               eres menor de edad, necesitas el consentimiento de tus padres o
-              tutores para usar safetap.
+              tutores para usar SafeTap.
             </p>
           </section>
 

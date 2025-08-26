@@ -30,7 +30,7 @@ export async function GET(_request: NextRequest) {
 
     const totalRevenue = await prisma.payment.aggregate({
       where: { status: 'VERIFIED' },
-      _sum: { amountCents: true },
+      _sum: { amount: true },
     });
 
     return NextResponse.json({
@@ -38,7 +38,7 @@ export async function GET(_request: NextRequest) {
       totalPayments,
       totalStickers,
       pendingPayments,
-      totalRevenue: totalRevenue._sum.amountCents || 0,
+      totalRevenue: totalRevenue._sum.amount || 0,
     });
   } catch (error) {
     return NextResponse.json(

@@ -47,7 +47,7 @@ export async function GET(req: Request) {
       return new NextResponse(svgString, {
         headers: {
           'Content-Type': 'image/svg+xml',
-          'Content-Disposition': `attachment; filename="safetap-qr-${Date.now()}.svg"`,
+          'Content-Disposition': `attachment; filename="SafeTap-qr-${Date.now()}.svg"`,
         },
       });
     } else {
@@ -65,7 +65,7 @@ export async function GET(req: Request) {
       return new NextResponse(buffer as any, {
         headers: {
           'Content-Type': 'image/png',
-          'Content-Disposition': `attachment; filename="safetap-qr-${Date.now()}.png"`,
+          'Content-Disposition': `attachment; filename="SafeTap-qr-${Date.now()}.png"`,
         },
       });
     }

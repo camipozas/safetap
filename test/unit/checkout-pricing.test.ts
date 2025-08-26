@@ -25,14 +25,14 @@ describe('Checkout Pricing', () => {
 
     it('calculates correct amount in cents for API', () => {
       const quantity = 1;
-      const amountCents = PRICE_PER_STICKER_CENTS * quantity;
-      expect(amountCents).toBe(toCents(PRICE_PER_STICKER_CLP));
+      const amount = PRICE_PER_STICKER_CENTS * quantity;
+      expect(amount).toBe(toCents(PRICE_PER_STICKER_CLP));
     });
 
     it('calculates correct amount in cents for multiple stickers', () => {
       const quantity = 2;
-      const amountCents = PRICE_PER_STICKER_CENTS * quantity;
-      expect(amountCents).toBe(toCents(PRICE_PER_STICKER_CLP) * 2);
+      const amount = PRICE_PER_STICKER_CENTS * quantity;
+      expect(amount).toBe(toCents(PRICE_PER_STICKER_CLP) * 2);
     });
 
     it('formats CLP currency correctly', () => {
@@ -49,14 +49,14 @@ describe('Checkout Pricing', () => {
 
   describe('Currency conversion from cents', () => {
     it('converts cents to CLP correctly', () => {
-      const amountCents = toCents(PRICE_PER_STICKER_CLP);
-      const clp = fromCents(amountCents);
+      const amount = toCents(PRICE_PER_STICKER_CLP);
+      const clp = fromCents(amount);
       expect(clp).toBe(PRICE_PER_STICKER_CLP);
     });
 
     it('converts large amounts from cents to CLP correctly', () => {
-      const amountCents = toCents(PRICE_PER_STICKER_CLP * 2);
-      const clp = fromCents(amountCents);
+      const amount = toCents(PRICE_PER_STICKER_CLP * 2);
+      const clp = fromCents(amount);
       expect(clp).toBe(PRICE_PER_STICKER_CLP * 2);
     });
   });
