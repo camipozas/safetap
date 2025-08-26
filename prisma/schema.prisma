@@ -8,98 +8,76 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model User {
-  id             String             @id @default(cuid())
-  email          String             @unique
-  name           String?
-  image          String?
-  country        String?
-  role           Role               @default(USER)
-  emailVerified  DateTime?
-  totalSpent     Int                @default(0)
-  lastLoginAt    DateTime?
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-  accounts       Account[]
-  profiles       EmergencyProfile[]
-  payments       Payment[]
-  sessions       Session[]
-  stickers       Sticker[]
-  stickerDesigns StickerDesign[]
+model Account {
+  id                String  @id
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  User              User    @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerAccountId])
 }
 
-model Sticker {
-  id            String            @id @default(cuid())
-  slug          String            @unique
-  serial        String            @unique
-  ownerId       String
-  nameOnSticker String
-  flagCode      String
-  colorPresetId String            @default("light-gray")
-  stickerColor  String            @default("#f1f5f9")
-  textColor     String            @default("#000000")
-  status        StickerStatus     @default(ORDERED)
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  profile       EmergencyProfile?
-  payments      Payment[]
-  owner         User              @relation(fields: [ownerId], references: [id])
+model AdminInvitation {
+  id        String    @id
+  email     String
+  role      Role
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime
 
-  @@index([ownerId])
-}
-
-model EmergencyProfile {
-  id              String             @id @default(cuid())
-  userId          String
-  stickerId       String?            @unique
-  bloodType       String?
-  allergies       String[]
-  conditions      String[]
-  medications     String[]
-  notes           String?
-  language        String?
-  organDonor      Boolean            @default(false)
-  insurance       Json?
-  consentPublic   Boolean            @default(true)
-  updatedByUserAt DateTime?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  contacts        EmergencyContact[]
-  sticker         Sticker?           @relation(fields: [stickerId], references: [id])
-  user            User               @relation(fields: [userId], references: [id])
-  accessLogs      ProfileAccessLog[]
+  @@index([email, expiresAt])
 }
 
 model EmergencyContact {
-  id        String           @id @default(cuid())
-  profileId String
-  name      String
-  relation  String
-  phone     String
-  country   String?
-  preferred Boolean          @default(false)
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-  profile   EmergencyProfile @relation(fields: [profileId], references: [id])
+  id               String           @id
+  profileId        String
+  name             String
+  relation         String
+  phone            String
+  country          String?
+  preferred        Boolean          @default(false)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime
+  EmergencyProfile EmergencyProfile @relation(fields: [profileId], references: [id])
 
   @@index([profileId])
 }
 
-model ProfileAccessLog {
-  id        String           @id @default(cuid())
-  profileId String
-  via       AccessVia
-  ip        String?
-  userAgent String?
-  country   String?
-  createdAt DateTime         @default(now())
-  profile   EmergencyProfile @relation(fields: [profileId], references: [id])
-
-  @@index([profileId, createdAt])
+model EmergencyProfile {
+  id               String             @id
+  userId           String
+  stickerId        String?            @unique
+  bloodType        String?
+  allergies        String[]
+  conditions       String[]
+  medications      String[]
+  notes            String?
+  language         String?
+  organDonor       Boolean            @default(false)
+  insurance        Json?
+  consentPublic    Boolean            @default(true)
+  updatedByUserAt  DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  EmergencyContact EmergencyContact[]
+  Sticker          Sticker?           @relation(fields: [stickerId], references: [id])
+  User             User               @relation(fields: [userId], references: [id])
+  ProfileAccessLog ProfileAccessLog[]
 }
 
 model Payment {
-  id         String        @id @default(cuid())
+  id         String        @id
   userId     String
   stickerId  String?
   amount     Int
@@ -109,50 +87,56 @@ model Payment {
   status     PaymentStatus @default(PENDING)
   receivedAt DateTime?
   createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
-  sticker    Sticker?      @relation(fields: [stickerId], references: [id])
-  user       User          @relation(fields: [userId], references: [id])
+  updatedAt  DateTime
+  Sticker    Sticker?      @relation(fields: [stickerId], references: [id])
+  User       User          @relation(fields: [userId], references: [id])
 
   @@index([userId, status])
 }
 
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-  user              User    @relation(fields: [userId], references: [id])
+model ProfileAccessLog {
+  id               String           @id
+  profileId        String
+  via              AccessVia
+  ip               String?
+  userAgent        String?
+  country          String?
+  createdAt        DateTime         @default(now())
+  EmergencyProfile EmergencyProfile @relation(fields: [profileId], references: [id])
 
-  @@unique([provider, providerAccountId])
+  @@index([profileId, createdAt])
 }
 
 model Session {
-  id           String   @id @default(cuid())
+  id           String   @id
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  user         User     @relation(fields: [userId], references: [id])
+  User         User     @relation(fields: [userId], references: [id])
 }
 
-model VerificationToken {
-  id         String   @id @default(cuid())
-  identifier String
-  token      String   @unique
-  expires    DateTime
+model Sticker {
+  id               String            @id
+  slug             String            @unique
+  serial           String            @unique
+  ownerId          String
+  nameOnSticker    String
+  flagCode         String
+  colorPresetId    String            @default("light-gray")
+  stickerColor     String            @default("#f1f5f9")
+  textColor        String            @default("#000000")
+  status           StickerStatus     @default(ORDERED)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime
+  EmergencyProfile EmergencyProfile?
+  Payment          Payment[]
+  User             User              @relation(fields: [ownerId], references: [id])
 
-  @@unique([identifier, token])
+  @@index([ownerId])
 }
 
 model StickerDesign {
-  id            String   @id @default(cuid())
+  id            String   @id
   userId        String
   name          String
   nameOnSticker String
@@ -162,23 +146,55 @@ model StickerDesign {
   textColor     String   @default("#000000")
   isTemplate    Boolean  @default(false)
   createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  user          User     @relation(fields: [userId], references: [id])
+  updatedAt     DateTime
+  User          User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
 }
 
-model AdminInvitation {
-  id        String    @id @default(cuid())
-  email     String
-  role      Role
-  token     String    @unique
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+model User {
+  id               String             @id
+  email            String             @unique
+  name             String?
+  image            String?
+  country          String?
+  role             Role               @default(USER)
+  emailVerified    DateTime?
+  totalSpent       Int                @default(0)
+  lastLoginAt      DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  Account          Account[]
+  EmergencyProfile EmergencyProfile[]
+  Payment          Payment[]
+  Session          Session[]
+  Sticker          Sticker[]
+  StickerDesign    StickerDesign[]
+}
 
-  @@index([email, expiresAt])
+model VerificationToken {
+  id         String   @id
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum AccessVia {
+  QR
+  NFC
+  DIRECT
+}
+
+enum PaymentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  TRANSFER_PAYMENT
+  PAID
+  TRANSFERRED
+  CANCELLED
 }
 
 enum Role {
@@ -194,22 +210,4 @@ enum StickerStatus {
   SHIPPED
   ACTIVE
   LOST
-  REJECTED
-  CANCELLED
-}
-
-enum AccessVia {
-  QR
-  NFC
-  DIRECT
-}
-
-enum PaymentStatus {
-  PENDING              // Pago pendiente
-  TRANSFER_PAYMENT     // Pago por transferencia confirmado
-  VERIFIED             // Pago verificado por el sistema
-  PAID                 // Pago completado
-  TRANSFERRED          // Transferencia realizada
-  REJECTED             // Pago rechazado
-  CANCELLED            // Pago cancelado
 }
