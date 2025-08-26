@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./test.db"
+}
+
+model Account {
+  id                String  @id
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String      @id
+  name          String?
+  email         String      @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  adminInvites  AdminInvite[]
+  emergencyProfile EmergencyProfile?
+}
+
+model AdminInvite {
+  id          String   @id
+  email       String   @unique
+  token       String   @unique
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  invitedBy   String
+  user        User     @relation(fields: [invitedBy], references: [id])
+}
+
+model EmergencyProfile {
+  id           String   @id
+  userId       String   @unique
+  bloodType    String?
+  allergies    String?
+  conditions   String?
+  medications  String?
+  notes        String?
+  language     String?
+  organDonor   Boolean  @default(false)
+  insurance    String?
+  consentPublic Boolean @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contacts EmergencyContact[]
+  stickers Sticker[]
+}
+
+model EmergencyContact {
+  id        String  @id
+  profileId String
+  name      String
+  relation  String
+  phone     String
+  preferred Boolean @default(false)
+
+  profile EmergencyProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model Sticker {
+  id           String        @id
+  profileId    String?
+  status       StickerStatus @default(ORDERED)
+  stickerCode  String        @unique
+  serialNumber String?       @unique
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  activatedAt  DateTime?
+
+  profile  EmergencyProfile? @relation(fields: [profileId], references: [id])
+  payments Payment[]
+}
+
+model Payment {
+  id          String        @id
+  stickerId   String
+  method      PaymentMethod @default(TRANSFER)
+  status      PaymentStatus @default(PENDING)
+  amount      Int           @default(12990)
+  currency    String        @default("CLP")
+  reference   String?       @unique
+  tbkToken    String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  sticker Sticker @relation(fields: [stickerId], references: [id], onDelete: Cascade)
+}
+
+enum StickerStatus {
+  ORDERED
+  PAID
+  SHIPPED
+  DELIVERED
+  ACTIVE
+  CANCELLED
+}
+
+enum PaymentMethod {
+  TRANSFER
+  CREDIT_CARD
+  DEBIT_CARD
+  WEBPAY
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REJECTED
+  CANCELLED
+  FAILED
+}

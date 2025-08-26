@@ -11,6 +11,21 @@ jobs:
   accessibility:
     name: Accessibility Audit
     runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'Production – safetap' || 'Preview – safetap' }}
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: safetap_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
       - name: Checkout code
@@ -28,27 +43,43 @@ jobs:
       - name: Setup Prisma
         run: npx prisma generate
 
+      - name: Apply database migrations
+        run: |
+          # Wait for PostgreSQL to be ready
+          while ! pg_isready -h localhost -p 5432; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+          
+          # Apply migrations
+          npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_test' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_test' }}
+
       - name: Build application
         run: npm run build:vercel
         env:
-          NEXTAUTH_SECRET: 'test-secret-key'
-          NEXTAUTH_URL: 'http://localhost:3000'
-          DATABASE_URL: 'file:./test.db'
-          EMAIL_SERVER_HOST: 'smtp.example.com'
-          EMAIL_SERVER_USER: 'test@example.com'
-          EMAIL_SERVER_PASSWORD: 'testpassword'
-          EMAIL_FROM: 'Test <test@example.com>'
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'test-secret-key' }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_test' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_test' }}
+          EMAIL_SERVER_HOST: ${{ secrets.EMAIL_SERVER_HOST || 'smtp.example.com' }}
+          EMAIL_SERVER_USER: ${{ secrets.EMAIL_SERVER_USER || 'test@example.com' }}
+          EMAIL_SERVER_PASSWORD: ${{ secrets.EMAIL_SERVER_PASSWORD || 'testpassword' }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM || 'Test <test@example.com>' }}
 
       - name: Start application
         run: npm start &
         env:
-          NEXTAUTH_SECRET: 'test-secret-key'
-          NEXTAUTH_URL: 'http://localhost:3000'
-          DATABASE_URL: 'file:./test.db'
-          EMAIL_SERVER_HOST: 'smtp.example.com'
-          EMAIL_SERVER_USER: 'test@example.com'
-          EMAIL_SERVER_PASSWORD: 'testpassword'
-          EMAIL_FROM: 'Test <test@example.com>'
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'test-secret-key' }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_test' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_test' }}
+          EMAIL_SERVER_HOST: ${{ secrets.EMAIL_SERVER_HOST || 'smtp.example.com' }}
+          EMAIL_SERVER_USER: ${{ secrets.EMAIL_SERVER_USER || 'test@example.com' }}
+          EMAIL_SERVER_PASSWORD: ${{ secrets.EMAIL_SERVER_PASSWORD || 'testpassword' }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM || 'Test <test@example.com>' }}
 
       - name: Wait for application to start
         run: npx wait-on http://localhost:3000
