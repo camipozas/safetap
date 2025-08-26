@@ -14,22 +14,23 @@ export const metadata = {
     default: 'SafeTap - Tu información vital, en un tap',
     template: '%s | SafeTap',
   },
-  description: 'Tu información vital, en un tap.',
+  description:
+    'Sistema de emergencia personal con códigos QR inteligentes. Acceso rápido a información médica vital y contactos de emergencia.',
   icons: {
     icon: '/favicon.svg',
   },
   openGraph: {
     title: 'SafeTap - Tu información vital, en un tap',
     description:
-      'Sistema de emergencia personal con códigos QR inteligentes. Acceso rápido a información médica vital y contactos de emergencia.',
+      'Sistema de emergencia personal con códigos QR inteligentes. Acceso rápido a información médica vital y contactos de emergencia en situaciones críticas.',
     url: 'https://safetap.cl',
     siteName: 'SafeTap',
     images: [
       {
-        url: 'https://safetap.cl/favicon.svg',
+        url: 'https://safetap.cl/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'SafeTap - Sistema de emergencia personal',
+        alt: 'SafeTap - Sistema de emergencia personal con códigos QR inteligentes',
       },
     ],
     locale: 'es_ES',
@@ -39,17 +40,24 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'SafeTap - Tu información vital, en un tap',
     description:
-      'Sistema de emergencia personal con códigos QR inteligentes. Acceso rápido a información médica vital y contactos de emergencia.',
-    images: ['https://safetap.cl/favicon.svg'],
+      'Sistema de emergencia personal con códigos QR inteligentes. Acceso rápido a información médica vital y contactos de emergencia en situaciones críticas.',
+    images: ['https://safetap.cl/twitter-image.png'],
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
   },
   verification: {
     // Agrega aquí tus códigos de verificación cuando los tengas
     // google: 'google-verification-code',
     // yandex: 'yandex-verification-code',
+  },
+  alternates: {
+    canonical: 'https://safetap.cl',
   },
 };
 

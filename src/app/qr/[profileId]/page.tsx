@@ -120,9 +120,37 @@ export async function generateMetadata({ params }: QrProfilePageProps) {
   const userName =
     profile.user.name ?? profile.user.email?.split('@')[0] ?? 'Usuario';
 
+  const profileUrl = `https://safetap.cl/qr/${profileId}`;
+  const profileDescription = `Información de emergencia de ${userName}. Acceso rápido a datos médicos vitales y contactos de emergencia a través de SafeTap.`;
+
   return {
-    title: `Perfil de Emergencia - ${userName} | SafeTap`,
-    description: `Información de emergencia de ${userName} - SafeTap`,
+    title: `${userName} - Perfil de Emergencia | SafeTap`,
+    description: profileDescription,
     robots: 'noindex, nofollow', // Privacy protection
+    alternates: {
+      canonical: profileUrl,
+    },
+    openGraph: {
+      title: `${userName} - Perfil de Emergencia`,
+      description: profileDescription,
+      url: profileUrl,
+      siteName: 'SafeTap',
+      type: 'profile',
+      images: [
+        {
+          url: 'https://safetap.cl/favicon.svg',
+          width: 512,
+          height: 512,
+          alt: `Perfil de emergencia de ${userName} - SafeTap`,
+        },
+      ],
+      locale: 'es_ES',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${userName} - Perfil de Emergencia`,
+      description: profileDescription,
+      images: ['https://safetap.cl/favicon.svg'],
+    },
   };
 }

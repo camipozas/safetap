@@ -167,10 +167,38 @@ export default async function DemoChilePage() {
 }
 
 export async function generateMetadata() {
+  const demoUrl = 'https://safetap.cl/s/demo-chile';
+  const demoDescription =
+    'Ejemplo interactivo de perfil de emergencia SafeTap. Descubre cómo funciona nuestro sistema de información médica vital con códigos QR inteligentes.';
+
   return {
     title: 'Demo SafeTap Chile - Información de Emergencia',
-    description:
-      'Ejemplo de perfil de emergencia SafeTap para usuarios de Chile',
+    description: demoDescription,
     robots: 'index, follow',
+    alternates: {
+      canonical: demoUrl,
+    },
+    openGraph: {
+      title: 'Demo SafeTap Chile - Información de Emergencia',
+      description: demoDescription,
+      url: demoUrl,
+      siteName: 'SafeTap',
+      type: 'website',
+      images: [
+        {
+          url: 'https://safetap.cl/favicon.svg',
+          width: 1200,
+          height: 630,
+          alt: 'Demo SafeTap Chile - Sistema de emergencia personal',
+        },
+      ],
+      locale: 'es_ES',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: 'Demo SafeTap Chile - Información de Emergencia',
+      description: demoDescription,
+      images: ['https://safetap.cl/favicon.svg'],
+    },
   };
 }

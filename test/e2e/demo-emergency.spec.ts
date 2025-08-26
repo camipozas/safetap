@@ -121,4 +121,88 @@ test.describe('Demo Emergency Page', () => {
     // Should NOT contain the sticker slug line
     await expect(page.locator('text=Sticker: /s/demo-chile')).not.toBeVisible();
   });
+
+  test('has proper SEO meta tags for social sharing', async ({ page }) => {
+    await page.goto('/s/demo-chile');
+
+    // Wait for page to fully load
+    await page.waitForLoadState('networkidle');
+
+    // Check basic meta tags
+    await expect(page).toHaveTitle(
+      'Demo SafeTap Chile - Información de Emergencia | SafeTap'
+    );
+
+    // Check Open Graph meta tags
+    const ogTitle = page.locator('meta[property="og:title"]');
+    await expect(ogTitle).toHaveAttribute(
+      'content',
+      'Demo SafeTap Chile - Información de Emergencia'
+    );
+
+    const ogDescription = page.locator('meta[property="og:description"]');
+    await expect(ogDescription).toHaveAttribute(
+      'content',
+      /Ejemplo interactivo de perfil de emergencia SafeTap/
+    );
+
+    const ogUrl = page.locator('meta[property="og:url"]');
+    await expect(ogUrl).toHaveAttribute(
+      'content',
+      'https://safetap.cl/s/demo-chile'
+    );
+
+    const ogImage = page.locator('meta[property="og:image"]');
+    await expect(ogImage).toHaveAttribute(
+      'content',
+      'https://safetap.cl/favicon.svg'
+    );
+
+    const ogType = page.locator('meta[property="og:type"]');
+    await expect(ogType).toHaveAttribute('content', 'website');
+
+    // Check Twitter Card meta tags
+    const twitterCard = page.locator('meta[name="twitter:card"]');
+    await expect(twitterCard).toHaveAttribute('content', 'summary_large_image');
+
+    const twitterTitle = page.locator('meta[name="twitter:title"]');
+    await expect(twitterTitle).toHaveAttribute(
+      'content',
+      'Demo SafeTap Chile - Información de Emergencia'
+    );
+
+    const twitterDescription = page.locator('meta[name="twitter:description"]');
+    await expect(twitterDescription).toHaveAttribute(
+      'content',
+      /Ejemplo interactivo de perfil de emergencia SafeTap/
+    );
+  });
+
+  test('URLs are SEO-friendly and not too long', async ({ page }) => {
+    await page.goto('/s/demo-chile');
+
+    // Wait for page to fully load
+    await page.waitForLoadState('networkidle');
+
+    // Check that current URL is clean and SEO-friendly
+    const currentUrl = page.url();
+    expect(currentUrl).toBe('http://localhost:3000/s/demo-chile');
+
+    // Verify URL length is reasonable for SEO (Google recommends < 100 characters for URLs)
+    expect(currentUrl.length).toBeLessThan(100);
+
+    // Check that the URL doesn't contain unnecessary parameters
+    expect(currentUrl).not.toContain('?');
+    expect(currentUrl).not.toContain('#');
+
+    // Verify URL structure is clean and readable
+    expect(currentUrl).toMatch(/^https?:\/\/[^\/]+\/s\/[a-z0-9-]+$/);
+
+    // Check canonical URL meta tag if present
+    const canonicalLink = page.locator('link[rel="canonical"]');
+    if ((await canonicalLink.count()) > 0) {
+      const canonicalUrl = await canonicalLink.getAttribute('href');
+      expect(canonicalUrl).toBe('https://safetap.cl/s/demo-chile');
+    }
+  });
 });

@@ -99,4 +99,52 @@ test.describe('Homepage', () => {
     await expect(termsLink).toBeVisible();
     await expect(termsLink).toContainText('Términos y Condiciones');
   });
+
+  test('has proper SEO configuration for main page', async ({ page }) => {
+    await page.goto('/');
+
+    // Check basic meta tags
+    await expect(page).toHaveTitle('SafeTap - Tu información vital, en un tap');
+
+    // Check meta description
+    const metaDescription = page.locator('meta[name="description"]');
+    await expect(metaDescription).toHaveAttribute(
+      'content',
+      'Sistema de emergencia personal con códigos QR inteligentes. Acceso rápido a información médica vital y contactos de emergencia.'
+    );
+
+    // Check Open Graph meta tags
+    const ogTitle = page.locator('meta[property="og:title"]');
+    await expect(ogTitle).toHaveAttribute(
+      'content',
+      'SafeTap - Tu información vital, en un tap'
+    );
+
+    const ogDescription = page.locator('meta[property="og:description"]');
+    await expect(ogDescription).toHaveAttribute(
+      'content',
+      /Sistema de emergencia personal con códigos QR inteligentes/
+    );
+
+    const ogUrl = page.locator('meta[property="og:url"]');
+    await expect(ogUrl).toHaveAttribute('content', 'https://safetap.cl');
+
+    const ogImage = page.locator('meta[property="og:image"]');
+    await expect(ogImage).toHaveAttribute(
+      'content',
+      'https://safetap.cl/favicon.svg'
+    );
+
+    // Check Twitter Card meta tags
+    const twitterCard = page.locator('meta[name="twitter:card"]');
+    await expect(twitterCard).toHaveAttribute('content', 'summary_large_image');
+
+    // Check robots meta tag
+    const robots = page.locator('meta[name="robots"]');
+    await expect(robots).toHaveAttribute('content', 'index, follow');
+
+    // Check canonical URL
+    const canonical = page.locator('link[rel="canonical"]');
+    await expect(canonical).toHaveAttribute('href', 'https://safetap.cl');
+  });
 });
