@@ -18,9 +18,9 @@ export default async function QrProfilePage({ params }: QrProfilePageProps) {
     where: {
       id: profileId,
       consentPublic: true,
-      sticker: {
+      Sticker: {
         status: 'ACTIVE', // Only show profiles with active stickers
-        payments: {
+        Payment: {
           some: {
             status: {
               in: ['TRANSFER_PAYMENT', 'VERIFIED', 'PAID', 'TRANSFERRED'], // Accept paid and transferred statuses
@@ -30,21 +30,21 @@ export default async function QrProfilePage({ params }: QrProfilePageProps) {
       },
     },
     include: {
-      contacts: {
+      EmergencyContact: {
         orderBy: [{ preferred: 'desc' }, { createdAt: 'asc' }],
       },
-      user: {
+      User: {
         select: {
           name: true,
           email: true,
           country: true,
         },
       },
-      sticker: {
+      Sticker: {
         select: {
           slug: true,
           status: true,
-          payments: {
+          Payment: {
             select: {
               id: true,
               status: true,
@@ -67,6 +67,7 @@ export default async function QrProfilePage({ params }: QrProfilePageProps) {
   // Log the access
   await prisma.profileAccessLog.create({
     data: {
+      id: crypto.randomUUID(),
       profileId: profile.id,
       via: 'QR',
     },
@@ -74,7 +75,17 @@ export default async function QrProfilePage({ params }: QrProfilePageProps) {
 
   return (
     <EmergencyProfileDisplay
-      profile={profile}
+      profile={{
+        ...profile,
+        contacts: profile.EmergencyContact,
+        user: profile.User,
+        sticker: profile.Sticker
+          ? {
+              ...profile.Sticker,
+              payments: profile.Sticker.Payment,
+            }
+          : null,
+      }}
       showSafeTapId={false}
       isDemoMode={false}
     />
@@ -88,9 +99,9 @@ export async function generateMetadata({ params }: QrProfilePageProps) {
     where: {
       id: profileId,
       consentPublic: true,
-      sticker: {
+      Sticker: {
         status: 'ACTIVE',
-        payments: {
+        Payment: {
           some: {
             status: {
               in: ['TRANSFER_PAYMENT', 'VERIFIED'],
@@ -100,7 +111,7 @@ export async function generateMetadata({ params }: QrProfilePageProps) {
       },
     },
     include: {
-      user: {
+      User: {
         select: {
           name: true,
           email: true,
@@ -118,7 +129,7 @@ export async function generateMetadata({ params }: QrProfilePageProps) {
   }
 
   const userName =
-    profile.user.name ?? profile.user.email?.split('@')[0] ?? 'Usuario';
+    profile.User.name ?? profile.User.email?.split('@')[0] ?? 'Usuario';
 
   const profileUrl = `https://safetap.cl/qr/${profileId}`;
   const profileDescription = `Información de emergencia de ${userName}. Acceso rápido a datos médicos vitales y contactos de emergencia a través de SafeTap.`;

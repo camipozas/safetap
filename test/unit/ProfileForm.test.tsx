@@ -7,7 +7,7 @@ import {
 } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import ProfileForm from '@/app/perfil/ui/ProfileForm';
+import ProfileForm from '@/app/profile/ui/ProfileForm';
 
 global.fetch = vi.fn();
 
@@ -46,8 +46,9 @@ describe('ProfileForm', () => {
   it('allows adding and removing contacts', () => {
     render(<ProfileForm />);
 
-    // Initial state: one contact
-    expect(screen.getAllByLabelText(/nombre/i)).toHaveLength(1);
+    // Initial state: one contact (check by id)
+    expect(screen.getByLabelText('Nombre completo')).toBeInTheDocument();
+    expect(document.getElementById('cname-0')).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /quitar último/i })
     ).not.toBeInTheDocument();
@@ -56,7 +57,8 @@ describe('ProfileForm', () => {
     const addButton = screen.getByRole('button', { name: /añadir contacto/i });
     fireEvent.click(addButton);
 
-    expect(screen.getAllByLabelText(/nombre/i)).toHaveLength(2);
+    expect(document.getElementById('cname-0')).toBeInTheDocument();
+    expect(document.getElementById('cname-1')).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /quitar último/i })
     ).toBeInTheDocument();
@@ -65,7 +67,8 @@ describe('ProfileForm', () => {
     const removeButton = screen.getByRole('button', { name: /quitar último/i });
     fireEvent.click(removeButton);
 
-    expect(screen.getAllByLabelText(/nombre/i)).toHaveLength(1);
+    expect(document.getElementById('cname-0')).toBeInTheDocument();
+    expect(document.getElementById('cname-1')).not.toBeInTheDocument();
   });
 
   it('populates form with existing profile data', () => {
@@ -108,9 +111,11 @@ describe('ProfileForm', () => {
     render(<ProfileForm stickerId="test-sticker" />);
 
     const bloodTypeSelect = screen.getByLabelText(/grupo sanguíneo/i);
-    const nameInput = screen.getByLabelText(/nombre/i);
-    const relationInput = screen.getByLabelText(/relación/i);
-    const phoneInput = screen.getByLabelText(/teléfono/i);
+    const nameInput = document.getElementById('cname-0') as HTMLInputElement;
+    const relationInput = document.getElementById(
+      'crel-0'
+    ) as HTMLSelectElement;
+    const phoneInput = document.getElementById('cphone-0') as HTMLInputElement;
 
     await act(async () => {
       fireEvent.change(bloodTypeSelect, { target: { value: 'A+' } });
@@ -146,9 +151,11 @@ describe('ProfileForm', () => {
     render(<ProfileForm />);
 
     const bloodTypeSelect = screen.getByLabelText(/grupo sanguíneo/i);
-    const nameInput = screen.getByLabelText(/nombre/i);
-    const relationSelect = screen.getByLabelText(/relación/i);
-    const phoneInput = screen.getByLabelText(/teléfono/i);
+    const nameInput = document.getElementById('cname-0') as HTMLInputElement;
+    const relationSelect = document.getElementById(
+      'crel-0'
+    ) as HTMLSelectElement;
+    const phoneInput = document.getElementById('cphone-0') as HTMLInputElement;
 
     await act(async () => {
       fireEvent.change(bloodTypeSelect, { target: { value: 'B+' } });

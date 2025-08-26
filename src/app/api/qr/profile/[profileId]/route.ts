@@ -17,19 +17,19 @@ export async function GET(req: Request, { params }: ProfileUrlParams) {
       where: {
         id: profileId,
         consentPublic: true,
-        sticker: {
+        Sticker: {
           status: 'ACTIVE',
-          payments: {
+          Payment: {
             some: {
               status: {
-                in: ['TRANSFER_PAYMENT', 'VERIFIED', 'PAID', 'TRANSFERRED'], // Accept all valid payment statuses
+                in: ['TRANSFER_PAYMENT', 'VERIFIED', 'PAID', 'TRANSFERRED'],
               },
             },
           },
         },
       },
       include: {
-        sticker: {
+        Sticker: {
           select: {
             id: true,
             slug: true,
@@ -37,7 +37,7 @@ export async function GET(req: Request, { params }: ProfileUrlParams) {
             status: true,
           },
         },
-        user: {
+        User: {
           select: {
             id: true,
             name: true,
@@ -47,7 +47,7 @@ export async function GET(req: Request, { params }: ProfileUrlParams) {
       },
     });
 
-    if (!profile || !profile.sticker) {
+    if (!profile || !profile.Sticker) {
       console.log('❌ Profile not found or not active:', profileId);
       return NextResponse.json(
         { error: 'Perfil no encontrado o no activo' },
@@ -66,14 +66,14 @@ export async function GET(req: Request, { params }: ProfileUrlParams) {
       profileId: profile.id,
       qrUrl,
       stickerInfo: {
-        id: profile.sticker.id,
-        slug: profile.sticker.slug,
-        serial: profile.sticker.serial,
-        status: profile.sticker.status,
+        id: profile.Sticker.id,
+        slug: profile.Sticker.slug,
+        serial: profile.Sticker.serial,
+        status: profile.Sticker.status,
       },
       userInfo: {
-        name: profile.user.name,
-        email: profile.user.email,
+        name: profile.User.name,
+        email: profile.User.email,
       },
       isPublic: profile.consentPublic,
     });

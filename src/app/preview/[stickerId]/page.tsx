@@ -28,15 +28,17 @@ export default async function PreviewPage(props: {
   const sticker = await prisma.sticker.findFirst({
     where: {
       id: params.stickerId,
-      owner: { email: session.user.email },
+      User: { email: session.user.email },
     },
     include: {
-      profile: {
+      EmergencyProfile: {
         include: {
-          contacts: { orderBy: [{ preferred: 'desc' }, { createdAt: 'asc' }] },
+          EmergencyContact: {
+            orderBy: [{ preferred: 'desc' }, { createdAt: 'asc' }],
+          },
         },
       },
-      owner: true,
+      User: true,
     },
   });
 
@@ -44,7 +46,7 @@ export default async function PreviewPage(props: {
     notFound();
   }
 
-  const profile = sticker.profile;
+  const profile = sticker.EmergencyProfile;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -131,7 +133,7 @@ export default async function PreviewPage(props: {
             <article className="space-y-6">
               <header>
                 <h3 className="text-2xl font-bold flex items-center gap-2">
-                  {sticker.owner.name ?? sticker.owner.email?.split('@')[0]}{' '}
+                  {sticker.User.name ?? sticker.User.email?.split('@')[0]}{' '}
                   <span className="text-sm rounded bg-slate-200 px-2 py-1">
                     {profile.language ?? 'es'}
                   </span>
@@ -184,38 +186,40 @@ export default async function PreviewPage(props: {
                 )}
               </div>
 
-              {profile.contacts.length > 0 && (
+              {profile.EmergencyContact.length > 0 && (
                 <section>
                   <h4 className="text-lg font-semibold mb-3">
                     Contactos de emergencia
                   </h4>
                   <ul className="space-y-2">
-                    {profile.contacts.map((contact: EmergencyContact) => (
-                      <li
-                        key={contact.id}
-                        className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
-                      >
-                        <div>
-                          <p className="font-medium">{contact.name}</p>
-                          <p className="text-sm text-slate-600">
-                            {contact.relation}
-                          </p>
-                          {contact.country && (
-                            <p className="text-xs text-slate-500">
-                              {contact.country}
+                    {profile.EmergencyContact.map(
+                      (contact: EmergencyContact) => (
+                        <li
+                          key={contact.id}
+                          className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                        >
+                          <div>
+                            <p className="font-medium">{contact.name}</p>
+                            <p className="text-sm text-slate-600">
+                              {contact.relation}
                             </p>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <p className="font-mono text-sm">{contact.phone}</p>
-                          {contact.preferred && (
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
-                              Preferido
-                            </span>
-                          )}
-                        </div>
-                      </li>
-                    ))}
+                            {contact.country && (
+                              <p className="text-xs text-slate-500">
+                                {contact.country}
+                              </p>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <p className="font-mono text-sm">{contact.phone}</p>
+                            {contact.preferred && (
+                              <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
+                                Preferido
+                              </span>
+                            )}
+                          </div>
+                        </li>
+                      )
+                    )}
                   </ul>
                 </section>
               )}

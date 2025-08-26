@@ -20,7 +20,7 @@ export default async function AdminPage() {
 
   const payments = await prisma.payment.findMany({
     where: { status: 'PENDING' },
-    include: { user: true, sticker: true },
+    include: { User: true, Sticker: true },
     orderBy: { createdAt: 'asc' },
   });
 
@@ -37,10 +37,10 @@ export default async function AdminPage() {
             >
               <div>
                 <p className="font-medium">
-                  {p.user.email} — Ref {p.reference}
+                  {p.User.email} — Ref {p.reference}
                 </p>
                 <p className="text-sm text-slate-600">
-                  Sticker: {p.sticker?.serial ?? '-'} · {p.amount} {p.currency}
+                  Sticker: {p.Sticker?.serial ?? '-'} · {p.amount} {p.currency}
                 </p>
               </div>
               <form action={`/api/admin/payments/${p.id}/verify`} method="post">

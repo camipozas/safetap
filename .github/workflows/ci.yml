@@ -10,6 +10,21 @@ jobs:
   quality-checks:
     name: Code Quality & Tests
     runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'Production – safetap' || 'Preview – safetap' }}
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: safetap_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
     strategy:
       matrix:
@@ -33,21 +48,17 @@ jobs:
 
       - name: Apply database migrations
         run: |
-          # First try to apply migrations normally
-          if ! npx prisma migrate deploy; then
-            echo "Migration failed, checking for failed migrations..."
-            # Get the status and look for failed migrations
-            npx prisma migrate status || true
-            # Try to resolve common migration issues automatically
-            echo "Attempting to resolve failed migrations..."
-            npx prisma migrate resolve --applied 20250820035608_add_transfer_payment_status || true
-            npx prisma migrate resolve --applied 20250820040759_add_payment_status_states || true
-            # Try deploy again
-            npx prisma migrate deploy
-          fi
+          # Wait for PostgreSQL to be ready
+          while ! pg_isready -h localhost -p 5432; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+
+          # Apply migrations
+          npx prisma migrate deploy
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL || 'file:./dev.db' }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://user:password@localhost:5432/test' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_test' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_test' }}
 
       - name: Type check
         run: npm run type-check
@@ -66,8 +77,8 @@ jobs:
         env:
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'fallback-secret-for-ci-testing-only' }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL || 'file:./dev.db' }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_test' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_test' }}
           EMAIL_SERVER_HOST: ${{ secrets.EMAIL_SERVER_HOST || 'smtp.example.com' }}
           EMAIL_SERVER_USER: ${{ secrets.EMAIL_SERVER_USER || 'test@example.com' }}
           EMAIL_SERVER_PASSWORD: ${{ secrets.EMAIL_SERVER_PASSWORD || 'testpassword' }}
@@ -77,6 +88,21 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
     needs: quality-checks
+    environment: ${{ github.ref == 'refs/heads/main' && 'Production – safetap' || 'Preview – safetap' }}
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: safetap_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
       - name: Checkout code
@@ -111,21 +137,17 @@ jobs:
 
       - name: Apply database migrations
         run: |
-          # First try to apply migrations normally
-          if ! npx prisma migrate deploy; then
-            echo "Migration failed, checking for failed migrations..."
-            # Get the status and look for failed migrations
-            npx prisma migrate status || true
-            # Try to resolve common migration issues automatically
-            echo "Attempting to resolve failed migrations..."
-            npx prisma migrate resolve --applied 20250820035608_add_transfer_payment_status || true
-            npx prisma migrate resolve --applied 20250820040759_add_payment_status_states || true
-            # Try deploy again
-            npx prisma migrate deploy
-          fi
+          # Wait for PostgreSQL to be ready
+          while ! pg_isready -h localhost -p 5432; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+
+          # Apply migrations
+          npx prisma migrate deploy
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL || secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_test' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_test' }}
 
       - name: Build application
         run: npm run build:vercel
@@ -133,8 +155,8 @@ jobs:
           PLAYWRIGHT_TEST: 'true'
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'fallback-secret-for-ci-testing-only' }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL || 'file:./test.db' }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL || secrets.DATABASE_URL || 'file:./test.db' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_test' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_test' }}
           EMAIL_SERVER_HOST: ${{ secrets.EMAIL_SERVER_HOST || 'smtp.example.com' }}
           EMAIL_SERVER_USER: ${{ secrets.EMAIL_SERVER_USER || 'test@example.com' }}
           EMAIL_SERVER_PASSWORD: ${{ secrets.EMAIL_SERVER_PASSWORD || 'testpassword' }}
@@ -148,7 +170,7 @@ jobs:
           CI: 'true'
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'fallback-secret-for-ci-testing-only' }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL || 'file:./test.db' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_test' }}
           # Email variables no son necesarias en test mode pero las dejamos por compatibilidad
           EMAIL_SERVER_HOST: ${{ secrets.EMAIL_SERVER_HOST || 'smtp.example.com' }}
           EMAIL_SERVER_USER: ${{ secrets.EMAIL_SERVER_USER || 'test@example.com' }}

@@ -44,9 +44,13 @@ export async function POST(req: Request) {
         data: {
           ...data,
           updatedByUserAt: new Date(),
-          contacts: {
+          EmergencyContact: {
             deleteMany: { profileId },
-            create: data.contacts,
+            create: data.contacts.map((contact) => ({
+              id: crypto.randomUUID(),
+              ...contact,
+              updatedAt: new Date(),
+            })),
           },
         },
       });
@@ -68,10 +72,18 @@ export async function POST(req: Request) {
 
     const created = await prisma.emergencyProfile.create({
       data: {
+        id: crypto.randomUUID(),
         userId: user.id,
         stickerId,
         ...data,
-        contacts: { create: data.contacts },
+        updatedAt: new Date(),
+        EmergencyContact: {
+          create: data.contacts.map((contact) => ({
+            id: crypto.randomUUID(),
+            ...contact,
+            updatedAt: new Date(),
+          })),
+        },
       },
     });
     return NextResponse.json({ id: created.id });

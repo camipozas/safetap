@@ -36,12 +36,12 @@ describe('/api/checkout/transfer/verify', () => {
         reference: 'SAFETAP-ABC123',
         status: 'PENDING',
         userId: 'user-123',
-        sticker: {
+        Sticker: {
           id: 'sticker-123',
           status: 'ORDERED',
           ownerId: 'user-123',
         },
-        user: {
+        User: {
           id: 'user-123',
           email: 'test@example.com',
         },
@@ -54,7 +54,7 @@ describe('/api/checkout/transfer/verify', () => {
       };
 
       const mockSticker = {
-        ...mockPayment.sticker,
+        ...mockPayment.Sticker,
         status: 'ACTIVE',
       };
 
@@ -106,12 +106,12 @@ describe('/api/checkout/transfer/verify', () => {
         reference: 'SAFETAP-XYZ456',
         status: 'PENDING',
         userId: 'user-456',
-        sticker: {
+        Sticker: {
           id: 'sticker-456',
           status: 'ORDERED',
           ownerId: 'user-456',
         },
-        user: {
+        User: {
           id: 'user-456',
           email: 'test456@example.com',
         },
@@ -184,8 +184,8 @@ describe('/api/checkout/transfer/verify', () => {
         reference: 'SAFETAP-ALREADY789',
         status: 'PAID',
         userId: 'user-789',
-        sticker: null,
-        user: {
+        Sticker: null,
+        User: {
           id: 'user-789',
           email: 'already@example.com',
         },
@@ -234,12 +234,12 @@ describe('/api/checkout/transfer/verify', () => {
         reference: 'SAFETAP-EXISTING',
         status: 'PENDING',
         userId: 'user-existing',
-        sticker: {
+        Sticker: {
           id: 'sticker-existing',
           status: 'ORDERED',
           ownerId: 'user-existing',
         },
-        user: {
+        User: {
           id: 'user-existing',
           email: 'existing@example.com',
         },
@@ -264,7 +264,7 @@ describe('/api/checkout/transfer/verify', () => {
           sticker: {
             update: vi
               .fn()
-              .mockResolvedValue({ ...mockPayment.sticker, status: 'ACTIVE' }),
+              .mockResolvedValue({ ...mockPayment.Sticker, status: 'ACTIVE' }),
           },
           emergencyProfile: {
             findFirst: vi.fn().mockResolvedValue(mockExistingProfile),

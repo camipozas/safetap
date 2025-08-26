@@ -33,13 +33,13 @@ describe('/api/qr/profile/[profileId]', () => {
       const mockProfile = {
         id: 'profile-123',
         consentPublic: true,
-        sticker: {
+        Sticker: {
           id: 'sticker-123',
           slug: 'test-slug',
           serial: 'STK-TEST123',
           status: 'ACTIVE',
         },
-        user: {
+        User: {
           id: 'user-123',
           name: 'Test User',
           email: 'test@example.com',
@@ -74,13 +74,13 @@ describe('/api/qr/profile/[profileId]', () => {
       const mockProfile = {
         id: 'profile-456',
         consentPublic: true,
-        sticker: {
+        Sticker: {
           id: 'sticker-456',
           slug: 'test-slug-456',
           serial: 'STK-TEST456',
           status: 'ACTIVE',
         },
-        user: {
+        User: {
           id: 'user-456',
           name: 'Test User 2',
           email: 'test2@example.com',
@@ -217,13 +217,13 @@ describe('/api/qr/profile/[profileId]', () => {
       const mockProfile = {
         id: 'profile-query-test',
         consentPublic: true,
-        sticker: {
+        Sticker: {
           id: 'sticker-query-test',
           slug: 'query-test-slug',
           serial: 'STK-QUERY',
           status: 'ACTIVE',
         },
-        user: {
+        User: {
           id: 'user-query-test',
           name: 'Query Test User',
           email: 'querytest@example.com',
@@ -245,9 +245,9 @@ describe('/api/qr/profile/[profileId]', () => {
         where: {
           id: 'profile-query-test',
           consentPublic: true,
-          sticker: {
+          Sticker: {
             status: 'ACTIVE',
-            payments: {
+            Payment: {
               some: {
                 status: {
                   in: ['TRANSFER_PAYMENT', 'VERIFIED', 'PAID', 'TRANSFERRED'],
@@ -257,7 +257,7 @@ describe('/api/qr/profile/[profileId]', () => {
           },
         },
         include: {
-          sticker: {
+          Sticker: {
             select: {
               id: true,
               slug: true,
@@ -265,7 +265,7 @@ describe('/api/qr/profile/[profileId]', () => {
               status: true,
             },
           },
-          user: {
+          User: {
             select: {
               id: true,
               name: true,

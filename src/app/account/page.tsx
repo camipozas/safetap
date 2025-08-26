@@ -28,17 +28,16 @@ export default async function AccountPage({
     try {
       const devSession = await prisma.session.findUnique({
         where: { sessionToken: devSessionToken },
-        include: { user: true },
+        include: { User: true },
       });
 
       if (devSession && devSession.expires > new Date()) {
         user = await prisma.user.findUnique({
           where: { id: devSession.userId },
           include: {
-            stickers: {
+            Sticker: {
               include: {
-                payments: {
-                  where: { status: 'VERIFIED' },
+                Payment: {
                   orderBy: { createdAt: 'desc' },
                 },
               },
@@ -61,10 +60,9 @@ export default async function AccountPage({
     user = await prisma.user.findUnique({
       where: { email: session.user.email },
       include: {
-        stickers: {
+        Sticker: {
           include: {
-            payments: {
-              where: { status: 'VERIFIED' },
+            Payment: {
               orderBy: { createdAt: 'desc' },
             },
           },
@@ -120,7 +118,7 @@ export default async function AccountPage({
       <section>
         <h2 className="text-xl font-semibold">Mis stickers</h2>
         <ul className="mt-2 grid gap-4">
-          {user.stickers.map((s) => (
+          {user.Sticker.map((s) => (
             <li key={s.id} className="rounded border bg-white p-4">
               <div className="flex flex-col lg:flex-row gap-4">
                 {/* Sticker Preview */}
@@ -246,24 +244,24 @@ export default async function AccountPage({
                     )}
 
                     {/* Mostrar estado del pago más reciente para mayor claridad */}
-                    {s.payments.length > 0 && (
+                    {s.Payment.length > 0 && (
                       <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded text-xs text-gray-600">
                         <p>
                           Estado del pago:{' '}
                           <span className="font-medium">
-                            {s.payments[0].status === 'VERIFIED'
+                            {s.Payment[0].status === 'VERIFIED'
                               ? '✅ Verificado'
-                              : s.payments[0].status === 'PAID'
+                              : s.Payment[0].status === 'PAID'
                                 ? '💰 Confirmado'
-                                : s.payments[0].status === 'TRANSFERRED'
+                                : s.Payment[0].status === 'TRANSFERRED'
                                   ? '💳 Transferido'
-                                  : s.payments[0].status === 'PENDING'
+                                  : s.Payment[0].status === 'PENDING'
                                     ? '⏳ Pendiente'
-                                    : s.payments[0].status === 'REJECTED'
+                                    : s.Payment[0].status === 'REJECTED'
                                       ? '❌ Rechazado'
-                                      : s.payments[0].status === 'CANCELLED'
+                                      : s.Payment[0].status === 'CANCELLED'
                                         ? '🚫 Cancelado'
-                                        : s.payments[0].status}
+                                        : s.Payment[0].status}
                           </span>
                         </p>
                       </div>
@@ -284,10 +282,10 @@ export default async function AccountPage({
                     >
                       Editar información
                     </Link>
-                    {s.status === 'SHIPPED' && s.payments.length > 0 && (
+                    {s.status === 'SHIPPED' && s.Payment.length > 0 && (
                       <ActivateStickerButton
                         stickerId={s.id}
-                        hasValidPayment={s.payments.length > 0}
+                        hasValidPayment={s.Payment.length > 0}
                         status={s.status}
                       />
                     )}

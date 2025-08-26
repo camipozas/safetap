@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 export async function GET(_: Request, { params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;
   const base = await prisma.emergencyProfile.findFirst({
-    where: { sticker: { slug: resolvedParams.slug }, consentPublic: true },
+    where: { Sticker: { slug: resolvedParams.slug }, consentPublic: true },
     select: {
       id: true,
       bloodType: true,
@@ -25,7 +25,12 @@ export async function GET(_: Request, { params }: { params: Promise<{ slug: stri
     select: { name: true, relation: true, phone: true, preferred: true },
   });
 
-  await prisma.profileAccessLog.create({ data: { profileId: base.id, via: 'DIRECT' } });
+  await prisma.profileAccessLog.create({
+    data: {
+      id: crypto.randomUUID(),
+      profileId: base.id, via: 'DIRECT'
+    }
+  });
 
   return NextResponse.json({
     bloodType: base.bloodType,

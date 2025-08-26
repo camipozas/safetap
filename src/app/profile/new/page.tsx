@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import ProfileForm from '@/app/perfil/ui/ProfileForm';
+import ProfileForm from '@/app/profile/ui/ProfileForm';
 import { auth } from '@/lib/auth';
 
 export default async function NewProfilePage({

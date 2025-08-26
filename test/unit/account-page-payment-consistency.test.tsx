@@ -19,7 +19,7 @@ vi.mock('@/lib/prisma', () => ({
       findUnique: vi.fn(() => ({
         id: 'user-123',
         email: 'test@example.com',
-        stickers: [
+        Sticker: [
           {
             id: 'sticker-123',
             nameOnSticker: 'Test User',
@@ -29,11 +29,12 @@ vi.mock('@/lib/prisma', () => ({
             status: 'PAID',
             slug: 'test-user',
             serial: 'ST123',
-            payments: [
+            Payment: [
               {
                 id: 'payment-123',
                 status: 'VERIFIED',
                 amount: 6990,
+                currency: 'CLP',
                 createdAt: new Date('2025-08-20'),
               },
             ],

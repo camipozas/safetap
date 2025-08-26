@@ -71,7 +71,7 @@ describe('/api/stickers/[stickerId]/activate', () => {
     mockStickerFindFirst.mockResolvedValue({
       id: 'test-id',
       status: 'SHIPPED',
-      payments: [{ status: 'PENDING' }, { status: 'CANCELLED' }],
+      Payment: [{ status: 'PENDING' }, { status: 'CANCELLED' }],
     });
 
     const request = new NextRequest(
@@ -95,7 +95,7 @@ describe('/api/stickers/[stickerId]/activate', () => {
     mockStickerFindFirst.mockResolvedValue({
       id: 'test-id',
       status: 'PAID',
-      payments: [{ status: 'VERIFIED' }],
+      Payment: [{ status: 'VERIFIED' }],
     });
 
     const request = new NextRequest(
@@ -119,7 +119,7 @@ describe('/api/stickers/[stickerId]/activate', () => {
     mockStickerFindFirst.mockResolvedValue({
       id: 'test-id',
       status: 'SHIPPED',
-      payments: [{ status: 'PENDING' }, { status: 'VERIFIED' }],
+      Payment: [{ status: 'PENDING' }, { status: 'VERIFIED' }],
     });
     mockStickerUpdate.mockResolvedValue({
       id: 'test-id',
@@ -150,7 +150,7 @@ describe('/api/stickers/[stickerId]/activate', () => {
     mockStickerFindFirst.mockResolvedValue({
       id: 'test-id',
       status: 'SHIPPED',
-      payments: [{ status: 'PAID' }],
+      Payment: [{ status: 'PAID' }],
     });
     mockStickerUpdate.mockResolvedValue({
       id: 'test-id',
@@ -185,10 +185,10 @@ describe('/api/stickers/[stickerId]/activate', () => {
     expect(mockStickerFindFirst).toHaveBeenCalledWith({
       where: {
         id: 'test-id',
-        owner: { email: 'test@example.com' },
+        User: { email: 'test@example.com' },
       },
       include: {
-        payments: {
+        Payment: {
           orderBy: { createdAt: 'desc' },
           take: 1,
         },

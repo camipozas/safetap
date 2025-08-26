@@ -27,8 +27,8 @@ export async function POST(req: Request) {
     const payment = await prisma.payment.findUnique({
       where: { reference: data.reference },
       include: {
-        sticker: true,
-        user: true,
+        Sticker: true,
+        User: true,
       },
     });
 
@@ -61,16 +61,16 @@ export async function POST(req: Request) {
         },
       });
 
-      let updatedSticker = payment.sticker;
+      let updatedSticker = payment.Sticker;
 
       // If transfer payment is confirmed, mark sticker as PAID (not ACTIVE yet)
-      if (data.transferConfirmed && payment.sticker) {
+      if (data.transferConfirmed && payment.Sticker) {
         console.log(
           '✅ Transfer payment confirmed, updating sticker to PAID:',
-          payment.sticker.id
+          payment.Sticker.id
         );
         updatedSticker = await tx.sticker.update({
-          where: { id: payment.sticker.id },
+          where: { id: payment.Sticker.id },
           data: {
             status: 'PAID',
           },
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
       return {
         payment: updatedPayment,
         sticker: updatedSticker,
-        user: payment.user,
+        user: payment.User,
       };
     });
 
@@ -142,7 +142,7 @@ export async function GET(req: Request) {
     const payment = await prisma.payment.findUnique({
       where: { reference },
       include: {
-        sticker: {
+        Sticker: {
           select: {
             id: true,
             status: true,
@@ -150,7 +150,7 @@ export async function GET(req: Request) {
             serial: true,
           },
         },
-        user: {
+        User: {
           select: {
             id: true,
             email: true,
@@ -178,8 +178,8 @@ export async function GET(req: Request) {
         receivedAt: payment.receivedAt,
         createdAt: payment.createdAt,
       },
-      sticker: payment.sticker,
-      user: payment.user,
+      sticker: payment.stickerId,
+      user: payment.User,
     });
   } catch (e: unknown) {
     console.error('❌ Payment status check failed:', e);
