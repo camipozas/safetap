@@ -14,6 +14,11 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
+// Mock next-auth/react
+vi.mock('next-auth/react', () => ({
+  signIn: vi.fn().mockResolvedValue(undefined),
+}));
+
 // Mock fetch globally
 global.fetch = vi.fn();
 
@@ -21,6 +26,10 @@ describe('LoginForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(global.fetch).mockClear();
+  });
+
+  afterEach(() => {
+    vi.clearAllTimers();
   });
 
   it('renders login form elements', () => {
@@ -93,7 +102,7 @@ describe('LoginForm', () => {
       json: async () => ({ messageId: 'test-message-id' }),
     } as Response);
 
-    render(<LoginForm />);
+    const { unmount } = render(<LoginForm />);
 
     const emailInput = screen.getByRole('textbox', {
       name: /dirección de correo electrónico/i,
@@ -112,25 +121,20 @@ describe('LoginForm', () => {
         body: JSON.stringify({ email: 'test@example.com' }),
       });
     });
+
+    unmount();
   });
 
   it('shows loading state during submission', async () => {
-    // Mock fetch with a delay to simulate loading state
-    vi.mocked(global.fetch).mockImplementation(
-      () =>
-        new Promise((resolve) =>
-          setTimeout(
-            () =>
-              resolve({
-                ok: true,
-                json: async () => ({ messageId: 'test-message-id' }),
-              } as Response),
-            100
-          )
-        )
-    );
+    let resolvePromise: (value: Response) => void;
+    const fetchPromise = new Promise<Response>((resolve) => {
+      resolvePromise = resolve;
+    });
 
-    render(<LoginForm />);
+    // Mock fetch with a controllable promise
+    vi.mocked(global.fetch).mockReturnValue(fetchPromise);
+
+    const { unmount } = render(<LoginForm />);
 
     const emailInput = screen.getByRole('textbox', {
       name: /dirección de correo electrónico/i,
@@ -142,7 +146,21 @@ describe('LoginForm', () => {
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
     fireEvent.click(submitButton);
 
+    // Check loading state immediately
     expect(screen.getByText(/enviando/i)).toBeInTheDocument();
+
+    // Clean up by resolving the promise and unmounting before test ends
+    resolvePromise!({
+      ok: true,
+      json: async () => ({ messageId: 'test-message-id' }),
+    } as Response);
+
+    // Wait for the promise to resolve
+    await waitFor(() => {
+      expect(screen.getByText(/revisa tu correo/i)).toBeInTheDocument();
+    });
+
+    unmount();
   });
 
   it('handles callback URL from search params', () => {
@@ -160,7 +178,7 @@ describe('LoginForm', () => {
       json: async () => ({ messageId: 'test-message-id' }),
     } as Response);
 
-    render(<LoginForm />);
+    const { unmount } = render(<LoginForm />);
 
     const emailInput = screen.getByRole('textbox', {
       name: /dirección de correo electrónico/i,
@@ -175,5 +193,7 @@ describe('LoginForm', () => {
     await waitFor(() => {
       expect(screen.getByText(/revisa tu correo/i)).toBeInTheDocument();
     });
+
+    unmount();
   });
 });

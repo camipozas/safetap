@@ -1,0 +1,234 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Generador de Imágenes SafeTap</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .generator {
+        border: 1px solid #ccc;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 8px;
+      }
+
+      canvas {
+        border: 1px solid #ddd;
+        margin: 10px 0;
+      }
+
+      button {
+        background: #0ea5e9;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px;
+      }
+
+      button:hover {
+        background: #0369a1;
+      }
+
+      .preview {
+        max-width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🎨 Generador de Logo SafeTap para Redes Sociales</h1>
+
+    <div class="generator">
+      <h2>📘 Logo para Open Graph (1200x630)</h2>
+      <p>Solo logo limpio de SafeTap para Facebook, LinkedIn, WhatsApp</p>
+      <canvas id="ogCanvas" width="1200" height="630"></canvas>
+      <br />
+      <button onclick="generateOGImage()">🎨 Generar Logo OG</button>
+      <button onclick="downloadCanvas('ogCanvas', 'og-image.png')">
+        💾 Descargar OG
+      </button>
+    </div>
+
+    <div class="generator">
+      <h2>🐦 Logo para Twitter (1200x675)</h2>
+      <p>Solo logo limpio de SafeTap para Twitter Cards</p>
+      <canvas id="twitterCanvas" width="1200" height="675"></canvas>
+      <br />
+      <button onclick="generateTwitterImage()">🎨 Generar Logo Twitter</button>
+      <button onclick="downloadCanvas('twitterCanvas', 'twitter-image.png')">
+        💾 Descargar Twitter
+      </button>
+    </div>
+
+    <script>
+      function generateOGImage() {
+        const canvas = document.getElementById('ogCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Background gradient - colores SafeTap
+        const gradient = ctx.createLinearGradient(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+        gradient.addColorStop(0, '#3B82F6'); // Azul SafeTap
+        gradient.addColorStop(1, '#1E40AF'); // Azul más oscuro
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Crear el logo SafeTap basado en el favicon
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const logoSize = 200;
+
+        // Fondo del logo (rectángulo redondeado)
+        const logoX = centerX - logoSize / 2;
+        const logoY = centerY - logoSize / 2;
+        const radius = 40;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.roundRect(logoX, logoY, logoSize, logoSize, radius);
+        ctx.fill();
+
+        // Círculo principal del logo
+        ctx.strokeStyle = '#3B82F6';
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, logoSize * 0.3, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Cruz médica en el centro
+        ctx.strokeStyle = '#3B82F6';
+        ctx.lineWidth = 6;
+        ctx.lineCap = 'round';
+
+        // Línea vertical
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY - logoSize * 0.15);
+        ctx.lineTo(centerX, centerY + logoSize * 0.15);
+        ctx.stroke();
+
+        // Línea horizontal
+        ctx.beginPath();
+        ctx.moveTo(centerX - logoSize * 0.15, centerY);
+        ctx.lineTo(centerX + logoSize * 0.15, centerY);
+        ctx.stroke();
+
+        // Pequeños iconos de emergencia alrededor
+        ctx.strokeStyle = '#3B82F6';
+        ctx.lineWidth = 3;
+
+        // Alarma superior
+        const alarmY = centerY - logoSize * 0.6;
+        ctx.beginPath();
+        ctx.moveTo(centerX, alarmY);
+        ctx.lineTo(centerX, alarmY - 15);
+        ctx.moveTo(centerX - 15, alarmY + 10);
+        ctx.lineTo(centerX - 10, alarmY + 5);
+        ctx.moveTo(centerX + 15, alarmY + 10);
+        ctx.lineTo(centerX + 10, alarmY + 5);
+        ctx.stroke();
+      }
+
+      function generateTwitterImage() {
+        const canvas = document.getElementById('twitterCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Background gradient - mismo que OG pero en ratio Twitter
+        const gradient = ctx.createLinearGradient(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+        gradient.addColorStop(0, '#3B82F6'); // Azul SafeTap
+        gradient.addColorStop(1, '#1E40AF'); // Azul más oscuro
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Crear el logo SafeTap centrado
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const logoSize = 220; // Ligeramente más grande para Twitter
+
+        // Fondo del logo (rectángulo redondeado)
+        const logoX = centerX - logoSize / 2;
+        const logoY = centerY - logoSize / 2;
+        const radius = 44;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.roundRect(logoX, logoY, logoSize, logoSize, radius);
+        ctx.fill();
+
+        // Círculo principal del logo
+        ctx.strokeStyle = '#3B82F6';
+        ctx.lineWidth = 9;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, logoSize * 0.3, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Cruz médica en el centro
+        ctx.strokeStyle = '#3B82F6';
+        ctx.lineWidth = 7;
+        ctx.lineCap = 'round';
+
+        // Línea vertical
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY - logoSize * 0.15);
+        ctx.lineTo(centerX, centerY + logoSize * 0.15);
+        ctx.stroke();
+
+        // Línea horizontal
+        ctx.beginPath();
+        ctx.moveTo(centerX - logoSize * 0.15, centerY);
+        ctx.lineTo(centerX + logoSize * 0.15, centerY);
+        ctx.stroke();
+
+        // Pequeños iconos de emergencia alrededor
+        ctx.strokeStyle = '#3B82F6';
+        ctx.lineWidth = 3;
+
+        // Alarma superior
+        const alarmY = centerY - logoSize * 0.6;
+        ctx.beginPath();
+        ctx.moveTo(centerX, alarmY);
+        ctx.lineTo(centerX, alarmY - 15);
+        ctx.moveTo(centerX - 15, alarmY + 10);
+        ctx.lineTo(centerX - 10, alarmY + 5);
+        ctx.moveTo(centerX + 15, alarmY + 10);
+        ctx.lineTo(centerX + 10, alarmY + 5);
+        ctx.stroke();
+      }
+
+      function downloadCanvas(canvasId, filename) {
+        const canvas = document.getElementById(canvasId);
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = canvas.toDataURL('image/png', 1.0);
+        link.click();
+      }
+
+      // Generate images on load
+      window.onload = function () {
+        generateOGImage();
+        generateTwitterImage();
+      };
+    </script>
+  </body>
+</html>
