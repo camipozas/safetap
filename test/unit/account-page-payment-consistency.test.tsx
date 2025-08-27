@@ -3,6 +3,18 @@ import { describe, expect, it, vi } from 'vitest';
 
 import AccountPage from '@/app/account/page';
 
+// Mock Next.js navigation hooks
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  useSearchParams: () => ({
+    get: vi.fn(),
+  }),
+}));
+
 // Mock the auth function
 vi.mock('@/lib/auth', () => ({
   auth: vi.fn(() => ({

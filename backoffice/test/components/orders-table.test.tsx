@@ -5,7 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // Mock the utils functions
 vi.mock('@/lib/utils', () => ({
   cn: (...inputs: unknown[]) => inputs.filter(Boolean).join(' '),
-  formatCurrency: (amount: number) => `$${amount.toLocaleString('es-CL')}`,
+  formatCurrency: (amount: number, currency = 'CLP') =>
+    `$${amount.toLocaleString('es-CL')} ${currency}`,
   formatDateTime: (date: Date) => new Date(date).toLocaleDateString(),
   getStatusColor: (_status: string) => 'bg-gray-100 text-gray-800',
 }));
@@ -147,8 +148,8 @@ describe('OrdersTable', () => {
   it('displays payment information correctly', () => {
     render(<OrdersTable orders={mockOrders} />);
 
-    // Check payment amount exists - appears in both desktop and mobile (699000 cents = $6.990 CLP)
-    expect(screen.getAllByText('$6.990')).toHaveLength(2);
+    // Check payment amount exists - appears in both desktop and mobile (699000 cents = $699.000)
+    expect(screen.getAllByText('$699.000')).toHaveLength(2);
     // Check for no payment text - appears more times due to responsive design
     expect(screen.getAllByText('Sin pago')).toHaveLength(4); // Desktop + mobile + responsive variants
   });

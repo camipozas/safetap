@@ -134,7 +134,10 @@ describe('LoginForm', () => {
       expect(global.fetch).toHaveBeenCalledWith('/api/custom-login', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ email: 'test@example.com' }),
+        body: JSON.stringify({
+          email: 'test@example.com',
+          callbackUrl: '/account',
+        }),
       });
     });
 
