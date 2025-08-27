@@ -70,6 +70,7 @@ export async function PUT(
       // Para rechazar, actualizamos el pago pero NO el sticker
       // (el sticker mantiene su estado actual, típicamente ORDERED)
       if (order.payments.length > 0) {
+        // Get the latest payment (already ordered by createdAt desc)
         const latestPayment = order.payments[0];
         await prisma.payment.update({
           where: { id: latestPayment.id },

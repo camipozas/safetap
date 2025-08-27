@@ -77,7 +77,7 @@ export async function POST(req: Request) {
           },
         });
 
-        // Update user's totalSpent
+        // Update user's totalSpent using atomic increment to prevent race conditions
         console.log(
           '💰 Updating user totalSpent by:',
           payment.amount,
@@ -87,7 +87,7 @@ export async function POST(req: Request) {
         updatedUser = await tx.user.update({
           where: { id: payment.userId },
           data: {
-            totalSpent: (payment.User.totalSpent || 0) + payment.amount,
+            totalSpent: { increment: payment.amount },
           },
         });
       }
