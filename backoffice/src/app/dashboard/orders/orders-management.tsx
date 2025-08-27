@@ -13,6 +13,7 @@ import { useMemo, useState } from 'react';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
+import { formatCLPAmount } from '../../../lib/utils';
 
 interface Order {
   id: string;
@@ -143,13 +144,6 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
     });
     return Array.from(countrySet).sort();
   }, [orders]);
-
-  const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('es-CL', {
-      style: 'currency',
-      currency: currency,
-    }).format(amount);
-  };
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('es-CL', {
@@ -452,10 +446,7 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
                     <td className="py-4 px-4">
                       <div className="text-sm">
                         <div className="font-medium">
-                          {formatCurrency(
-                            order.paymentInfo.totalAmount,
-                            order.paymentInfo.currency
-                          )}
+                          {formatCLPAmount(order.paymentInfo.totalAmount)}
                         </div>
                         <div className="text-gray-500">
                           {order.paymentInfo.latestStatus === 'PENDING' &&

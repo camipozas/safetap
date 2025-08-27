@@ -1,6 +1,6 @@
 'use client';
 
-import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { formatCLPAmount, formatDateTime } from '@/lib/utils';
 import { Role } from '@/types/shared';
 import { Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -157,7 +157,7 @@ export default function UsersTable({ users }: UsersTableProps) {
                 <td className="p-3">
                   <div className="font-medium">
                     {user.totalSpent > 0
-                      ? formatCurrency(user.totalSpent)
+                      ? formatCLPAmount(user.totalSpent)
                       : '-'}
                   </div>
                 </td>
@@ -276,7 +276,7 @@ export default function UsersTable({ users }: UsersTableProps) {
                 <span className="text-gray-500">Total Gastado:</span>
                 <div className="font-medium">
                   {user.totalSpent > 0
-                    ? formatCurrency(user.totalSpent)
+                    ? formatCLPAmount(user.totalSpent)
                     : 'Sin gastos'}
                 </div>
               </div>

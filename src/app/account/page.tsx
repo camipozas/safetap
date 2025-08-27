@@ -30,7 +30,7 @@ export default async function AccountPage({
     try {
       const devSession = await prisma.session.findUnique({
         where: { sessionToken: devSessionToken },
-        include: { User: true },
+        include: { user: true },
       });
 
       if (devSession && devSession.expires > new Date()) {

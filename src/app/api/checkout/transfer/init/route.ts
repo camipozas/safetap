@@ -32,12 +32,24 @@ export async function POST(req: Request) {
       where: { email: data.email },
       create: {
         email: data.email,
+        name: data.nameOnSticker,
+        country: data.flagCode,
         id: crypto.randomUUID(),
         updatedAt: new Date(),
       },
-      update: {},
+      update: {
+        // Always update name and country with the latest info from purchase
+        name: data.nameOnSticker,
+        country: data.flagCode,
+        updatedAt: new Date(),
+      },
     });
-    console.log('✅ User ready:', { id: user.id, email: user.email });
+    console.log('✅ User ready:', {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      country: user.country,
+    });
 
     // Create Sticker (ORDERED) and Payment (PENDING) with reference
     const reference = `SAFETAP-${generateSlug(6)}`;
