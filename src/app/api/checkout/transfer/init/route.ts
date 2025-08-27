@@ -28,16 +28,36 @@ export async function POST(req: Request) {
 
     // Create or find user by email
     console.log('🔍 Creating or finding user:', data.email);
+
+    // First, check if user exists to determine whether to update name
+    const existingUser = await prisma.user.findUnique({
+      where: { email: data.email },
+      select: { id: true, name: true },
+    });
+
     const user = await prisma.user.upsert({
       where: { email: data.email },
       create: {
         email: data.email,
+        name: data.nameOnSticker,
+        country: data.flagCode,
         id: crypto.randomUUID(),
         updatedAt: new Date(),
       },
-      update: {},
+      update: {
+        // Only update name if user doesn't have one (preserve SSO names)
+        ...(existingUser?.name ? {} : { name: data.nameOnSticker }),
+        // Always update country as it can change
+        country: data.flagCode,
+        updatedAt: new Date(),
+      },
     });
-    console.log('✅ User ready:', { id: user.id, email: user.email });
+    console.log('✅ User ready:', {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      country: user.country,
+    });
 
     // Create Sticker (ORDERED) and Payment (PENDING) with reference
     const reference = `SAFETAP-${generateSlug(6)}`;

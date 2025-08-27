@@ -65,7 +65,35 @@ export async function PUT(
       );
     }
 
-    // Actualizar el estado de la orden
+    // Manejar caso especial de rechazo
+    if (newStatus === 'REJECTED') {
+      // Para rechazar, actualizamos el pago pero NO el sticker
+      // (el sticker mantiene su estado actual, típicamente ORDERED)
+      if (order.payments.length > 0) {
+        // Get the latest payment (already ordered by createdAt desc)
+        const latestPayment = order.payments[0];
+        await prisma.payment.update({
+          where: { id: latestPayment.id },
+          data: { status: 'REJECTED' },
+        });
+      }
+
+      // Devolver la orden sin cambiar el estado del sticker
+      const orderWithRejectedPayment = await prisma.sticker.findUnique({
+        where: { id },
+        include: {
+          payments: true,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        order: orderWithRejectedPayment,
+        message: 'Pago rechazado correctamente',
+      });
+    }
+
+    // Para otros estados, actualizar el estado del sticker normalmente
     const updatedOrder = await prisma.sticker.update({
       where: { id },
       data: { status: newStatus },
@@ -95,32 +123,6 @@ export async function PUT(
           await prisma.payment.update({
             where: { id: latestPayment.id },
             data: { status: 'VERIFIED' },
-          });
-        }
-      }
-    }
-
-    // Si la orden pasa a REJECTED, crear o actualizar el pago como rechazado
-    if (newStatus === 'REJECTED') {
-      if (order.payments.length === 0) {
-        // Crear un nuevo pago rechazado si no existe
-        await prisma.payment.create({
-          data: {
-            userId: order.ownerId,
-            stickerId: id,
-            amount: 6990, // Precio estándar del sticker
-            currency: 'CLP',
-            reference: `STK-${id}-REJ-${Date.now()}`,
-            status: 'REJECTED',
-          },
-        });
-      } else {
-        // Actualizar el pago más reciente
-        const latestPayment = order.payments[0];
-        if (latestPayment.status === 'PENDING') {
-          await prisma.payment.update({
-            where: { id: latestPayment.id },
-            data: { status: 'REJECTED' },
           });
         }
       }

@@ -3,11 +3,18 @@ import { redirect } from 'next/navigation';
 import LoginForm from '@/app/login/ui/LoginForm';
 import { auth } from '@/lib/auth';
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string>>;
+}) {
   const session = await auth();
   if (session?.user) {
     redirect('/account');
   }
+
+  const resolvedSearchParams = await searchParams;
+  const callbackUrl = resolvedSearchParams?.callbackUrl || '/account';
 
   return (
     <div className="max-w-md mx-auto">
@@ -34,7 +41,7 @@ export default async function LoginPage() {
       </div>
 
       <div className="bg-white rounded-2xl p-8 shadow-lg">
-        <LoginForm />
+        <LoginForm callbackUrl={callbackUrl} />
       </div>
 
       <div className="text-center mt-6">

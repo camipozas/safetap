@@ -16,14 +16,6 @@ async function getUsers() {
           payments: true,
         },
       },
-      payments: {
-        where: {
-          status: 'VERIFIED',
-        },
-        select: {
-          amount: true,
-        },
-      },
       profiles: {
         select: {
           bloodType: true,
@@ -46,7 +38,8 @@ export default async function UsersPage() {
 
   const usersWithStats = users.map((user) => ({
     ...user,
-    totalSpent: user.payments.reduce((sum, payment) => sum + payment.amount, 0),
+    // Use the totalSpent field from the user model
+    totalSpent: user.totalSpent || 0,
   }));
 
   const stats = {

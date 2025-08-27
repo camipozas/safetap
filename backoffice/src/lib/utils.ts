@@ -5,10 +5,13 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCurrency(amount: number, currency = 'CLP') {
-  return new Intl.NumberFormat('es-CL', {
-    style: 'currency',
-    currency,
-  }).format(amount / 100);
+  // Use the same format as the main app
+  return `$${amount.toLocaleString('es-CL')} ${currency}`;
+}
+
+// Specific function for CLP amounts matching main app format
+export function formatCLPAmount(amount: number) {
+  return `$${amount.toLocaleString('es-CL')} CLP`;
 }
 
 export function formatDate(date: Date | string) {

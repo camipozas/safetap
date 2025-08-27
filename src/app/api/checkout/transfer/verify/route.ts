@@ -62,8 +62,9 @@ export async function POST(req: Request) {
       });
 
       let updatedSticker = payment.Sticker;
+      let updatedUser = payment.User;
 
-      // If transfer payment is confirmed, mark sticker as PAID (not ACTIVE yet)
+      // If transfer payment is confirmed, mark sticker as PAID and update user totalSpent
       if (data.transferConfirmed && payment.Sticker) {
         console.log(
           '✅ Transfer payment confirmed, updating sticker to PAID:',
@@ -75,12 +76,26 @@ export async function POST(req: Request) {
             status: 'PAID',
           },
         });
+
+        // Update user's totalSpent using atomic increment to prevent race conditions
+        console.log(
+          '💰 Updating user totalSpent by:',
+          payment.amount,
+          'for user:',
+          payment.User.email
+        );
+        updatedUser = await tx.user.update({
+          where: { id: payment.userId },
+          data: {
+            totalSpent: { increment: payment.amount },
+          },
+        });
       }
 
       return {
         payment: updatedPayment,
         sticker: updatedSticker,
-        user: payment.User,
+        user: updatedUser,
       };
     });
 

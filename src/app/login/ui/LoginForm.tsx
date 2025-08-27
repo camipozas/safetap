@@ -2,7 +2,11 @@
 import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 
-export default function LoginForm() {
+export default function LoginForm({
+  callbackUrl = '/account',
+}: {
+  callbackUrl?: string;
+}) {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +25,7 @@ export default function LoginForm() {
       const res = await fetch('/api/custom-login', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, callbackUrl }),
       });
 
       const data = await res.json();
@@ -50,12 +54,12 @@ export default function LoginForm() {
     setError(null);
 
     try {
-      console.log('🔗 Initiating Google OAuth with callback to /account');
+      console.log('🔗 Initiating Google OAuth with callback to', callbackUrl);
       console.log('🌍 Environment:', process.env.NODE_ENV);
       console.log('🔗 Base URL:', window.location.origin);
 
       const result = await signIn('google', {
-        callbackUrl: '/account',
+        callbackUrl,
         redirect: false,
       });
 

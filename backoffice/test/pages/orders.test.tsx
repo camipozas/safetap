@@ -176,6 +176,7 @@ describe('Orders Page', () => {
             email: true,
             name: true,
             country: true,
+            totalSpent: true,
           },
         },
         profile: {

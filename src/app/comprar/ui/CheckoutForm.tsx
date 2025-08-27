@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
 
 import { CountrySelect } from '@/components/CountrySelect';
-import { DEFAULT_LOCALE, PRICE_PER_STICKER_CLP } from '@/lib/constants';
+import { PRICE_PER_STICKER_CLP, formatCLPAmount } from '@/lib/constants';
 import { checkoutSchema } from '@/lib/validators';
 
 export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
@@ -163,10 +163,9 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
         <div className="space-y-2">
           <div className="flex justify-between text-slate-600">
             <span>
-              {qty} sticker{qty > 1 ? 's' : ''} × $
-              {price.toLocaleString(DEFAULT_LOCALE)}
+              {qty} sticker{qty > 1 ? 's' : ''} × ${formatCLPAmount(price)}
             </span>
-            <span>${(qty * price).toLocaleString(DEFAULT_LOCALE)}</span>
+            <span>${formatCLPAmount(qty * price)}</span>
           </div>
           <div className="flex justify-between text-slate-600">
             <span>Envío</span>
@@ -175,7 +174,7 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
           <div className="border-t border-slate-300 pt-2 mt-2">
             <div className="flex justify-between font-semibold text-slate-900 text-lg">
               <span>Total</span>
-              <span>${total.toLocaleString(DEFAULT_LOCALE)}</span>
+              <span>${formatCLPAmount(total)}</span>
             </div>
           </div>
         </div>
@@ -265,7 +264,7 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
           </>
         ) : (
           <>
-            Confirmar pedido - ${total.toLocaleString(DEFAULT_LOCALE)}
+            Confirmar pedido - ${formatCLPAmount(total)}
             <svg
               className="w-5 h-5 ml-2"
               fill="none"

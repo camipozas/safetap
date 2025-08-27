@@ -75,6 +75,11 @@ describe('/api/checkout/transfer/verify', () => {
           sticker: {
             update: vi.fn().mockResolvedValue(mockSticker),
           },
+          user: {
+            update: vi
+              .fn()
+              .mockResolvedValue({ id: 'user-123', totalSpent: 6990 }),
+          },
           emergencyProfile: {
             findFirst: vi.fn().mockResolvedValue(null),
             create: vi.fn().mockResolvedValue(mockProfile),
@@ -265,6 +270,11 @@ describe('/api/checkout/transfer/verify', () => {
             update: vi
               .fn()
               .mockResolvedValue({ ...mockPayment.Sticker, status: 'ACTIVE' }),
+          },
+          user: {
+            update: vi
+              .fn()
+              .mockResolvedValue({ id: 'existing-user', totalSpent: 6990 }),
           },
           emergencyProfile: {
             findFirst: vi.fn().mockResolvedValue(mockExistingProfile),

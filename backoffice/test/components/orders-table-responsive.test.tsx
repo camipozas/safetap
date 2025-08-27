@@ -4,7 +4,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/lib/utils', () => ({
   cn: (...inputs: unknown[]) => inputs.filter(Boolean).join(' '),
-  formatCurrency: (amount: number) => `$${amount.toLocaleString('es-CL')}`,
+  formatCurrency: (amount: number, currency = 'CLP') =>
+    `$${amount.toLocaleString('es-CL')} ${currency}`,
   formatDateTime: (date: Date) => new Date(date).toLocaleDateString(),
   getStatusColor: (_status: string) => 'bg-gray-100 text-gray-800',
 }));
@@ -99,7 +100,7 @@ const mockOrder: MockOrder = {
   payments: [
     {
       id: '1',
-      amount: 2500,
+      amount: 25000,
       currency: 'CLP',
       status: 'VERIFIED',
       createdAt: new Date('2023-01-01'),
@@ -131,7 +132,7 @@ describe('OrdersTable Responsive Design', () => {
   it('should show correct payment information in CLP', () => {
     render(<OrdersTable orders={[mockOrder]} />);
 
-    expect(screen.getAllByText('$25')).toHaveLength(2); // Desktop + mobile
+    expect(screen.getAllByText('$25.000')).toHaveLength(2); // Desktop + mobile
   });
 
   it('should handle orders without profile information', () => {

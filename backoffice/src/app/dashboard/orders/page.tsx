@@ -18,6 +18,7 @@ async function getOrdersData() {
           email: true,
           name: true,
           country: true,
+          totalSpent: true,
         },
       },
       profile: {

@@ -13,22 +13,51 @@ interface Payment {
   stickerStatus?: string;
 }
 
-const getStickerStatusText = (status: string) => {
-  switch (status) {
-    case 'ORDERED':
-      return '📝 Creada';
+const getStatusText = (paymentStatus: string, stickerStatus?: string) => {
+  // Los estados de pago críticos (rechazado, cancelado, pendiente) tienen prioridad sobre el sticker
+  switch (paymentStatus) {
+    case 'REJECTED':
+      return { text: '❌ Rechazado', color: 'bg-red-100 text-red-800' };
+    case 'CANCELLED':
+      return { text: '🚫 Cancelado', color: 'bg-gray-100 text-gray-800' };
+    case 'PENDING':
+      return { text: '⏳ Pendiente', color: 'bg-yellow-100 text-yellow-800' };
+  }
+
+  // Si hay un sticker y el pago no está en estado crítico, mostrar el estado del sticker
+  if (stickerStatus) {
+    switch (stickerStatus) {
+      case 'ORDERED':
+        return { text: '📝 Creada', color: 'bg-blue-100 text-blue-800' };
+      case 'PAID':
+        return { text: '💰 Pagada', color: 'bg-green-100 text-green-800' };
+      case 'PRINTING':
+        return {
+          text: '🖨️ Imprimiendo',
+          color: 'bg-purple-100 text-purple-800',
+        };
+      case 'SHIPPED':
+        return { text: '📦 Enviado', color: 'bg-indigo-100 text-indigo-800' };
+      case 'ACTIVE':
+        return { text: '✅ Activo', color: 'bg-emerald-100 text-emerald-800' };
+      case 'LOST':
+        return { text: '❌ Perdido', color: 'bg-red-100 text-red-800' };
+      default:
+        return { text: stickerStatus, color: 'bg-gray-100 text-gray-800' };
+    }
+  }
+
+  // Estados de pago restantes cuando no hay sticker
+  switch (paymentStatus) {
     case 'PAID':
-      return '💰 Pagada';
-    case 'PRINTING':
-      return '🖨️ Imprimiendo';
-    case 'SHIPPED':
-      return '📦 Enviado';
-    case 'ACTIVE':
-      return '✅ Activo';
-    case 'LOST':
-      return '❌ Perdido';
+      return { text: '💰 Pagado', color: 'bg-green-100 text-green-800' };
+    case 'VERIFIED':
+      return {
+        text: '✅ Verificado',
+        color: 'bg-emerald-100 text-emerald-800',
+      };
     default:
-      return status;
+      return { text: paymentStatus, color: 'bg-gray-100 text-gray-800' };
   }
 };
 
@@ -119,13 +148,19 @@ export function PaymentsTable() {
                     {payment.monto}
                   </td>
                   <td className="py-3 px-3">
-                    {payment.stickerStatus ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {getStickerStatusText(payment.stickerStatus)}
-                      </span>
-                    ) : (
-                      <span className="text-gray-400 text-xs">-</span>
-                    )}
+                    {(() => {
+                      const status = getStatusText(
+                        payment.estado,
+                        payment.stickerStatus
+                      );
+                      return (
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${status.color}`}
+                        >
+                          {status.text}
+                        </span>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))}
