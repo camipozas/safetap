@@ -28,6 +28,13 @@ export async function POST(req: Request) {
 
     // Create or find user by email
     console.log('🔍 Creating or finding user:', data.email);
+
+    // First, check if user exists to determine whether to update name
+    const existingUser = await prisma.user.findUnique({
+      where: { email: data.email },
+      select: { id: true, name: true },
+    });
+
     const user = await prisma.user.upsert({
       where: { email: data.email },
       create: {
@@ -38,8 +45,9 @@ export async function POST(req: Request) {
         updatedAt: new Date(),
       },
       update: {
-        // Always update name and country with the latest info from purchase
-        name: data.nameOnSticker,
+        // Only update name if user doesn't have one (preserve SSO names)
+        ...(existingUser?.name ? {} : { name: data.nameOnSticker }),
+        // Always update country as it can change
         country: data.flagCode,
         updatedAt: new Date(),
       },

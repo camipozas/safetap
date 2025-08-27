@@ -34,6 +34,7 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account, profile }) {
       console.log('🔐 Sign-in attempt:', {
         email: user.email,
+        name: user.name,
         provider: account?.provider,
         accountId: account?.providerAccountId,
         profileId: profile?.sub,
@@ -52,10 +53,29 @@ export const authOptions: NextAuthOptions = {
             console.log('✅ Existing user found:', {
               id: existingUser.id,
               email: existingUser.email,
+              name: existingUser.name,
               role: existingUser.role,
             });
+
+            // Update user with name from Google if they don't have one
+            if (!existingUser.name && user.name) {
+              await prisma.user.update({
+                where: { email: user.email! },
+                data: {
+                  name: user.name,
+                  updatedAt: new Date(),
+                },
+              });
+              console.log(
+                '✅ Updated user name from Google profile:',
+                user.name
+              );
+            }
           } else {
-            console.log('ℹ️ New user will be created:', user.email);
+            console.log(
+              'ℹ️ New user will be created with Google name:',
+              user.name
+            );
           }
 
           console.log('✅ Google sign-in allowed for:', user.email);
