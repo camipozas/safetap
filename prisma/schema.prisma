@@ -9,7 +9,7 @@ datasource db {
 }
 
 model Account {
-  id                String  @id
+  id                String  @id @default(cuid())
   userId            String
   type              String
   provider          String
@@ -21,7 +21,7 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-  User              User    @relation(fields: [userId], references: [id])
+  user              User    @relation(fields: [userId], references: [id])
 
   @@unique([provider, providerAccountId])
 }
@@ -108,11 +108,11 @@ model ProfileAccessLog {
 }
 
 model Session {
-  id           String   @id
+  id           String   @id @default(cuid())
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  User         User     @relation(fields: [userId], references: [id])
+  user         User     @relation(fields: [userId], references: [id])
 }
 
 model Sticker {
@@ -164,16 +164,16 @@ model User {
   lastLoginAt      DateTime?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime
-  Account          Account[]
+  accounts         Account[]
   EmergencyProfile EmergencyProfile[]
   Payment          Payment[]
-  Session          Session[]
+  sessions         Session[]
   Sticker          Sticker[]
   StickerDesign    StickerDesign[]
 }
 
 model VerificationToken {
-  id         String   @id
+  id         String   @id @default(cuid())
   identifier String
   token      String   @unique
   expires    DateTime

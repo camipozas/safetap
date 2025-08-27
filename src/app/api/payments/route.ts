@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { auth } from '@/lib/auth';
+import { formatCLPAmount } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 
 export async function GET() {
@@ -36,7 +37,7 @@ export async function GET() {
       id: payment.id,
       fecha: payment.createdAt.toLocaleDateString('es-CL'),
       producto: 'Sticker SafeTap',
-      monto: `$${(payment.amount / 100).toLocaleString('es-CL')} ${payment.currency}`,
+      monto: `$${formatCLPAmount(payment.amount)} ${payment.currency}`,
       estado: payment.status,
       stickerSlug: payment.Sticker?.slug,
       stickerName: payment.Sticker?.nameOnSticker,

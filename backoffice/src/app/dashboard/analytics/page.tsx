@@ -98,7 +98,7 @@ async function getAnalyticsData() {
       const day = format(date, 'yyyy-MM-dd');
       return {
         name: format(date, 'dd/MM', { locale: es }),
-        value: (revenueByDay[day] || 0) / 100,
+        value: revenueByDay[day] || 0,
       };
     }),
     orders: Array.from({ length: 30 }, (_, i) => {

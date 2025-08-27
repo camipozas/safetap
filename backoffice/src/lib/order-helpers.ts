@@ -501,7 +501,9 @@ export function getPaymentDisplayInfo(paymentInfo: PaymentInfo): {
   const amount = new Intl.NumberFormat('es-CL', {
     style: 'currency',
     currency: paymentInfo.currency,
-  }).format(paymentInfo.totalAmount / 100);
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(paymentInfo.totalAmount);
 
   if (paymentInfo.hasConfirmedPayment && !paymentInfo.hasPendingPayment) {
     return {

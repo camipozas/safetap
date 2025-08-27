@@ -92,54 +92,14 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, user }) {
       console.log('👤 Creating session for user:', session.user?.email);
-      if (session.user && user) {
-        // Get additional user info from database
-        try {
-          const dbUser = await prisma.user.findUnique({
-            where: { email: session.user.email! },
-            select: {
-              id: true,
-              role: true,
-              country: true,
-              totalSpent: true,
-              emailVerified: true,
-            },
-          });
-
-          if (dbUser) {
-            console.log('✅ User found in database:', {
-              id: dbUser.id,
-              role: dbUser.role,
-              country: dbUser.country,
-            });
-            session.user.id = dbUser.id;
-            session.user.role = dbUser.role;
-            session.user.country = dbUser.country || undefined;
-            session.user.totalSpent = dbUser.totalSpent;
-            session.user.emailVerified = dbUser.emailVerified || undefined;
-          } else {
-            console.log('⚠️ User not found in database, using fallback');
-            // Fallback to basic user info
-            session.user.id = user.id;
-            session.user.role = 'USER';
-            session.user.totalSpent = 0;
-          }
-        } catch (error) {
-          console.error('❌ Error fetching user from database:', error);
-          // Fallback to basic user info
-          session.user.id = user.id;
-          session.user.role = 'USER';
-          session.user.totalSpent = 0;
-        }
+      if (session?.user?.email && user) {
+        session.user.id = user.id;
+        session.user.role = user.role as typeof session.user.role;
+        session.user.country = user.country || undefined;
+        session.user.totalSpent = user.totalSpent || 0;
+        session.user.emailVerified = user.emailVerified || undefined;
       }
       return session;
-    },
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-      }
-      return token;
     },
   },
   session: {

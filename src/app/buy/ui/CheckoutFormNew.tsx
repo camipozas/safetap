@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 import { StickerCustomization } from '@/components/StickerCustomizerNew';
 import { getColorPresetById } from '@/lib/color-presets';
-import { DEFAULT_LOCALE, PRICE_PER_STICKER_CLP } from '@/lib/constants';
+import { PRICE_PER_STICKER_CLP, formatCLPAmount } from '@/lib/constants';
 
 // Simplified schema for checkout form (quantity + optional email if not logged in)
 const checkoutSchema = z.object({
@@ -64,6 +64,11 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
     }
 
     const result = await res.json();
+    // Store the reference in sessionStorage before redirect
+    // This ensures we don't lose it during authentication flow
+    if (result.reference) {
+      sessionStorage.setItem('pendingPaymentRef', result.reference);
+    }
     window.location.href = `/account?ref=${encodeURIComponent(result.reference)}`;
   }
 
@@ -200,9 +205,9 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
           <div className="flex justify-between text-slate-600">
             <span>
               {qty} sticker{qty > 1 ? 's' : ''} personalizado
-              {qty > 1 ? 's' : ''} × ${price.toLocaleString(DEFAULT_LOCALE)}
+              {qty > 1 ? 's' : ''} × ${formatCLPAmount(price)}
             </span>
-            <span>${(qty * price).toLocaleString(DEFAULT_LOCALE)}</span>
+            <span>${formatCLPAmount(qty * price)}</span>
           </div>
           <div className="flex justify-between text-slate-600">
             <span>Envío</span>
@@ -211,7 +216,7 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
           <div className="border-t border-slate-300 pt-2 mt-2">
             <div className="flex justify-between font-semibold text-slate-900 text-lg">
               <span>Total</span>
-              <span>${total.toLocaleString(DEFAULT_LOCALE)}</span>
+              <span>${formatCLPAmount(total)}</span>
             </div>
           </div>
         </div>
@@ -301,7 +306,7 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
           </>
         ) : (
           <>
-            Confirmar pedido - ${total.toLocaleString(DEFAULT_LOCALE)}
+            Confirmar pedido - ${formatCLPAmount(total)}
             <svg
               className="w-5 h-5 ml-2"
               fill="none"

@@ -31,7 +31,7 @@ const emailMessages = {
 
 export async function POST(req: Request) {
   try {
-    const { email } = await req.json();
+    const { email, callbackUrl = '/account' } = await req.json();
 
     if (!email) {
       return NextResponse.json({ error: 'Email required' }, { status: 400 });
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
       const protocol = host.includes('localhost') ? 'http' : 'https';
       const baseUrl = `${protocol}://${host}`;
       const mockToken = `test-token-${Date.now()}`;
-      const loginUrl = `${baseUrl}/api/custom-callback?callbackUrl=${encodeURIComponent('/account')}&token=${mockToken}&email=${encodeURIComponent(email)}`;
+      const loginUrl = `${baseUrl}/api/custom-callback?callbackUrl=${encodeURIComponent(callbackUrl)}&token=${mockToken}&email=${encodeURIComponent(email)}`;
 
       const result = {
         messageId: `test-mock-${Date.now()}`,
@@ -112,7 +112,7 @@ export async function POST(req: Request) {
     const protocol = host.includes('localhost') ? 'http' : 'https';
     const baseUrl = `${protocol}://${host}`;
 
-    const loginUrl = `${baseUrl}/api/custom-callback?callbackUrl=${encodeURIComponent('/account')}&token=${token}&email=${encodeURIComponent(email)}`;
+    const loginUrl = `${baseUrl}/api/custom-callback?callbackUrl=${encodeURIComponent(callbackUrl)}&token=${token}&email=${encodeURIComponent(email)}`;
 
     // 4. Validate required environment variables for email (only in non-test environments)
     if (

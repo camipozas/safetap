@@ -8,7 +8,9 @@ export function formatCurrency(amount: number, currency = 'CLP') {
   return new Intl.NumberFormat('es-CL', {
     style: 'currency',
     currency,
-  }).format(amount / 100);
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
 }
 
 export function formatDate(date: Date | string) {

@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { Suspense } from 'react';
 
 import ActivateStickerButton from '@/components/ActivateStickerButton';
+import PaymentReferenceHandler from '@/components/PaymentReferenceHandler';
 import { PaymentsTable } from '@/components/PaymentsTable';
 import StickerPreview from '@/components/StickerPreview';
 import { auth } from '@/lib/auth';
@@ -54,7 +56,11 @@ export default async function AccountPage({
   // Normal authentication
   if (!user) {
     if (!session?.user?.email) {
-      redirect('/login');
+      // Preserve the current URL (including ref parameter) for after login
+      const currentUrl = resolvedSearchParams?.ref
+        ? `/account?ref=${encodeURIComponent(resolvedSearchParams.ref)}`
+        : '/account';
+      redirect(`/login?callbackUrl=${encodeURIComponent(currentUrl)}`);
     }
 
     user = await prisma.user.findUnique({
@@ -78,6 +84,11 @@ export default async function AccountPage({
 
   return (
     <div className="grid gap-6">
+      {/* Payment reference handler - restores payment ref after login */}
+      <Suspense fallback={null}>
+        <PaymentReferenceHandler />
+      </Suspense>
+
       {/* Dev Auth Banner */}
       {resolvedSearchParams?.['dev-auth'] &&
         process.env.NODE_ENV === 'development' && (
