@@ -58,12 +58,14 @@ export function analyzePayments(payments: Order['payments']): PaymentInfo {
   const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0);
   const currency = payments[0]?.currency || 'EUR';
 
+  const confirmedStatuses: PaymentStatus[] = [
+    PAYMENT_STATUS.PAID,
+    PAYMENT_STATUS.VERIFIED,
+    PAYMENT_STATUS.TRANSFERRED,
+  ];
+
   const hasConfirmedPayment = payments.some((p) =>
-    [
-      PAYMENT_STATUS.PAID,
-      PAYMENT_STATUS.VERIFIED,
-      PAYMENT_STATUS.TRANSFERRED,
-    ].includes(p.status as any)
+    confirmedStatuses.includes(p.status as PaymentStatus)
   );
 
   const hasPendingPayment = payments.some(
@@ -97,13 +99,20 @@ export function isValidStatusTransition(
   newStatus: OrderStatus,
   paymentInfo: PaymentInfo
 ): boolean {
+  // Special case: REJECTED is handled differently (affects payment, not sticker status)
+  if (newStatus === ORDER_STATUS.REJECTED) {
+    // Can reject from ORDERED or PAID states
+    return (
+      currentStatus === ORDER_STATUS.ORDERED ||
+      currentStatus === ORDER_STATUS.PAID
+    );
+  }
+
   // Business rules for status transitions
   switch (currentStatus) {
     case ORDER_STATUS.ORDERED:
       // Can move to PAID (payment will be created if needed)
       if (newStatus === ORDER_STATUS.PAID) return true;
-      // Can move to REJECTED (payment will be created if needed)
-      if (newStatus === ORDER_STATUS.REJECTED) return true;
       // Can move to LOST anytime
       if (newStatus === ORDER_STATUS.LOST) return true;
       return false;
@@ -385,15 +394,15 @@ export function getDisplayStatus(
     };
   }
 
-  // If the order is ORDERED but has rejected payments, this is inconsistent
+  // If the order is ORDERED but has rejected payments, show as REJECTED
   if (
     currentStatus === ORDER_STATUS.ORDERED &&
     paymentInfo.hasRejectedPayment
   ) {
     return {
       primaryStatus: ORDER_STATUS.REJECTED,
-      secondaryStatuses: [ORDER_STATUS.ORDERED],
-      description: 'Inconsistencia: Creada con pago rechazado',
+      secondaryStatuses: [],
+      description: 'Pago rechazado',
     };
   }
 

@@ -14,7 +14,17 @@ interface Payment {
 }
 
 const getStatusText = (paymentStatus: string, stickerStatus?: string) => {
-  // Si hay un sticker, mostrar su estado (es más específico)
+  // Los estados de pago críticos (rechazado, cancelado, pendiente) tienen prioridad sobre el sticker
+  switch (paymentStatus) {
+    case 'REJECTED':
+      return { text: '❌ Rechazado', color: 'bg-red-100 text-red-800' };
+    case 'CANCELLED':
+      return { text: '🚫 Cancelado', color: 'bg-gray-100 text-gray-800' };
+    case 'PENDING':
+      return { text: '⏳ Pendiente', color: 'bg-yellow-100 text-yellow-800' };
+  }
+
+  // Si hay un sticker y el pago no está en estado crítico, mostrar el estado del sticker
   if (stickerStatus) {
     switch (stickerStatus) {
       case 'ORDERED':
@@ -37,10 +47,8 @@ const getStatusText = (paymentStatus: string, stickerStatus?: string) => {
     }
   }
 
-  // Si no hay sticker, mostrar el estado del pago
+  // Estados de pago restantes cuando no hay sticker
   switch (paymentStatus) {
-    case 'PENDING':
-      return { text: '⏳ Pendiente', color: 'bg-yellow-100 text-yellow-800' };
     case 'PAID':
       return { text: '💰 Pagado', color: 'bg-green-100 text-green-800' };
     case 'VERIFIED':
@@ -48,10 +56,6 @@ const getStatusText = (paymentStatus: string, stickerStatus?: string) => {
         text: '✅ Verificado',
         color: 'bg-emerald-100 text-emerald-800',
       };
-    case 'REJECTED':
-      return { text: '❌ Rechazado', color: 'bg-red-100 text-red-800' };
-    case 'CANCELLED':
-      return { text: '🚫 Cancelado', color: 'bg-gray-100 text-gray-800' };
     default:
       return { text: paymentStatus, color: 'bg-gray-100 text-gray-800' };
   }
