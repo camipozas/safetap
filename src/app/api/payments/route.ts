@@ -24,6 +24,7 @@ export async function GET() {
           select: {
             slug: true,
             nameOnSticker: true,
+            status: true,
           },
         },
       },
@@ -37,10 +38,11 @@ export async function GET() {
       id: payment.id,
       fecha: payment.createdAt.toLocaleDateString('es-CL'),
       producto: 'Sticker SafeTap',
-      monto: `$${formatCLPAmount(payment.amount)} ${payment.currency}`,
+      monto: formatCLPAmount(payment.amount),
       estado: payment.status,
       stickerSlug: payment.Sticker?.slug,
       stickerName: payment.Sticker?.nameOnSticker,
+      stickerStatus: payment.Sticker?.status,
     }));
 
     return NextResponse.json(formattedPayments);
