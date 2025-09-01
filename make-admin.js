@@ -33,9 +33,11 @@ async function makeUserAdmin() {
       // If no exist, create it
       user = await prisma.user.create({
         data: {
+          id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           email,
           role,
           name: `${role} SafeTap`,
+          updatedAt: new Date(),
         },
       });
       console.log(`✅ Usuario ${email} creado como ${role}`);
