@@ -85,6 +85,18 @@ export default async function QrProfilePage({ params }: QrProfilePageProps) {
               payments: profile.Sticker.Payment,
             }
           : null,
+        insurance:
+          typeof profile.insurance === 'object' &&
+          profile.insurance !== null &&
+          'type' in profile.insurance
+            ? (profile.insurance as {
+                type: 'fonasa' | 'isapre';
+                isapre?: string;
+                isapreCustom?: string;
+                hasComplementary: boolean;
+                complementaryInsurance?: string;
+              })
+            : undefined,
       }}
       showSafeTapId={false}
       isDemoMode={false}

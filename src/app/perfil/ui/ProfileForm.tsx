@@ -291,6 +291,108 @@ export default function ProfileForm({
           <p className="error">{errors.contacts.message as any}</p>
         )}
       </fieldset>
+
+      {/* Salud Previsional */}
+      <fieldset className="border rounded-md p-3">
+        <legend className="font-medium">Salud Previsional</legend>
+        <div className="space-y-3">
+          <div>
+            <label className="label" htmlFor="insuranceType">
+              Tipo de previsión *
+            </label>
+            <select
+              id="insuranceType"
+              className="input"
+              {...register('insurance.type')}
+            >
+              <option value="">Seleccionar</option>
+              <option value="fonasa">Fonasa</option>
+              <option value="isapre">Isapre</option>
+            </select>
+          </div>
+
+          {/* Show Isapre field when Isapre is selected */}
+          <div>
+            <label className="label" htmlFor="isapreProvider">
+              ¿Cuál Isapre?
+            </label>
+            <select
+              id="isapreProvider"
+              className="input"
+              {...register('insurance.isapre')}
+            >
+              <option value="">Seleccionar Isapre</option>
+              <option value="Banmédica S.A.">Banmédica S.A.</option>
+              <option value="Colmena Golden Cross S.A.">
+                Colmena Golden Cross S.A.
+              </option>
+              <option value="Consalud S.A.">Consalud S.A.</option>
+              <option value="Cruz Blanca S.A.">Cruz Blanca S.A.</option>
+              <option value="Cruz del Norte Ltda.">Cruz del Norte Ltda.</option>
+              <option value="Esencial S.A.">Esencial S.A.</option>
+              <option value="Fundación Ltda. (Isapre Fundación)">
+                Fundación Ltda. (Isapre Fundación)
+              </option>
+              <option value="Isalud Ltda. (Isapre de Codelco)">
+                Isalud Ltda. (Isapre de Codelco)
+              </option>
+              <option value="Nueva Masvida S.A.">Nueva Masvida S.A.</option>
+              <option value="Vida Tres S.A.">Vida Tres S.A.</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+
+          {/* Show custom Isapre field when "Otro" is selected */}
+          <div>
+            <label className="label" htmlFor="isapreCustom">
+              Especificar Isapre
+            </label>
+            <input
+              id="isapreCustom"
+              className="input"
+              placeholder="Escribir nombre de la Isapre"
+              {...register('insurance.isapreCustom')}
+            />
+          </div>
+
+          <div>
+            <fieldset>
+              <legend className="label">¿Tiene seguro complementario?</legend>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    value="true"
+                    {...register('insurance.hasComplementary')}
+                  />
+                  Sí
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    value="false"
+                    {...register('insurance.hasComplementary')}
+                  />
+                  No
+                </label>
+              </div>
+            </fieldset>
+          </div>
+
+          <div>
+            <label className="label" htmlFor="complementaryInsurance">
+              ¿Cuál seguro complementario?
+            </label>
+            <input
+              id="complementaryInsurance"
+              className="input"
+              placeholder="Ej: Vida Tres, Colmena Golden Cross, etc."
+              {...register('insurance.complementaryInsurance')}
+            />
+          </div>
+        </div>
+      </fieldset>
+
       <div className="flex items-center gap-2">
         <input
           id="consent"

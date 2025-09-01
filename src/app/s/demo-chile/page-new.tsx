@@ -146,11 +146,30 @@ export default async function DemoChilePage() {
   const profile = await ensureDemoProfile();
 
   // Transform the data to match the expected interface
+  let insurance: any = profile.insurance;
+  if (typeof insurance === 'string') {
+    try {
+      insurance = JSON.parse(insurance);
+    } catch {
+      insurance = undefined;
+    }
+  }
+  if (
+    insurance &&
+    typeof insurance === 'object' &&
+    (insurance.type === 'fonasa' || insurance.type === 'isapre')
+  ) {
+    // insurance is in the correct format
+  } else {
+    insurance = undefined;
+  }
+
   const profileData = {
     ...profile,
     contacts: profile.EmergencyContact || [],
     user: profile.User || {},
     sticker: profile.Sticker,
+    insurance,
   };
 
   return (

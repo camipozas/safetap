@@ -97,7 +97,12 @@ describe('Complete SafeTap Flow Integration Test', () => {
       organDonor: false,
       preferredContact: null,
       language: 'es',
-      insurance: null,
+      insurance: {
+        type: 'isapre',
+        isapre: 'Cruz Blanca',
+        hasComplementary: true,
+        complementaryInsurance: 'Vida Tres',
+      },
       createdAt: new Date(),
       updatedAt: new Date(),
       updatedByUserAt: null,

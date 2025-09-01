@@ -36,6 +36,13 @@ interface EmergencyProfileData {
       createdAt: Date;
     }[];
   } | null;
+  insurance?: {
+    type: 'fonasa' | 'isapre';
+    isapre?: string;
+    isapreCustom?: string;
+    hasComplementary: boolean;
+    complementaryInsurance?: string;
+  };
 }
 
 interface EmergencyProfileDisplayProps {
@@ -225,6 +232,37 @@ export function EmergencyProfileDisplay({
                 📝 Notas Importantes
               </h4>
               <p className="text-gray-800 font-medium">{profile.notes}</p>
+            </div>
+          )}
+
+          {/* Health Insurance / Salud Previsional */}
+          {profile.insurance && (
+            <div className="bg-indigo-100 border-2 border-indigo-300 rounded-lg p-4 shadow-sm">
+              <h4 className="font-bold text-indigo-900 mb-2">
+                🏥 Salud Previsional
+              </h4>
+              <div className="text-indigo-800 space-y-1">
+                <p className="font-medium">
+                  • Tipo:{' '}
+                  {profile.insurance.type === 'fonasa' ? 'Fonasa' : 'Isapre'}
+                </p>
+                {profile.insurance.type === 'isapre' && (
+                  <p className="font-medium">
+                    • Isapre:{' '}
+                    {profile.insurance.isapreCustom || profile.insurance.isapre}
+                  </p>
+                )}
+                <p className="font-medium">
+                  • Seguro complementario:{' '}
+                  {profile.insurance.hasComplementary ? 'Sí' : 'No'}
+                </p>
+                {profile.insurance.hasComplementary &&
+                  profile.insurance.complementaryInsurance && (
+                    <p className="font-medium">
+                      • Seguro: {profile.insurance.complementaryInsurance}
+                    </p>
+                  )}
+              </div>
             </div>
           )}
         </div>

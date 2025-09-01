@@ -129,6 +129,32 @@ async function seedTestData() {
         notes: `Notas médicas del usuario ${i + 1}`,
         language: 'es',
         organDonor: Math.random() > 0.5,
+        insurance:
+          i % 3 === 0
+            ? {
+                type: 'fonasa',
+                hasComplementary: false,
+              }
+            : i % 3 === 1
+              ? {
+                  type: 'isapre',
+                  isapre: [
+                    'Cruz Blanca S.A.',
+                    'Banmédica S.A.',
+                    'Colmena Golden Cross S.A.',
+                  ][Math.floor(Math.random() * 3)],
+                  hasComplementary: Math.random() > 0.5,
+                  complementaryInsurance:
+                    Math.random() > 0.5 ? 'Vida Tres' : 'Colmena Golden Cross',
+                }
+              : i % 3 === 2
+                ? {
+                    type: 'isapre',
+                    isapre: 'Otro',
+                    isapreCustom: 'Isapre Regional Personalizada',
+                    hasComplementary: false,
+                  }
+                : undefined,
       },
     });
 

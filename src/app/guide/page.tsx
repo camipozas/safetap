@@ -144,7 +144,7 @@ export default function GuidePage() {
               <li>Su grupo sanguíneo (O-)</li>
               <li>Condiciones médicas (marcapasos)</li>
               <li>Contactos de emergencia (madre y hermana)</li>
-              <li>Información del seguro médico</li>
+              <li>Información de salud previsional</li>
             </ul>
           </div>
 
@@ -165,7 +165,7 @@ export default function GuidePage() {
             <ul className="list-disc list-inside text-gray-600 space-y-1 ml-4">
               <li>Ven sus condiciones médicas (asma, inhalador de rescate)</li>
               <li>Contactan a su hermano directamente</li>
-              <li>Obtienen información sobre su seguro médico</li>
+              <li>Obtienen información de salud previsional</li>
             </ul>
           </div>
         </div>
@@ -404,7 +404,8 @@ export default function GuidePage() {
                   <li>• Condición: Asma leve</li>
                   <li>• Medicación: Ventolin (emergencia)</li>
                   <li>• Alergias: Frutos secos, abejas</li>
-                  <li>• Seguro: Fonasa 12345678</li>
+                  <li>• Salud previsional: Isapre Cruz Blanca</li>
+                  <li>• Seguro complementario: Vida Tres</li>
                 </ul>
               </div>
             </div>

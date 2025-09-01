@@ -66,6 +66,16 @@ export default async function PublicProfile(props: {
     <EmergencyProfileDisplay
       profile={{
         ...profile,
+        insurance:
+          profile.insurance && typeof profile.insurance === 'object'
+            ? (profile.insurance as {
+                type: 'fonasa' | 'isapre';
+                isapre?: string;
+                isapreCustom?: string;
+                hasComplementary: boolean;
+                complementaryInsurance?: string;
+              })
+            : undefined,
         contacts: profile.EmergencyContact,
         user: profile.User,
         sticker: profile.Sticker
