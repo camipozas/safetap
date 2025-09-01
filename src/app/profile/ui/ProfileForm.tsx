@@ -1,6 +1,6 @@
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 
 import {
@@ -24,27 +24,51 @@ export default function ProfileForm({
     register,
     handleSubmit,
     control,
+    reset,
     formState: { errors },
   } = useForm<ProfileInput>({
     resolver: zodResolver(profileSchema),
-    defaultValues: profile
-      ? {
-          bloodType: profile.bloodType ?? undefined,
-          allergies: profile.allergies ?? [],
-          conditions: profile.conditions ?? [],
-          medications: profile.medications ?? [],
-          notes: profile.notes ?? undefined,
-          language: profile.language ?? undefined,
-          organDonor: profile.organDonor ?? false,
-          insurance: profile.insurance ?? undefined,
-          consentPublic: profile.consentPublic ?? true,
-          contacts:
-            profile.contacts?.length > 0
-              ? profile.contacts
-              : [{ name: '', relation: '', phone: '', preferred: true }],
-        }
-      : { contacts: [{ name: '', relation: '', phone: '', preferred: true }] },
+    defaultValues: {
+      bloodType: undefined,
+      allergies: '',
+      conditions: '',
+      medications: '',
+      notes: '',
+      language: 'es',
+      organDonor: false,
+      insurance: {},
+      consentPublic: true,
+      contacts: [{ name: '', relation: '', phone: '', preferred: true }],
+    },
   });
+
+  // Reset form with profile data when profile changes
+  useEffect(() => {
+    if (profile) {
+      const formValues = {
+        bloodType: profile.bloodType || undefined,
+        allergies: Array.isArray(profile.allergies)
+          ? profile.allergies.join(', ')
+          : profile.allergies || '',
+        conditions: Array.isArray(profile.conditions)
+          ? profile.conditions.join(', ')
+          : profile.conditions || '',
+        medications: Array.isArray(profile.medications)
+          ? profile.medications.join(', ')
+          : profile.medications || '',
+        notes: profile.notes || '',
+        language: profile.language || 'es',
+        organDonor: profile.organDonor || false,
+        insurance: profile.insurance || {},
+        consentPublic: profile.consentPublic !== false,
+        contacts:
+          profile.contacts?.length > 0
+            ? profile.contacts
+            : [{ name: '', relation: '', phone: '', preferred: true }],
+      };
+      reset(formValues);
+    }
+  }, [profile, reset]);
 
   const contacts = useFieldArray({ control, name: 'contacts' });
 
@@ -131,34 +155,14 @@ export default function ProfileForm({
           id="allergies"
           className="input"
           placeholder="Ej. Penicilina, Mariscos"
-          {...register('allergies', {
-            setValueAs: (v) =>
-              typeof v === 'string'
-                ? v
-                    .split(',')
-                    .map((s: string) => s.trim())
-                    .filter(Boolean)
-                : v,
-          })}
+          {...register('allergies')}
         />
       </div>
       <div>
         <label className="label" htmlFor="conditions">
           Condiciones (coma)
         </label>
-        <input
-          id="conditions"
-          className="input"
-          {...register('conditions', {
-            setValueAs: (v) =>
-              typeof v === 'string'
-                ? v
-                    .split(',')
-                    .map((s: string) => s.trim())
-                    .filter(Boolean)
-                : v,
-          })}
-        />
+        <input id="conditions" className="input" {...register('conditions')} />
       </div>
       <div>
         <label className="label" htmlFor="medications">
@@ -167,15 +171,7 @@ export default function ProfileForm({
         <input
           id="medications"
           className="input"
-          {...register('medications', {
-            setValueAs: (v) =>
-              typeof v === 'string'
-                ? v
-                    .split(',')
-                    .map((s: string) => s.trim())
-                    .filter(Boolean)
-                : v,
-          })}
+          {...register('medications')}
         />
       </div>
       <div>
@@ -288,9 +284,109 @@ export default function ProfileForm({
           )}
         </div>
         {errors.contacts && (
-          <p className="error">{errors.contacts.message as any}</p>
+          <p className="error">{String(errors.contacts.message)}</p>
         )}
       </fieldset>
+
+      {/* Salud Previsional */}
+      <fieldset className="border rounded-md p-3">
+        <legend className="font-medium">Salud Previsional</legend>
+        <div className="space-y-3">
+          <div>
+            <label className="label" htmlFor="insuranceType">
+              Tipo de previsión *
+            </label>
+            <select
+              id="insuranceType"
+              className="input"
+              {...register('insurance.type')}
+            >
+              <option value="">Seleccionar</option>
+              <option value="fonasa">Fonasa</option>
+              <option value="isapre">Isapre</option>
+            </select>
+          </div>
+
+          {/* Show Isapre field when Isapre is selected */}
+          <div>
+            <label className="label" htmlFor="isapreProvider">
+              ¿Cuál Isapre?
+            </label>
+            <select
+              id="isapreProvider"
+              className="input"
+              {...register('insurance.isapre')}
+            >
+              <option value="">Seleccionar Isapre</option>
+              <option value="Cruz Blanca">Cruz Blanca</option>
+              <option value="Banmédica">Banmédica</option>
+              <option value="Colmena">Colmena</option>
+              <option value="Consalud">Consalud</option>
+              <option value="Nueva Masvida">Nueva Masvida</option>
+              <option value="Vida Tres">Vida Tres</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+
+          {/* Show custom Isapre field when "Otro" is selected */}
+          <div>
+            <label className="label" htmlFor="isapreCustom">
+              Especificar Isapre
+            </label>
+            <input
+              id="isapreCustom"
+              className="input"
+              placeholder="Escribir nombre de la Isapre"
+              {...register('insurance.isapreCustom')}
+            />
+          </div>
+
+          <div>
+            <label className="label" htmlFor="hasComplementary">
+              ¿Tiene seguro complementario?
+            </label>
+            <div className="flex gap-4">
+              <label
+                className="flex items-center gap-2"
+                htmlFor="hasComplementary-yes"
+              >
+                <input
+                  id="hasComplementary-yes"
+                  type="radio"
+                  value="true"
+                  {...register('insurance.hasComplementary')}
+                />
+                Sí
+              </label>
+              <label
+                className="flex items-center gap-2"
+                htmlFor="hasComplementary-no"
+              >
+                <input
+                  id="hasComplementary-no"
+                  type="radio"
+                  value="false"
+                  {...register('insurance.hasComplementary')}
+                />
+                No
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label className="label" htmlFor="complementaryInsurance">
+              ¿Cuál seguro complementario?
+            </label>
+            <input
+              id="complementaryInsurance"
+              className="input"
+              placeholder="Ej: Vida Tres, Colmena Golden Cross, etc."
+              {...register('insurance.complementaryInsurance')}
+            />
+          </div>
+        </div>
+      </fieldset>
+
       <div className="flex items-center gap-2">
         <input
           id="consent"

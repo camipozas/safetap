@@ -146,11 +146,26 @@ export default async function DemoChilePage() {
   const profile = await ensureDemoProfile();
 
   // Transform the data to match the expected interface
+  const insurance =
+    typeof profile.insurance === 'object' &&
+    profile.insurance !== null &&
+    'type' in profile.insurance &&
+    'hasComplementary' in profile.insurance
+      ? (profile.insurance as {
+          type: 'fonasa' | 'isapre';
+          isapre?: string;
+          isapreCustom?: string;
+          hasComplementary: boolean;
+          complementaryInsurance?: string;
+        })
+      : undefined;
+
   const profileData = {
     ...profile,
     contacts: profile.EmergencyContact || [],
     user: profile.User || {},
     sticker: profile.Sticker,
+    insurance,
   };
 
   return (
