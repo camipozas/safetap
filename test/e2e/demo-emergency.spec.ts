@@ -186,7 +186,7 @@ test.describe('Demo Emergency Page', () => {
 
     // Check that current URL is clean and SEO-friendly
     const currentUrl = page.url();
-    expect(currentUrl).toBe('http://localhost:3000/s/demo-chile');
+    expect(currentUrl).toMatch(/^http:\/\/localhost:\d+\/s\/demo-chile$/);
 
     // Verify URL length is reasonable for SEO (Google recommends < 100 characters for URLs)
     expect(currentUrl.length).toBeLessThan(100);

@@ -13,10 +13,10 @@ const mockUsers = [
     createdAt: new Date('2023-12-15T10:00:00.000Z'), // Fixed UTC date
     totalSpent: 0,
     _count: {
-      stickers: 2,
-      payments: 1,
+      Sticker: 2,
+      Payment: 1,
     },
-    stickers: [
+    Sticker: [
       {
         id: 'sticker-1',
         status: 'ACTIVE' as const,
@@ -28,7 +28,7 @@ const mockUsers = [
         createdAt: new Date('2024-01-02T10:00:00.000Z'),
       },
     ],
-    profiles: [
+    EmergencyProfile: [
       {
         bloodType: 'O+',
         allergies: [],
@@ -47,11 +47,11 @@ const mockUsers = [
     createdAt: new Date('2024-03-20T15:30:00.000Z'), // Fixed UTC date
     totalSpent: 0,
     _count: {
-      stickers: 0,
-      payments: 0,
+      Sticker: 0,
+      Payment: 0,
     },
-    stickers: [],
-    profiles: [],
+    Sticker: [],
+    EmergencyProfile: [],
   },
 ];
 

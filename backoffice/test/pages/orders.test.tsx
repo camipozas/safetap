@@ -35,21 +35,21 @@ const mockOrders = [
     displayDescription: 'Pedido creado',
     displaySecondaryStatuses: [],
     createdAt: new Date('2024-01-01'),
-    owner: {
+    User: {
       id: 'user-1',
       email: 'john@example.com',
       name: 'John Doe',
       country: 'US',
     },
-    profile: {
+    EmergencyProfile: {
       bloodType: 'O+',
       allergies: [],
       conditions: [],
       medications: [],
       notes: null,
-      contacts: [],
+      EmergencyContact: [],
     },
-    payments: [
+    Payment: [
       {
         id: 'payment-1',
         status: 'VERIFIED',
@@ -77,14 +77,14 @@ const mockOrders = [
     displayDescription: 'Pedido creado',
     displaySecondaryStatuses: [],
     createdAt: new Date('2024-01-02'),
-    owner: {
+    User: {
       id: 'user-2',
       email: 'jane@example.com',
       name: 'Jane Smith',
       country: 'GB',
     },
-    profile: null,
-    payments: [],
+    EmergencyProfile: null,
+    Payment: [],
     paymentInfo: {
       totalAmount: 0,
       hasValidPayment: false,
@@ -104,14 +104,14 @@ const mockOrders = [
     displayDescription: 'Pedido creado',
     displaySecondaryStatuses: [],
     createdAt: new Date('2024-01-03'),
-    owner: {
+    User: {
       id: 'user-3',
       email: 'bob@example.com',
       name: 'Bob Wilson',
       country: 'CA',
     },
-    profile: null,
-    payments: [],
+    EmergencyProfile: null,
+    Payment: [],
     paymentInfo: {
       totalAmount: 0,
       hasValidPayment: false,
@@ -170,7 +170,7 @@ describe('Orders Page', () => {
 
     expect(prisma.sticker.findMany).toHaveBeenCalledWith({
       include: {
-        owner: {
+        User: {
           select: {
             id: true,
             email: true,
@@ -179,14 +179,14 @@ describe('Orders Page', () => {
             totalSpent: true,
           },
         },
-        profile: {
+        EmergencyProfile: {
           select: {
             bloodType: true,
             allergies: true,
             conditions: true,
             medications: true,
             notes: true,
-            contacts: {
+            EmergencyContact: {
               where: {
                 preferred: true,
               },
@@ -199,7 +199,7 @@ describe('Orders Page', () => {
             },
           },
         },
-        payments: {
+        Payment: {
           orderBy: {
             createdAt: 'desc',
           },
