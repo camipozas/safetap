@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 
 import ActivateStickerButton from '@/components/ActivateStickerButton';
+import BankAccountInfo from '@/components/BankAccountInfo';
 import PaymentReferenceHandler from '@/components/PaymentReferenceHandler';
 import { PaymentsTable } from '@/components/PaymentsTable';
 import StickerPreview from '@/components/StickerPreview';
@@ -89,6 +90,50 @@ export default async function AccountPage({
         <PaymentReferenceHandler />
       </Suspense>
 
+      {/* Mostrar información bancaria si hay referencia de pago */}
+      {resolvedSearchParams?.ref && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+          <div className="flex items-start mb-4">
+            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+              <svg
+                className="w-4 h-4 text-blue-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                />
+              </svg>
+            </div>
+            <div>
+              <h4 className="font-semibold text-blue-900 mb-1">
+                Pago Pendiente
+              </h4>
+              <p className="text-blue-700 text-sm">
+                Tienes un pago pendiente. Usa la información bancaria de abajo
+                para realizar la transferencia.
+              </p>
+            </div>
+          </div>
+          <BankAccountInfo
+            paymentReference={{
+              reference: resolvedSearchParams.ref,
+              amount:
+                user.Sticker.find((s) =>
+                  s.Payment.some(
+                    (p) => p.reference === resolvedSearchParams.ref
+                  )
+                )?.Payment[0]?.amount || 15000,
+              description: 'Pago de sticker SafeTap',
+            }}
+          />
+        </div>
+      )}
+
       {/* Dev Auth Banner */}
       {resolvedSearchParams?.['dev-auth'] &&
         process.env.NODE_ENV === 'development' && (
@@ -113,19 +158,7 @@ export default async function AccountPage({
         )}
 
       <h1 className="text-2xl font-semibold">Mi cuenta</h1>
-      {resolvedSearchParams?.ref && (
-        <div className="rounded-md border bg-white p-4">
-          <p className="font-medium">Referencia de transferencia</p>
-          <p className="text-sm text-slate-700">
-            Usa este concepto al hacer la transferencia:{' '}
-            <span className="font-mono">{resolvedSearchParams.ref}</span>
-          </p>
-          <p className="text-sm text-slate-700 mt-2">
-            Datos bancarios: IBAN ES00 0000 0000 0000 0000 0000 · Beneficiario:
-            SafeTap
-          </p>
-        </div>
-      )}
+
       <section>
         <h2 className="text-xl font-semibold">Mis stickers</h2>
         <ul className="mt-2 grid gap-4">
@@ -169,12 +202,18 @@ export default async function AccountPage({
                               </p>
                             </div>
                           </div>
-                          <Link
-                            className="mt-3 text-sm bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1.5 rounded transition-colors inline-block"
-                            href="/datos-bancarios"
-                          >
-                            Ver datos bancarios
-                          </Link>
+                          {s.Payment.length > 0 && s.Payment[0].reference ? (
+                            <Link
+                              className="mt-3 text-sm bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1.5 rounded transition-colors inline-block"
+                              href={`/bank-details?ref=${encodeURIComponent(s.Payment[0].reference)}`}
+                            >
+                              Ver datos bancarios
+                            </Link>
+                          ) : (
+                            <span className="mt-3 text-sm bg-gray-400 text-white px-3 py-1.5 rounded inline-block cursor-not-allowed">
+                              Referencia no disponible
+                            </span>
+                          )}
                         </div>
                       )}
 

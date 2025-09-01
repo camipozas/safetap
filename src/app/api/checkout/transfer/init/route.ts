@@ -7,6 +7,7 @@ import {
   PRICE_PER_STICKER_CLP,
 } from '@/lib/constants';
 import { applyDiscount } from '@/lib/discounts/applyDiscount';
+import { PaymentReferenceService } from '@/lib/payment-reference-service';
 import { prisma } from '@/lib/prisma';
 import { generateSlug } from '@/lib/slug';
 import { checkoutSchema } from '@/lib/validators';
@@ -98,9 +99,13 @@ export async function POST(req: Request) {
       }
     }
 
-    // Create Sticker (ORDERED) and Payment (PENDING) with reference
-    const reference = `SAFETAP-${generateSlug(6)}`;
-    console.log('🔖 Generated reference:', reference);
+    // Generate unique payment reference
+    const reference = await PaymentReferenceService.generateUniqueReference(
+      user.id,
+      finalAmount,
+      `Sticker ${data.nameOnSticker}`
+    );
+    console.log('🔖 Generated unique reference:', reference);
 
     console.log('💾 Starting database transaction...');
     const result = await prisma.$transaction(async (tx) => {
