@@ -280,19 +280,40 @@ export default async function AccountPage({
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <Link
-                      className="btn"
-                      href={`${process.env.NEXTAUTH_URL}/s/${s.slug}`}
-                      target="_blank"
-                    >
-                      Ver perfil público
-                    </Link>
-                    <Link
-                      className="btn btn-secondary"
-                      href={`/profile/new?stickerId=${s.id}`}
-                    >
-                      Editar información
-                    </Link>
+                    {/* Only show profile buttons if payment is not rejected */}
+                    {s.Payment.length === 0 ||
+                    s.Payment[0].status !== 'REJECTED' ? (
+                      <>
+                        <Link
+                          className="btn"
+                          href={`${process.env.NEXTAUTH_URL}/s/${s.slug}`}
+                          target="_blank"
+                        >
+                          Ver perfil público
+                        </Link>
+                        <Link
+                          className="btn btn-secondary"
+                          href={`/profile/new?stickerId=${s.id}`}
+                        >
+                          Editar información
+                        </Link>
+                      </>
+                    ) : (
+                      <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="flex items-center">
+                          <span className="text-lg">❌</span>
+                          <div className="ml-2">
+                            <p className="font-medium text-red-800">
+                              Pago rechazado
+                            </p>
+                            <p className="text-red-700 text-sm mt-1">
+                              Por favor, contacta con soporte para más
+                              información
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {s.status === 'SHIPPED' && s.Payment.length > 0 && (
                       <ActivateStickerButton
                         stickerId={s.id}
