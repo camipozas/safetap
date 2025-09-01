@@ -47,6 +47,12 @@ const MockQrProfilePage = ({ profile }: { profile: unknown }) => {
       country: string | null;
       preferred: boolean;
     }>;
+    insurance: {
+      type: string;
+      isapre?: string;
+      hasComplementary?: boolean;
+      complementaryInsurance?: string;
+    } | null;
   };
 
   return (
@@ -94,6 +100,37 @@ const MockQrProfilePage = ({ profile }: { profile: unknown }) => {
           </div>
         ))}
       </div>
+      {typedProfile.insurance && (
+        <div data-testid="insurance">
+          <h2>Salud Previsional</h2>
+          <div>
+            {typedProfile.insurance.type === 'fonasa' && (
+              <>
+                <div>Fonasa</div>
+                <div>
+                  Seguro Complementario:{' '}
+                  {typedProfile.insurance.hasComplementary ? 'Sí' : 'No'}
+                </div>
+              </>
+            )}
+            {typedProfile.insurance.type === 'isapre' && (
+              <>
+                <div>Isapre: {typedProfile.insurance.isapre}</div>
+                <div>
+                  Seguro Complementario:{' '}
+                  {typedProfile.insurance.hasComplementary ? 'Sí' : 'No'}
+                </div>
+                {typedProfile.insurance.hasComplementary && (
+                  <div>
+                    Detalle Complementario:{' '}
+                    {typedProfile.insurance.complementaryInsurance}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -139,6 +176,7 @@ describe('QR Profile Page', () => {
           preferred: false,
         },
       ],
+      insurance: null,
     };
 
     vi.mocked(prisma.emergencyProfile.findFirst).mockResolvedValue(
@@ -214,6 +252,7 @@ describe('QR Profile Page', () => {
       organDonor: false,
       language: null,
       contacts: [],
+      insurance: null,
     };
 
     render(<MockQrProfilePage profile={mockProfile} />);
@@ -261,6 +300,7 @@ describe('QR Profile Page', () => {
       organDonor: false,
       language: 'es',
       contacts: [],
+      insurance: null,
     };
 
     render(<MockQrProfilePage profile={mockProfile} />);
@@ -297,6 +337,7 @@ describe('QR Profile Page', () => {
           preferred: false,
         },
       ],
+      insurance: null,
     };
 
     render(<MockQrProfilePage profile={mockProfile} />);
@@ -308,5 +349,166 @@ describe('QR Profile Page', () => {
       'href',
       'tel:+1234567890'
     );
+  });
+});
+
+// Test para validar la nueva estructura de salud previsional
+describe('Health Insurance Display', () => {
+  it('displays Fonasa information correctly', async () => {
+    const profileWithFonasa = {
+      id: 'profile-123',
+      user: {
+        name: 'Juan Pérez',
+        email: 'juan@example.com',
+      },
+      sticker: {
+        serial: 'STK-ABC12345',
+        status: 'ACTIVE',
+      },
+      bloodType: 'O+',
+      allergies: ['Penicilina', 'Nueces'],
+      conditions: ['Diabetes tipo 2'],
+      medications: ['Metformina 850mg'],
+      notes: 'Verificar niveles de glucosa en emergencias',
+      organDonor: true,
+      language: 'es',
+      contacts: [
+        {
+          id: 'contact-1',
+          name: 'María Pérez',
+          relation: 'Esposa',
+          phone: '+56912345678',
+          country: 'Chile',
+          preferred: true,
+        },
+        {
+          id: 'contact-2',
+          name: 'Dr. González',
+          relation: 'Médico',
+          phone: '+56987654321',
+          country: 'Chile',
+          preferred: false,
+        },
+      ],
+      insurance: {
+        type: 'fonasa',
+        hasComplementary: false,
+      },
+    };
+
+    vi.mocked(prisma.emergencyProfile.findFirst).mockResolvedValue(
+      profileWithFonasa as never
+    );
+
+    render(<MockQrProfilePage profile={profileWithFonasa} />);
+
+    expect(screen.getByText(/salud previsional/i)).toBeInTheDocument();
+    expect(screen.getByText(/fonasa/i)).toBeInTheDocument();
+    expect(screen.getByText(/seguro complementario.*no/i)).toBeInTheDocument();
+  });
+
+  it('displays Isapre information correctly', async () => {
+    const profileWithIsapre = {
+      id: 'profile-123',
+      user: {
+        name: 'Juan Pérez',
+        email: 'juan@example.com',
+      },
+      sticker: {
+        serial: 'STK-ABC12345',
+        status: 'ACTIVE',
+      },
+      bloodType: 'O+',
+      allergies: ['Penicilina', 'Nueces'],
+      conditions: ['Diabetes tipo 2'],
+      medications: ['Metformina 850mg'],
+      notes: 'Verificar niveles de glucosa en emergencias',
+      organDonor: true,
+      language: 'es',
+      contacts: [
+        {
+          id: 'contact-1',
+          name: 'María Pérez',
+          relation: 'Esposa',
+          phone: '+56912345678',
+          country: 'Chile',
+          preferred: true,
+        },
+        {
+          id: 'contact-2',
+          name: 'Dr. González',
+          relation: 'Médico',
+          phone: '+56987654321',
+          country: 'Chile',
+          preferred: false,
+        },
+      ],
+      insurance: {
+        type: 'isapre',
+        isapre: 'Cruz Blanca',
+        hasComplementary: true,
+        complementaryInsurance: 'Vida Tres',
+      },
+    };
+
+    vi.mocked(prisma.emergencyProfile.findFirst).mockResolvedValue(
+      profileWithIsapre as never
+    );
+
+    render(<MockQrProfilePage profile={profileWithIsapre} />);
+
+    expect(screen.getByText(/salud previsional/i)).toBeInTheDocument();
+    expect(screen.getByText(/isapre/i)).toBeInTheDocument();
+    expect(screen.getByText(/cruz blanca/i)).toBeInTheDocument();
+    expect(screen.getByText(/seguro complementario.*sí/i)).toBeInTheDocument();
+    expect(screen.getByText(/vida tres/i)).toBeInTheDocument();
+  });
+
+  it('does not display insurance section when no insurance data', async () => {
+    const profileWithoutInsurance = {
+      id: 'profile-123',
+      user: {
+        name: 'Juan Pérez',
+        email: 'juan@example.com',
+      },
+      sticker: {
+        serial: 'STK-ABC12345',
+        status: 'ACTIVE',
+      },
+      bloodType: 'O+',
+      allergies: ['Penicilina', 'Nueces'],
+      conditions: ['Diabetes tipo 2'],
+      medications: ['Metformina 850mg'],
+      notes: 'Verificar niveles de glucosa en emergencias',
+      organDonor: true,
+      language: 'es',
+      contacts: [
+        {
+          id: 'contact-1',
+          name: 'María Pérez',
+          relation: 'Esposa',
+          phone: '+56912345678',
+          country: 'Chile',
+          preferred: true,
+        },
+        {
+          id: 'contact-2',
+          name: 'Dr. González',
+          relation: 'Médico',
+          phone: '+56987654321',
+          country: 'Chile',
+          preferred: false,
+        },
+      ],
+      insurance: null,
+    };
+
+    vi.mocked(prisma.emergencyProfile.findFirst).mockResolvedValue(
+      profileWithoutInsurance as never
+    );
+
+    render(<MockQrProfilePage profile={profileWithoutInsurance} />);
+
+    expect(screen.queryByText(/salud previsional/i)).not.toBeInTheDocument();
   });
 });
