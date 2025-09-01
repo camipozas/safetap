@@ -47,6 +47,7 @@ vi.mock('@/lib/prisma', () => ({
                 status: 'PENDING', // NOT rejected, so should show pending payment section
                 amount: 6990,
                 currency: 'CLP',
+                reference: 'SAFETAP-TEST-123', // Add reference so "Ver datos bancarios" shows
                 createdAt: new Date('2025-08-20'),
               },
             ],
