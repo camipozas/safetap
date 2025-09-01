@@ -54,6 +54,31 @@ export default async function EditProfilePage({
     const medicationsString = formData.get('medications') as string;
     const notes = formData.get('notes') as string;
 
+    // Procesar información de salud previsional
+    const insuranceType = formData.get('insuranceType') as string;
+    const isapreProvider = formData.get('isapreProvider') as string;
+    const isapreCustom = formData.get('isapreCustom') as string;
+    const hasComplementary = formData.get('hasComplementary') === 'true';
+    const complementaryInsurance = formData.get(
+      'complementaryInsurance'
+    ) as string;
+
+    const insuranceData = insuranceType
+      ? {
+          type: insuranceType,
+          ...(insuranceType === 'isapre' && isapreProvider
+            ? { isapre: isapreProvider }
+            : {}),
+          ...(insuranceType === 'isapre' && isapreCustom
+            ? { isapreCustom }
+            : {}),
+          hasComplementary,
+          ...(hasComplementary && complementaryInsurance
+            ? { complementaryInsurance }
+            : {}),
+        }
+      : null;
+
     const allergies = allergiesString
       ? allergiesString
           .split(',')
@@ -99,6 +124,7 @@ export default async function EditProfilePage({
           conditions,
           medications,
           notes: notes || null,
+          insurance: insuranceData as any,
         },
       });
 
@@ -314,6 +340,97 @@ export default async function EditProfilePage({
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Salud Previsional */}
+        <div className="bg-white p-6 rounded-lg border">
+          <h2 className="text-lg font-semibold mb-4">Salud Previsional</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Tipo de Previsión
+              </label>{' '}
+              <select
+                name="insuranceType"
+                defaultValue={(sticker.profile?.insurance as any)?.type || ''}
+                className="w-full border rounded px-3 py-2"
+              >
+                <option value="">Seleccionar</option>
+                <option value="fonasa">Fonasa</option>
+                <option value="isapre">Isapre</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Isapre (si aplica)
+              </label>
+              <select
+                name="isapreProvider"
+                defaultValue={(sticker.profile?.insurance as any)?.isapre || ''}
+                className="w-full border rounded px-3 py-2"
+              >
+                <option value="">Seleccionar Isapre</option>
+                <option value="Cruz Blanca">Cruz Blanca</option>
+                <option value="Banmédica">Banmédica</option>
+                <option value="Colmena">Colmena</option>
+                <option value="Consalud">Consalud</option>
+                <option value="Nueva Masvida">Nueva Masvida</option>
+                <option value="Vida Tres">Vida Tres</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Otra Isapre (especificar)
+              </label>
+              <input
+                type="text"
+                name="isapreCustom"
+                defaultValue={
+                  (sticker.profile?.insurance as any)?.isapreCustom || ''
+                }
+                className="w-full border rounded px-3 py-2"
+                placeholder="Escribir nombre de la Isapre"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                ¿Tiene seguro complementario?
+              </label>{' '}
+              <select
+                name="hasComplementary"
+                defaultValue={
+                  (
+                    sticker.profile?.insurance as any
+                  )?.hasComplementary?.toString() || 'false'
+                }
+                className="w-full border rounded px-3 py-2"
+              >
+                <option value="false">No</option>
+                <option value="true">Sí</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Seguro Complementario (si aplica)
+              </label>{' '}
+              <input
+                type="text"
+                name="complementaryInsurance"
+                defaultValue={
+                  (sticker.profile?.insurance as any)?.complementaryInsurance ||
+                  ''
+                }
+                className="w-full border rounded px-3 py-2"
+                placeholder="Ej. Vida Tres, Colmena Golden Cross"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Botones de acción */}
