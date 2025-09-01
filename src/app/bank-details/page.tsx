@@ -135,33 +135,6 @@ export default async function BankDetailsPage({
             </div>
           </div>
 
-          {/* Instrucciones Importantes */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
-            <h2 className="font-semibold text-yellow-900 mb-4 flex items-center">
-              ⚠️ Instrucciones Importantes
-            </h2>
-            <div className="space-y-3">
-              <div className="bg-white rounded p-3 border">
-                <p className="text-yellow-800 font-medium mb-2">
-                  Referencia de Pago:
-                </p>
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-lg font-bold text-blue-600">
-                    {paymentData.reference}
-                  </span>
-                  <span className="text-blue-600 text-sm">
-                    📋 Copiar manualmente
-                  </span>
-                </div>
-              </div>
-              <p className="text-sm text-yellow-700">
-                <strong>IMPORTANTE:</strong> Incluye esta referencia en el
-                comentario de la transferencia para identificar tu pago
-                automáticamente.
-              </p>
-            </div>
-          </div>
-
           {/* Proceso Post-Pago */}
           <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
             <h2 className="font-semibold text-green-900 mb-3 flex items-center">
