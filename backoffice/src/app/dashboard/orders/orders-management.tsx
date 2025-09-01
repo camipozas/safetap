@@ -3,8 +3,11 @@
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/utils';
 import { Order } from '@/types/dashboard';
-import { Download, Edit, Eye } from 'lucide-react';
+import { Edit, Eye } from 'lucide-react';
 import { useState } from 'react';
+
+// Import StickerPreview from local components
+import StickerPreview from '../../../components/StickerPreview';
 
 interface OrdersManagementProps {
   orders: Order[];
@@ -45,16 +48,59 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
     setShowPreview(true);
   };
 
-  const handleEditOrder = (_order: Order) => {
-    // Implementar edición de orden
-    // Aquí puedes abrir un modal o redirigir a una página de edición
+  const handleEditOrder = (order: Order) => {
+    // Redirigir a la página de edición del usuario
+    window.location.href = `/dashboard/users/${order.owner.id}/edit`;
   };
 
   const handleDownloadSVG = async (order: Order) => {
     try {
-      // Generar SVG del sticker
-      const svgContent = generateStickerSVG(order);
-      downloadFile(svgContent, `sticker-${order.id}.svg`, 'image/svg+xml');
+      // Capturar solo el sticker sin sombras ni efectos del modal
+      const stickerElement = document.querySelector(
+        '[data-testid="sticker-preview"]'
+      ) as HTMLElement;
+      if (!stickerElement) {
+        alert('No se pudo encontrar el sticker para descargar');
+        return;
+      }
+
+      // Esperar a que las imágenes se carguen completamente
+      const images = stickerElement.querySelectorAll('img');
+      await Promise.all(
+        Array.from(images).map((img) => {
+          if (img.complete) return Promise.resolve();
+          return new Promise((resolve) => {
+            img.onload = () => resolve(undefined);
+            img.onerror = () => resolve(undefined);
+          });
+        })
+      );
+
+      const htmlToImage = await import('html-to-image');
+
+      // Generar SVG con alta resolución
+      const svgDataUrl = await htmlToImage.toSvg(stickerElement, {
+        width: stickerElement.offsetWidth * 8,
+        height: stickerElement.offsetHeight * 8,
+        style: {
+          transform: 'scale(8)',
+          transformOrigin: 'top left',
+        },
+        pixelRatio: 2,
+        quality: 1,
+        filter: (_node) => {
+          // Incluir todos los nodos
+          return true;
+        },
+      });
+
+      // Descargar directamente el data URL como SVG
+      const link = document.createElement('a');
+      link.href = svgDataUrl;
+      link.download = `sticker-${order.id}.svg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
       console.error('Error generando SVG:', error);
       alert('Error al generar el archivo SVG');
@@ -63,66 +109,55 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
 
   const handleDownloadPNG = async (order: Order) => {
     try {
-      // Generar PNG del sticker
-      const pngBlob = await generateStickerPNG(order);
-      downloadFile(pngBlob, `sticker-${order.id}.png`, 'image/png');
+      // Capturar solo el sticker sin sombras ni efectos del modal
+      const stickerElement = document.querySelector(
+        '[data-testid="sticker-preview"]'
+      ) as HTMLElement;
+      if (!stickerElement) {
+        alert('No se pudo encontrar el sticker para descargar');
+        return;
+      }
+
+      // Esperar a que las imágenes se carguen completamente
+      const images = stickerElement.querySelectorAll('img');
+      await Promise.all(
+        Array.from(images).map((img) => {
+          if (img.complete) return Promise.resolve();
+          return new Promise((resolve) => {
+            img.onload = () => resolve(undefined);
+            img.onerror = () => resolve(undefined);
+          });
+        })
+      );
+
+      const htmlToImage = await import('html-to-image');
+
+      // Generar PNG con máxima resolución
+      const dataUrl = await htmlToImage.toPng(stickerElement, {
+        width: stickerElement.offsetWidth * 10,
+        height: stickerElement.offsetHeight * 10,
+        style: {
+          transform: 'scale(10)',
+          transformOrigin: 'top left',
+        },
+        pixelRatio: 4, // Incrementar pixelRatio para mejor calidad del QR
+        quality: 1,
+        canvasWidth: stickerElement.offsetWidth * 10,
+        canvasHeight: stickerElement.offsetHeight * 10,
+        filter: (_node) => {
+          // Incluir todos los nodos
+          return true;
+        },
+      });
+
+      // Convertir data URL a blob
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      downloadFile(blob, `sticker-${order.id}.png`, 'image/png');
     } catch (error) {
       console.error('Error generando PNG:', error);
       alert('Error al generar el archivo PNG');
     }
-  };
-
-  const generateStickerSVG = (order: Order): string => {
-    const {
-      nameOnSticker,
-      flagCode,
-      stickerColor = '#f1f5f9',
-      textColor = '#000000',
-    } = order;
-
-    return `
-      <svg width="300" height="200" xmlns="http://www.w3.org/2000/svg">
-        <rect width="300" height="200" fill="${stickerColor}" rx="10"/>
-        <text x="150" y="100" font-family="Arial, sans-serif" font-size="24" 
-              text-anchor="middle" fill="${textColor}">${nameOnSticker}</text>
-        <text x="150" y="130" font-family="Arial, sans-serif" font-size="16" 
-              text-anchor="middle" fill="${textColor}">${flagCode}</text>
-        <circle cx="250" cy="50" r="30" fill="#e5e7eb"/>
-        <text x="250" y="55" font-family="Arial, sans-serif" font-size="12" 
-              text-anchor="middle" fill="#374151">QR</text>
-      </svg>
-    `;
-  };
-
-  const generateStickerPNG = async (order: Order): Promise<Blob> => {
-    const svgContent = generateStickerSVG(order);
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx) throw new Error('No se pudo obtener el contexto del canvas');
-
-    canvas.width = 300;
-    canvas.height = 200;
-
-    const img = new Image();
-    const svgBlob = new Blob([svgContent], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(svgBlob);
-
-    return new Promise((resolve, reject) => {
-      img.onload = () => {
-        ctx.drawImage(img, 0, 0);
-        canvas.toBlob((blob) => {
-          URL.revokeObjectURL(url);
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error('No se pudo generar el PNG'));
-          }
-        }, 'image/png');
-      };
-      img.onerror = reject;
-      img.src = url;
-    });
   };
 
   const downloadFile = (
@@ -240,6 +275,12 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
                     <div className="text-gray-500">
                       {getPaymentStatus(order.payments)}
                     </div>
+                    {order.payments.length > 0 &&
+                      order.payments[0].reference && (
+                        <div className="text-xs text-blue-600 font-mono mt-1">
+                          Ref: {order.payments[0].reference}
+                        </div>
+                      )}
                   </div>
                 </td>
 
@@ -263,36 +304,15 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
                       <Eye className="h-4 w-4" />
                     </Button>
 
-                    {/* Botón Editar */}
+                    {/* Botón Editar Perfil */}
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => handleEditOrder(order)}
-                      title="Editar orden"
+                      title="Editar perfil del usuario"
+                      className="text-purple-600 border-purple-200 hover:bg-purple-50"
                     >
                       <Edit className="h-4 w-4" />
-                    </Button>
-
-                    {/* Botón Descargar SVG */}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDownloadSVG(order)}
-                      title="Descargar SVG"
-                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-
-                    {/* Botón Descargar PNG */}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDownloadPNG(order)}
-                      title="Descargar PNG"
-                      className="text-green-600 border-green-200 hover:bg-green-50"
-                    >
-                      <Download className="h-4 w-4" />
                     </Button>
 
                     {/* Botones de transición de estado */}
@@ -471,7 +491,7 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
               </Button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <h4 className="font-medium mb-2">Información del cliente</h4>
@@ -484,6 +504,15 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
                   <p>
                     <strong>País:</strong> {selectedOrder.owner.country}
                   </p>
+                  {selectedOrder.payments.length > 0 &&
+                    selectedOrder.payments[0].reference && (
+                      <p>
+                        <strong>Referencia:</strong>
+                        <span className="font-mono text-sm text-blue-600 ml-1">
+                          {selectedOrder.payments[0].reference}
+                        </span>
+                      </p>
+                    )}
                 </div>
                 <div>
                   <h4 className="font-medium mb-2">Detalles del sticker</h4>
@@ -504,6 +533,22 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
               </div>
 
               <div className="border-t pt-4">
+                <h4 className="font-medium mb-4">Vista previa del sticker</h4>
+                <div
+                  className="flex justify-center mb-4"
+                  id="sticker-preview-for-download"
+                >
+                  <StickerPreview
+                    name={selectedOrder.nameOnSticker}
+                    flagCode={selectedOrder.flagCode}
+                    stickerColor={selectedOrder.stickerColor}
+                    textColor={selectedOrder.textColor}
+                    stickerId={selectedOrder.id}
+                    serial={selectedOrder.serial}
+                    showRealQR={true}
+                  />
+                </div>
+
                 <h4 className="font-medium mb-2">Acciones disponibles</h4>
                 <div className="flex gap-2">
                   <Button
@@ -528,7 +573,6 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
   );
 }
 
-// Funciones auxiliares
 function getStatusColor(status: string): string {
   const colors = {
     ORDERED: 'bg-blue-100 text-blue-800',

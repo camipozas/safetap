@@ -31,7 +31,7 @@ export async function PUT(
       }
     }
 
-    const { name, role, country } = await request.json();
+    const { name, role, country, profile } = await request.json();
     const userId = params.id;
 
     const userToUpdate = await accelerateClient.user.findUnique({
@@ -90,6 +90,93 @@ export async function PUT(
           'Sticker flags updated via Accelerate:',
           flagUpdateResult
         );
+      }
+
+      // Update emergency profile if provided
+      if (profile) {
+        const userSticker = await tx.sticker.findFirst({
+          where: { ownerId: userId },
+          include: {
+            EmergencyProfile: true,
+          },
+        });
+
+        if (userSticker) {
+          if (userSticker.EmergencyProfile) {
+            // Update existing profile
+            await tx.emergencyProfile.update({
+              where: { id: userSticker.EmergencyProfile.id },
+              data: {
+                bloodType: profile.bloodType,
+                allergies: profile.allergies,
+                conditions: profile.conditions,
+                medications: profile.medications,
+                notes: profile.notes,
+                updatedAt: new Date(),
+              },
+            });
+
+            // Delete existing contacts and create new ones
+            await tx.emergencyContact.deleteMany({
+              where: { profileId: userSticker.EmergencyProfile.id },
+            });
+
+            if (profile.contacts?.length > 0) {
+              await tx.emergencyContact.createMany({
+                data: profile.contacts.map(
+                  (contact: {
+                    name: string;
+                    phone: string;
+                    relation: string;
+                    preferred?: boolean;
+                  }) => ({
+                    profileId: userSticker.EmergencyProfile!.id,
+                    name: contact.name,
+                    phone: contact.phone,
+                    relation: contact.relation,
+                    preferred: contact.preferred || false,
+                  })
+                ),
+              });
+            }
+          } else {
+            // Create new profile
+            const emergencyProfile = await tx.emergencyProfile.create({
+              data: {
+                id: `profile_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                userId: userId,
+                stickerId: userSticker.id,
+                bloodType: profile.bloodType,
+                allergies: profile.allergies,
+                conditions: profile.conditions,
+                medications: profile.medications,
+                notes: profile.notes,
+                updatedAt: new Date(),
+              },
+            });
+
+            if (profile.contacts?.length > 0) {
+              await tx.emergencyContact.createMany({
+                data: profile.contacts.map(
+                  (contact: {
+                    name: string;
+                    phone: string;
+                    relation: string;
+                    preferred?: boolean;
+                  }) => ({
+                    id: `contact_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                    profileId: emergencyProfile.id,
+                    name: contact.name,
+                    phone: contact.phone,
+                    relation: contact.relation,
+                    preferred: contact.preferred || false,
+                    updatedAt: new Date(),
+                  })
+                ),
+              });
+            }
+          }
+        }
       }
 
       return user;

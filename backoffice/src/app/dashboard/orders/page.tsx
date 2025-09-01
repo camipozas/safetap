@@ -47,6 +47,7 @@ async function getOrdersData() {
           status: true,
           amount: true,
           currency: true,
+          reference: true,
           createdAt: true,
         },
         orderBy: {

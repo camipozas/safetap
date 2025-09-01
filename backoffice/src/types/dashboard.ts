@@ -78,6 +78,7 @@ export interface Order {
     status: string;
     amount: number;
     currency: string;
+    reference?: string;
     createdAt: Date;
   }[];
   // Display status fields for processed status
