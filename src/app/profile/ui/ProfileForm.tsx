@@ -26,6 +26,7 @@ export default function ProfileForm({
     handleSubmit,
     control,
     reset,
+    watch,
     formState: { errors },
   } = useForm<ProfileFormInput>({
     resolver: zodResolver(profileFormSchema),
@@ -37,11 +38,25 @@ export default function ProfileForm({
       notes: '',
       language: 'es',
       organDonor: false,
-      insurance: {},
+      insurance: {
+        hasComplementary: false,
+      },
       consentPublic: true,
       contacts: [{ name: '', relation: '', phone: '', preferred: true }],
     },
   });
+
+  // Watch form values for conditional rendering
+  const watchedInsuranceType = watch('insurance.type');
+  const watchedIsapre = watch('insurance.isapre');
+  const rawHasComplementary = watch('insurance.hasComplementary');
+  // Transform string/boolean to boolean for conditional rendering
+  const watchedHasComplementary = (() => {
+    if (typeof rawHasComplementary === 'string') {
+      return rawHasComplementary === 'true';
+    }
+    return Boolean(rawHasComplementary);
+  })();
 
   // Reset form with profile data when profile changes
   useEffect(() => {
@@ -334,48 +349,54 @@ export default function ProfileForm({
           </div>
 
           {/* Show Isapre field when Isapre is selected */}
-          <div>
-            <label className="label" htmlFor="isapreProvider">
-              ¿Cuál Isapre?
-            </label>
-            <select
-              id="isapreProvider"
-              className="input"
-              {...register('insurance.isapre')}
-            >
-              <option value="">Seleccionar Isapre</option>
-              <option value="Banmédica S.A.">Banmédica S.A.</option>
-              <option value="Colmena Golden Cross S.A.">
-                Colmena Golden Cross S.A.
-              </option>
-              <option value="Consalud S.A.">Consalud S.A.</option>
-              <option value="Cruz Blanca S.A.">Cruz Blanca S.A.</option>
-              <option value="Cruz del Norte Ltda.">Cruz del Norte Ltda.</option>
-              <option value="Esencial S.A.">Esencial S.A.</option>
-              <option value="Fundación Ltda. (Isapre Fundación)">
-                Fundación Ltda. (Isapre Fundación)
-              </option>
-              <option value="Isalud Ltda. (Isapre de Codelco)">
-                Isalud Ltda. (Isapre de Codelco)
-              </option>
-              <option value="Nueva Masvida S.A.">Nueva Masvida S.A.</option>
-              <option value="Vida Tres S.A.">Vida Tres S.A.</option>
-              <option value="Otro">Otro</option>
-            </select>
-          </div>
+          {watchedInsuranceType === 'isapre' && (
+            <div>
+              <label className="label" htmlFor="isapreProvider">
+                ¿Cuál Isapre?
+              </label>
+              <select
+                id="isapreProvider"
+                className="input"
+                {...register('insurance.isapre')}
+              >
+                <option value="">Seleccionar Isapre</option>
+                <option value="Banmédica S.A.">Banmédica S.A.</option>
+                <option value="Colmena Golden Cross S.A.">
+                  Colmena Golden Cross S.A.
+                </option>
+                <option value="Consalud S.A.">Consalud S.A.</option>
+                <option value="Cruz Blanca S.A.">Cruz Blanca S.A.</option>
+                <option value="Cruz del Norte Ltda.">
+                  Cruz del Norte Ltda.
+                </option>
+                <option value="Esencial S.A.">Esencial S.A.</option>
+                <option value="Fundación Ltda. (Isapre Fundación)">
+                  Fundación Ltda. (Isapre Fundación)
+                </option>
+                <option value="Isalud Ltda. (Isapre de Codelco)">
+                  Isalud Ltda. (Isapre de Codelco)
+                </option>
+                <option value="Nueva Masvida S.A.">Nueva Masvida S.A.</option>
+                <option value="Vida Tres S.A.">Vida Tres S.A.</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+          )}
 
           {/* Show custom Isapre field when "Otro" is selected */}
-          <div>
-            <label className="label" htmlFor="isapreCustom">
-              Especificar Isapre
-            </label>
-            <input
-              id="isapreCustom"
-              className="input"
-              placeholder="Escribir nombre de la Isapre"
-              {...register('insurance.isapreCustom')}
-            />
-          </div>
+          {watchedInsuranceType === 'isapre' && watchedIsapre === 'Otro' && (
+            <div>
+              <label className="label" htmlFor="isapreCustom">
+                Especificar Isapre
+              </label>
+              <input
+                id="isapreCustom"
+                className="input"
+                placeholder="Escribir nombre de la Isapre"
+                {...register('insurance.isapreCustom')}
+              />
+            </div>
+          )}
 
           <div>
             <label className="label" htmlFor="hasComplementary">
@@ -390,7 +411,9 @@ export default function ProfileForm({
                   id="hasComplementary-yes"
                   type="radio"
                   value="true"
-                  {...register('insurance.hasComplementary')}
+                  {...register('insurance.hasComplementary', {
+                    setValueAs: (value) => value === 'true',
+                  })}
                 />
                 Sí
               </label>
@@ -409,17 +432,19 @@ export default function ProfileForm({
             </div>
           </div>
 
-          <div>
-            <label className="label" htmlFor="complementaryInsurance">
-              ¿Cuál seguro complementario?
-            </label>
-            <input
-              id="complementaryInsurance"
-              className="input"
-              placeholder="Ej: Vida Tres, Colmena Golden Cross, etc."
-              {...register('insurance.complementaryInsurance')}
-            />
-          </div>
+          {watchedHasComplementary === true && (
+            <div>
+              <label className="label" htmlFor="complementaryInsurance">
+                ¿Cuál seguro complementario?
+              </label>
+              <input
+                id="complementaryInsurance"
+                className="input"
+                placeholder="Ej: Sura, Consorcio, etc."
+                {...register('insurance.complementaryInsurance')}
+              />
+            </div>
+          )}
         </div>
       </fieldset>
 

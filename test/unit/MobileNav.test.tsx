@@ -1,7 +1,12 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import MobileNav from '@/components/MobileNav';
+
+// Mock next-auth
+vi.mock('next-auth/react', () => ({
+  useSession: vi.fn(() => ({ data: null })),
+}));
 
 describe('MobileNav', () => {
   it('renders mobile menu button', () => {
@@ -100,5 +105,40 @@ describe('MobileNav', () => {
     const overlay = screen.getByTestId('mobile-overlay');
     fireEvent.keyDown(overlay, { key: 'Escape' });
     expect(screen.queryByTestId('mobile-menu')).not.toBeInTheDocument();
+  });
+
+  it('shows "Iniciar sesión" when user is not authenticated', () => {
+    render(<MobileNav />);
+
+    const menuButton = screen.getByTestId('mobile-menu-button');
+    fireEvent.click(menuButton);
+
+    expect(screen.getByText('Iniciar sesión')).toBeInTheDocument();
+    expect(screen.queryByText('Mi cuenta')).not.toBeInTheDocument();
+  });
+
+  it('shows "Mi cuenta" when user is authenticated', async () => {
+    const { useSession } = await import('next-auth/react');
+    vi.mocked(useSession).mockReturnValue({
+      data: {
+        user: {
+          id: 'test-id',
+          email: 'test@example.com',
+          role: 'USER' as const,
+          totalSpent: 0,
+        },
+        expires: '2025-12-31T23:59:59.999Z',
+      },
+      status: 'authenticated',
+      update: vi.fn(),
+    });
+
+    render(<MobileNav />);
+
+    const menuButton = screen.getByTestId('mobile-menu-button');
+    fireEvent.click(menuButton);
+
+    expect(screen.getByText('Mi cuenta')).toBeInTheDocument();
+    expect(screen.queryByText('Iniciar sesión')).not.toBeInTheDocument();
   });
 });

@@ -24,7 +24,7 @@ vi.mock('@/lib/auth', () => ({
   })),
 }));
 
-// Mock the prisma client
+// Mock the prisma client with REJECTED payment
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     user: {
@@ -38,13 +38,13 @@ vi.mock('@/lib/prisma', () => ({
             flagCode: 'CL',
             stickerColor: '#f1f5f9',
             textColor: '#000000',
-            status: 'PAID',
+            status: 'ORDERED',
             slug: 'test-user',
             serial: 'ST123',
             Payment: [
               {
                 id: 'payment-123',
-                status: 'VERIFIED',
+                status: 'REJECTED', // This is the key difference - REJECTED payment
                 amount: 6990,
                 currency: 'CLP',
                 createdAt: new Date('2025-08-20'),
@@ -88,44 +88,50 @@ vi.mock('@/components/ActivateStickerButton', () => ({
   ),
 }));
 
-describe('AccountPage - Payment Consistency', () => {
-  it('displays consistent payment information between sticker status and payment details', async () => {
+describe('AccountPage - Rejected Payment Handling', () => {
+  it('hides profile buttons when payment is rejected', async () => {
     const page = await AccountPage({ searchParams: Promise.resolve({}) });
     render(page);
 
-    // Verify that the sticker shows "Pago confirmado" status
-    expect(screen.getByText('Pago confirmado')).toBeInTheDocument();
+    // Should NOT show profile buttons when payment status is REJECTED
+    expect(screen.queryByText('Ver perfil público')).not.toBeInTheDocument();
+    expect(screen.queryByText('Editar información')).not.toBeInTheDocument();
+
+    // Should show rejection message instead
+    expect(screen.getByText('Pago rechazado')).toBeInTheDocument();
     expect(
-      screen.getByText('Tu sticker está en cola de impresión')
+      screen.getByText('Por favor, contacta con soporte para más información')
     ).toBeInTheDocument();
+  });
 
-    // Verify that the payment status is also displayed
+  it('hides pending payment section when payment is rejected', async () => {
+    const page = await AccountPage({ searchParams: Promise.resolve({}) });
+    render(page);
+
+    // Should NOT show pending payment section when payment status is REJECTED
+    expect(screen.queryByText('Pendiente de pago')).not.toBeInTheDocument();
+    expect(screen.queryByText('Ver datos bancarios')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        'Realiza la transferencia bancaria para procesar tu pedido'
+      )
+    ).not.toBeInTheDocument();
+  });
+
+  it('still shows payment status information for rejected payment', async () => {
+    const page = await AccountPage({ searchParams: Promise.resolve({}) });
+    render(page);
+
+    // Should still show the payment status for transparency
     expect(screen.getByText('Estado del pago:')).toBeInTheDocument();
-    expect(screen.getByText('✅ Verificado')).toBeInTheDocument();
-
-    // Verify that the sticker status is displayed
-    expect(screen.getByText('Test User')).toBeInTheDocument();
-    expect(screen.getByText('País: CL')).toBeInTheDocument();
+    expect(screen.getByText('❌ Rechazado')).toBeInTheDocument();
   });
 
-  it('shows payment status information for each sticker', async () => {
+  it('displays sticker information even when payment is rejected', async () => {
     const page = await AccountPage({ searchParams: Promise.resolve({}) });
     render(page);
 
-    // Verify that payment status is shown for each sticker
-    const paymentStatusElement = screen.getByText('Estado del pago:');
-    expect(paymentStatusElement).toBeInTheDocument();
-
-    // Verify the payment status text
-    const statusText = paymentStatusElement.parentElement?.textContent;
-    expect(statusText).toContain('✅ Verificado');
-  });
-
-  it('displays sticker information correctly', async () => {
-    const page = await AccountPage({ searchParams: Promise.resolve({}) });
-    render(page);
-
-    // Verify sticker details
+    // Verify sticker details are still shown
     expect(screen.getByText('Test User')).toBeInTheDocument();
     expect(screen.getByText('País: CL')).toBeInTheDocument();
     expect(
@@ -133,21 +139,15 @@ describe('AccountPage - Payment Consistency', () => {
     ).toBeInTheDocument();
   });
 
-  it('includes payments table component', async () => {
+  it('shows rejection banner with error styling', async () => {
     const page = await AccountPage({ searchParams: Promise.resolve({}) });
     render(page);
 
-    // Verify that the payments table is rendered
-    expect(screen.getByTestId('payments-table')).toBeInTheDocument();
-  });
+    // Look for the rejection message with the error icon
+    const rejectionMessage = screen.getByText('Pago rechazado');
+    expect(rejectionMessage).toBeInTheDocument();
 
-  it('shows profile buttons when payment is not rejected', async () => {
-    const page = await AccountPage({ searchParams: Promise.resolve({}) });
-    render(page);
-
-    // Should show profile buttons when payment status is VERIFIED (not REJECTED)
-    expect(screen.getByText('Ver perfil público')).toBeInTheDocument();
-    expect(screen.getByText('Editar información')).toBeInTheDocument();
-    expect(screen.queryByText('Pago rechazado')).not.toBeInTheDocument();
+    // The message itself should have the error styling classes
+    expect(rejectionMessage).toHaveClass('font-medium', 'text-red-800');
   });
 });

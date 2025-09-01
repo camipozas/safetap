@@ -153,28 +153,30 @@ export default async function AccountPage({
                     <p className="text-sm text-slate-600">País: {s.flagCode}</p>
 
                     {/* Estado del sticker */}
-                    {s.status === 'ORDERED' && (
-                      <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <div className="flex items-center">
-                          <span className="text-lg">⏳</span>
-                          <div className="ml-2">
-                            <p className="font-medium text-yellow-800">
-                              Pendiente de pago
-                            </p>
-                            <p className="text-yellow-700 text-sm mt-1">
-                              Realiza la transferencia bancaria para procesar tu
-                              pedido
-                            </p>
+                    {s.status === 'ORDERED' &&
+                      (s.Payment.length === 0 ||
+                        s.Payment[0].status !== 'REJECTED') && (
+                        <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <div className="flex items-center">
+                            <span className="text-lg">⏳</span>
+                            <div className="ml-2">
+                              <p className="font-medium text-yellow-800">
+                                Pendiente de pago
+                              </p>
+                              <p className="text-yellow-700 text-sm mt-1">
+                                Realiza la transferencia bancaria para procesar
+                                tu pedido
+                              </p>
+                            </div>
                           </div>
+                          <Link
+                            className="mt-3 text-sm bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1.5 rounded transition-colors inline-block"
+                            href="/datos-bancarios"
+                          >
+                            Ver datos bancarios
+                          </Link>
                         </div>
-                        <Link
-                          className="mt-3 text-sm bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1.5 rounded transition-colors inline-block"
-                          href="/datos-bancarios"
-                        >
-                          Ver datos bancarios
-                        </Link>
-                      </div>
-                    )}
+                      )}
 
                     {s.status === 'PAID' && (
                       <div className="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-lg">
@@ -280,19 +282,40 @@ export default async function AccountPage({
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <Link
-                      className="btn"
-                      href={`${process.env.NEXTAUTH_URL}/s/${s.slug}`}
-                      target="_blank"
-                    >
-                      Ver perfil público
-                    </Link>
-                    <Link
-                      className="btn btn-secondary"
-                      href={`/profile/new?stickerId=${s.id}`}
-                    >
-                      Editar información
-                    </Link>
+                    {/* Only show profile buttons if payment is not rejected */}
+                    {s.Payment.length === 0 ||
+                    s.Payment[0].status !== 'REJECTED' ? (
+                      <>
+                        <Link
+                          className="btn"
+                          href={`${process.env.NEXTAUTH_URL}/s/${s.slug}`}
+                          target="_blank"
+                        >
+                          Ver perfil público
+                        </Link>
+                        <Link
+                          className="btn btn-secondary"
+                          href={`/profile/new?stickerId=${s.id}`}
+                        >
+                          Editar información
+                        </Link>
+                      </>
+                    ) : (
+                      <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="flex items-center">
+                          <span className="text-lg">❌</span>
+                          <div className="ml-2">
+                            <p className="font-medium text-red-800">
+                              Pago rechazado
+                            </p>
+                            <p className="text-red-700 text-sm mt-1">
+                              Por favor, contacta con soporte para más
+                              información
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {s.status === 'SHIPPED' && s.Payment.length > 0 && (
                       <ActivateStickerButton
                         stickerId={s.id}

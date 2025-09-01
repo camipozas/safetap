@@ -67,7 +67,15 @@ export const profileSchema = z.object({
       type: z.enum(['fonasa', 'isapre']),
       isapre: z.string().optional(),
       isapreCustom: z.string().optional(),
-      hasComplementary: z.boolean().default(false),
+      hasComplementary: z
+        .union([z.boolean(), z.string()])
+        .transform((val) => {
+          if (typeof val === 'string') {
+            return val === 'true';
+          }
+          return val;
+        })
+        .default(false),
       complementaryInsurance: z.string().optional(),
     })
     .refine(
@@ -107,7 +115,15 @@ export const profileFormSchema = z.object({
       type: z.enum(['fonasa', 'isapre']),
       isapre: z.string().optional(),
       isapreCustom: z.string().optional(),
-      hasComplementary: z.boolean().default(false),
+      hasComplementary: z
+        .union([z.boolean(), z.string()])
+        .transform((val) => {
+          if (typeof val === 'string') {
+            return val === 'true';
+          }
+          return val;
+        })
+        .default(false),
       complementaryInsurance: z.string().optional(),
     })
     .refine(
