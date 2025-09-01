@@ -138,9 +138,11 @@ async function seedTestData() {
             : i % 3 === 1
               ? {
                   type: 'isapre',
-                  isapre: ['Cruz Blanca', 'Banmédica', 'Colmena'][
-                    Math.floor(Math.random() * 3)
-                  ],
+                  isapre: [
+                    'Cruz Blanca S.A.',
+                    'Banmédica S.A.',
+                    'Colmena Golden Cross S.A.',
+                  ][Math.floor(Math.random() * 3)],
                   hasComplementary: Math.random() > 0.5,
                   complementaryInsurance:
                     Math.random() > 0.5 ? 'Vida Tres' : 'Colmena Golden Cross',

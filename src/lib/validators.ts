@@ -93,6 +93,46 @@ export const profileSchema = z.object({
     .min(1, 'At least one contact is required'),
 });
 
+// Form input type for client-side forms (before transformation)
+export const profileFormSchema = z.object({
+  bloodType: bloodTypeEnum.optional(),
+  allergies: z.string().optional().default(''),
+  conditions: z.string().optional().default(''),
+  medications: z.string().optional().default(''),
+  notes: z.string().max(500).optional(),
+  language: z.string().min(2).max(5).optional(),
+  organDonor: z.boolean().optional().default(false),
+  insurance: z
+    .object({
+      type: z.enum(['fonasa', 'isapre']),
+      isapre: z.string().optional(),
+      isapreCustom: z.string().optional(),
+      hasComplementary: z.boolean().default(false),
+      complementaryInsurance: z.string().optional(),
+    })
+    .refine(
+      (data) => {
+        // Si es Isapre, debe especificar cuál (ya sea del dropdown o custom)
+        if (data.type === 'isapre' && !data.isapre && !data.isapreCustom) {
+          return false;
+        }
+        // Si tiene seguro complementario, debe especificar cuál
+        if (data.hasComplementary && !data.complementaryInsurance) {
+          return false;
+        }
+        return true;
+      },
+      {
+        message: 'Debe completar toda la información de salud previsional',
+      }
+    )
+    .optional(),
+  consentPublic: z.boolean().default(true),
+  contacts: z
+    .array(emergencyContactSchema)
+    .min(1, 'At least one contact is required'),
+});
+
 export const checkoutSchema = z.object({
   email: z.string().email('Invalid email address'),
   nameOnSticker: z
@@ -120,3 +160,4 @@ export const checkoutSchema = z.object({
 });
 
 export type ProfileInput = z.infer<typeof profileSchema>;
+export type ProfileFormInput = z.infer<typeof profileFormSchema>;

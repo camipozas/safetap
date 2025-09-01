@@ -85,7 +85,7 @@ describe('ProfileForm - Health Insurance', () => {
 
     // Test selecting Isapre provider from dropdown
     const isapreField = screen.getByLabelText(/cuál isapre/i);
-    await user.selectOptions(isapreField, 'Cruz Blanca');
+    await user.selectOptions(isapreField, 'Cruz Blanca S.A.');
 
     // Test selecting complementary insurance
     const complementaryYes = screen.getByRole('radio', { name: /sí/i });
@@ -120,9 +120,9 @@ describe('ProfileForm - Health Insurance', () => {
     const optionTexts = isapreOptions.map(
       (option: HTMLElement) => option.textContent
     );
-    expect(optionTexts).toContain('Cruz Blanca');
-    expect(optionTexts).toContain('Banmédica');
-    expect(optionTexts).toContain('Colmena');
+    expect(optionTexts).toContain('Cruz Blanca S.A.');
+    expect(optionTexts).toContain('Banmédica S.A.');
+    expect(optionTexts).toContain('Colmena Golden Cross S.A.');
     expect(optionTexts).toContain('Otro');
   });
 });

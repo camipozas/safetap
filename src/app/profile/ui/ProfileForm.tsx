@@ -5,7 +5,8 @@ import { useFieldArray, useForm } from 'react-hook-form';
 
 import {
   bloodTypeEnum,
-  profileSchema,
+  profileFormSchema,
+  type ProfileFormInput,
   type ProfileInput,
 } from '@/lib/validators';
 
@@ -26,8 +27,8 @@ export default function ProfileForm({
     control,
     reset,
     formState: { errors },
-  } = useForm<ProfileInput>({
-    resolver: zodResolver(profileSchema),
+  } = useForm<ProfileFormInput>({
+    resolver: zodResolver(profileFormSchema),
     defaultValues: {
       bloodType: undefined,
       allergies: '',
@@ -72,9 +73,32 @@ export default function ProfileForm({
 
   const contacts = useFieldArray({ control, name: 'contacts' });
 
-  async function onSubmit(values: ProfileInput) {
+  async function onSubmit(formValues: ProfileFormInput) {
     setServerError(null);
     setUserNameError(null);
+
+    // Transform form data to API format
+    const values: ProfileInput = {
+      ...formValues,
+      allergies: formValues.allergies
+        ? formValues.allergies
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [],
+      conditions: formValues.conditions
+        ? formValues.conditions
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [],
+      medications: formValues.medications
+        ? formValues.medications
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [],
+    };
 
     // First, update user name if it has changed
     if (userName !== (profile?.user?.name || '') && userName.trim()) {
@@ -318,12 +342,22 @@ export default function ProfileForm({
               {...register('insurance.isapre')}
             >
               <option value="">Seleccionar Isapre</option>
-              <option value="Cruz Blanca">Cruz Blanca</option>
-              <option value="Banmédica">Banmédica</option>
-              <option value="Colmena">Colmena</option>
-              <option value="Consalud">Consalud</option>
-              <option value="Nueva Masvida">Nueva Masvida</option>
-              <option value="Vida Tres">Vida Tres</option>
+              <option value="Banmédica S.A.">Banmédica S.A.</option>
+              <option value="Colmena Golden Cross S.A.">
+                Colmena Golden Cross S.A.
+              </option>
+              <option value="Consalud S.A.">Consalud S.A.</option>
+              <option value="Cruz Blanca S.A.">Cruz Blanca S.A.</option>
+              <option value="Cruz del Norte Ltda.">Cruz del Norte Ltda.</option>
+              <option value="Esencial S.A.">Esencial S.A.</option>
+              <option value="Fundación Ltda. (Isapre Fundación)">
+                Fundación Ltda. (Isapre Fundación)
+              </option>
+              <option value="Isalud Ltda. (Isapre de Codelco)">
+                Isalud Ltda. (Isapre de Codelco)
+              </option>
+              <option value="Nueva Masvida S.A.">Nueva Masvida S.A.</option>
+              <option value="Vida Tres S.A.">Vida Tres S.A.</option>
               <option value="Otro">Otro</option>
             </select>
           </div>

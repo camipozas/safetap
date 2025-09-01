@@ -372,12 +372,24 @@ export default async function EditProfilePage({
                 className="w-full border rounded px-3 py-2"
               >
                 <option value="">Seleccionar Isapre</option>
-                <option value="Cruz Blanca">Cruz Blanca</option>
-                <option value="Banmédica">Banmédica</option>
-                <option value="Colmena">Colmena</option>
-                <option value="Consalud">Consalud</option>
-                <option value="Nueva Masvida">Nueva Masvida</option>
-                <option value="Vida Tres">Vida Tres</option>
+                <option value="Banmédica S.A.">Banmédica S.A.</option>
+                <option value="Colmena Golden Cross S.A.">
+                  Colmena Golden Cross S.A.
+                </option>
+                <option value="Consalud S.A.">Consalud S.A.</option>
+                <option value="Cruz Blanca S.A.">Cruz Blanca S.A.</option>
+                <option value="Cruz del Norte Ltda.">
+                  Cruz del Norte Ltda.
+                </option>
+                <option value="Esencial S.A.">Esencial S.A.</option>
+                <option value="Fundación Ltda. (Isapre Fundación)">
+                  Fundación Ltda. (Isapre Fundación)
+                </option>
+                <option value="Isalud Ltda. (Isapre de Codelco)">
+                  Isalud Ltda. (Isapre de Codelco)
+                </option>
+                <option value="Nueva Masvida S.A.">Nueva Masvida S.A.</option>
+                <option value="Vida Tres S.A.">Vida Tres S.A.</option>
                 <option value="Otro">Otro</option>
               </select>
             </div>

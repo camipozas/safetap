@@ -183,7 +183,7 @@ describe('ProfileForm', () => {
       consentPublic: true,
       insurance: {
         type: 'isapre' as const,
-        isapre: 'Cruz Blanca',
+        isapre: 'Cruz Blanca S.A.',
       },
       user: {
         name: 'Test User 2',
