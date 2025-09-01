@@ -96,12 +96,12 @@ export const profileSchema = z.object({
 // Form input type for client-side forms (before transformation)
 export const profileFormSchema = z.object({
   bloodType: bloodTypeEnum.optional(),
-  allergies: z.string().optional().default(''),
-  conditions: z.string().optional().default(''),
-  medications: z.string().optional().default(''),
+  allergies: z.string().optional(),
+  conditions: z.string().optional(),
+  medications: z.string().optional(),
   notes: z.string().max(500).optional(),
   language: z.string().min(2).max(5).optional(),
-  organDonor: z.boolean().optional().default(false),
+  organDonor: z.boolean().optional(),
   insurance: z
     .object({
       type: z.enum(['fonasa', 'isapre']),
@@ -127,7 +127,7 @@ export const profileFormSchema = z.object({
       }
     )
     .optional(),
-  consentPublic: z.boolean().default(true),
+  consentPublic: z.boolean().optional(),
   contacts: z
     .array(emergencyContactSchema)
     .min(1, 'At least one contact is required'),

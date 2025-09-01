@@ -98,6 +98,8 @@ export default function ProfileForm({
             .map((s) => s.trim())
             .filter(Boolean)
         : [],
+      organDonor: formValues.organDonor ?? false,
+      consentPublic: formValues.consentPublic ?? true,
     };
 
     // First, update user name if it has changed
