@@ -45,9 +45,8 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
     setShowPreview(true);
   };
 
-  const handleEditOrder = (order: Order) => {
+  const handleEditOrder = (_order: Order) => {
     // Implementar edición de orden
-    console.log('Editando orden:', order.id);
     // Aquí puedes abrir un modal o redirigir a una página de edición
   };
 
@@ -200,11 +199,6 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
                     >
                       {getStatusLabel(order.displayStatus || order.status)}
                     </span>
-                    {order.inconsistency && (
-                      <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
-                        {order.inconsistency}
-                      </span>
-                    )}
                   </div>
                 </td>
 
@@ -218,12 +212,12 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
                 {/* Contacto */}
                 <td className="py-4 px-6">
                   <div className="text-sm text-gray-900">
-                    {order.emergencyContacts &&
-                    order.emergencyContacts.length > 0 ? (
+                    {order.profile?.contacts &&
+                    order.profile.contacts.length > 0 ? (
                       <div>
-                        <div>{order.emergencyContacts[0].name}</div>
+                        <div>{order.profile.contacts[0].name}</div>
                         <div className="text-gray-500">
-                          {order.emergencyContacts[0].phone}
+                          {order.profile.contacts[0].phone}
                         </div>
                       </div>
                     ) : (
@@ -236,7 +230,12 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
                 <td className="py-4 px-6">
                   <div className="text-sm">
                     <div className="font-medium text-gray-900">
-                      {formatCurrency(order.totalAmount, 'CLP')}
+                      {order.payments.length > 0
+                        ? formatCurrency(
+                            order.payments[0].amount,
+                            order.payments[0].currency
+                          )
+                        : 'Sin pago'}
                     </div>
                     <div className="text-gray-500">
                       {getPaymentStatus(order.payments)}
@@ -558,7 +557,7 @@ function getStatusLabel(status: string): string {
   return labels[status as keyof typeof labels] || status;
 }
 
-function getPaymentStatus(payments: any[]): string {
+function getPaymentStatus(payments: { status: string }[]): string {
   if (!payments || payments.length === 0) return 'Sin pagos';
 
   const hasPaid = payments.some((p) => p.status === 'PAID');

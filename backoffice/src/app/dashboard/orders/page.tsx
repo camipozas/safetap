@@ -66,6 +66,12 @@ async function getOrdersData() {
 
     return {
       id: order.id,
+      slug: order.slug,
+      serial: order.serial,
+      nameOnSticker: order.nameOnSticker,
+      flagCode: order.flagCode,
+      stickerColor: order.stickerColor,
+      textColor: order.textColor,
       status: order.status,
       displayStatus: displayStatus.primaryStatus,
       displayDescription: displayStatus.description,
