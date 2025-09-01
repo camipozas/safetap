@@ -459,9 +459,9 @@ export default function GuidePage() {
               <span className="ml-6 flex-shrink-0">+</span>
             </summary>
             <div className="mt-3 text-gray-600">
-              Sí, tu información está protegida y encriptada. Solo se muestra la
-              información de emergencia esencial cuando alguien escanea tu
-              código QR, y se registra cada acceso para tu seguridad.
+              Tu información personal no se muestra públicamente. Solo las
+              personas que escaneen tu código QR podrán ver la información de
+              emergencia que has configurado en tu perfil SafeTap.
             </div>
           </details>
 
@@ -483,9 +483,10 @@ export default function GuidePage() {
               <span className="ml-6 flex-shrink-0">+</span>
             </summary>
             <div className="mt-3 text-gray-600">
-              Solo se muestra información de emergencia básica. Los datos
-              sensibles están protegidos y solo son visibles para profesionales
-              médicos autorizados en situaciones de emergencia.
+              Cualquier persona que escanee tu código QR puede ver la
+              información de emergencia que has configurado en tu perfil. Tú
+              decides qué información incluir cuando creas o actualizas tu
+              perfil SafeTap.
             </div>
           </details>
         </div>
