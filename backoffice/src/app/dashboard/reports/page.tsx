@@ -84,8 +84,8 @@ async function getReportsData() {
       take: 10,
       orderBy: { createdAt: 'desc' },
       include: {
-        user: { select: { email: true, name: true } },
-        sticker: { select: { nameOnSticker: true } },
+        User: { select: { email: true, name: true } },
+        Sticker: { select: { nameOnSticker: true } },
       },
     }),
   ]);
@@ -274,10 +274,10 @@ export default async function ReportsPage() {
                 >
                   <div>
                     <div className="text-sm font-medium">
-                      {activity.user.name || activity.user.email}
+                      {activity.User.name || activity.User.email}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {activity.sticker?.nameOnSticker || 'Sin sticker'}
+                      {activity.Sticker?.nameOnSticker || 'Sin sticker'}
                     </div>
                   </div>
                   <div className="text-right">

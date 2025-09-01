@@ -12,7 +12,7 @@ export const revalidate = 0;
 async function getOrdersData() {
   const rawOrders = await prisma.sticker.findMany({
     include: {
-      owner: {
+      User: {
         select: {
           id: true,
           email: true,
@@ -21,14 +21,14 @@ async function getOrdersData() {
           totalSpent: true,
         },
       },
-      profile: {
+      EmergencyProfile: {
         select: {
           bloodType: true,
           allergies: true,
           conditions: true,
           medications: true,
           notes: true,
-          contacts: {
+          EmergencyContact: {
             where: {
               preferred: true,
             },
@@ -41,7 +41,7 @@ async function getOrdersData() {
           },
         },
       },
-      payments: {
+      Payment: {
         select: {
           id: true,
           status: true,
@@ -61,7 +61,7 @@ async function getOrdersData() {
 
   // Process orders with display status
   const processedOrders = rawOrders.map((order) => {
-    const paymentInfo = analyzePayments(order.payments);
+    const paymentInfo = analyzePayments(order.Payment);
     const displayStatus = getDisplayStatus(order.status, paymentInfo);
 
     return {
@@ -71,9 +71,14 @@ async function getOrdersData() {
       displayDescription: displayStatus.description,
       displaySecondaryStatuses: displayStatus.secondaryStatuses,
       createdAt: order.createdAt,
-      owner: order.owner,
-      profile: order.profile,
-      payments: order.payments,
+      owner: order.User,
+      profile: order.EmergencyProfile
+        ? {
+            ...order.EmergencyProfile,
+            contacts: order.EmergencyProfile.EmergencyContact,
+          }
+        : null,
+      payments: order.Payment,
       paymentInfo,
     };
   });

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import DiscountCodeInput from '@/components/DiscountCodeInput';
 import { StickerCustomization } from '@/components/StickerCustomizerNew';
 import { getColorPresetById } from '@/lib/color-presets';
 import { PRICE_PER_STICKER_CLP, formatCLPAmount } from '@/lib/constants';
@@ -23,6 +24,11 @@ interface CheckoutFormProps {
 
 export default function CheckoutForm({ customization }: CheckoutFormProps) {
   const [serverError, setServerError] = useState<string | null>(null);
+  const [appliedDiscount, setAppliedDiscount] = useState<{
+    code: string;
+    amount: number;
+    newTotal: number;
+  } | null>(null);
   const {
     register,
     handleSubmit,
@@ -49,6 +55,7 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
       colorPresetId: customization.colorPresetId,
       stickerColor: customization.stickerColor,
       textColor: customization.textColor,
+      discountCode: appliedDiscount?.code,
     };
 
     const res = await fetch('/api/checkout/transfer/init', {
@@ -74,7 +81,8 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
 
   const qty = watch('quantity');
   const price = PRICE_PER_STICKER_CLP;
-  const total = qty * price;
+  const subtotal = qty * price;
+  const total = appliedDiscount ? appliedDiscount.newTotal : subtotal;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
@@ -196,6 +204,26 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
         )}
       </div>
 
+      {/* Discount Code Input */}
+      <DiscountCodeInput
+        cartTotal={subtotal}
+        onDiscountApplied={(result) => {
+          if (
+            result.valid &&
+            result.newTotal !== undefined &&
+            result.appliedDiscount !== undefined
+          ) {
+            setAppliedDiscount({
+              code: result.code,
+              amount: result.appliedDiscount,
+              newTotal: result.newTotal,
+            });
+          }
+        }}
+        onDiscountRemoved={() => setAppliedDiscount(null)}
+        appliedDiscount={appliedDiscount}
+      />
+
       {/* Summary of price */}
       <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
         <h3 className="font-semibold text-slate-900 mb-4">
@@ -207,8 +235,14 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
               {qty} sticker{qty > 1 ? 's' : ''} personalizado
               {qty > 1 ? 's' : ''} × ${formatCLPAmount(price)}
             </span>
-            <span>${formatCLPAmount(qty * price)}</span>
+            <span>${formatCLPAmount(subtotal)}</span>
           </div>
+          {appliedDiscount && (
+            <div className="flex justify-between text-green-600">
+              <span>Descuento ({appliedDiscount.code})</span>
+              <span>-${formatCLPAmount(appliedDiscount.amount)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-slate-600">
             <span>Envío</span>
             <span>Gratis</span>

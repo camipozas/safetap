@@ -31,7 +31,13 @@ export async function POST(request: NextRequest) {
           data: {
             userId,
             consentPublic: true,
-          },
+            bloodType: null,
+            allergies: [],
+            conditions: [],
+            medications: [],
+            language: 'es',
+            organDonor: false,
+          } as any,
         });
         finalProfileId = profile.id;
       }
@@ -55,7 +61,7 @@ export async function POST(request: NextRequest) {
           phone,
           country,
           preferred,
-        },
+        } as any,
       });
 
       return contact;

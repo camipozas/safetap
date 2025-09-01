@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
         role,
         token,
         expiresAt,
-      },
+      } as any,
     });
     console.log('✅ Invitation created with ID:', invitation.id);
 

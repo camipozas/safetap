@@ -7,9 +7,9 @@ async function getUserWithContacts(userId: string) {
   return await prisma.user.findUnique({
     where: { id: userId },
     include: {
-      profiles: {
+      EmergencyProfile: {
         include: {
-          contacts: {
+          EmergencyContact: {
             orderBy: {
               createdAt: 'desc',
             },
@@ -38,8 +38,8 @@ export default async function UserContactsPage(props: {
     );
   }
 
-  const profile = user.profiles[0];
-  const contacts = profile?.contacts || [];
+  const profile = user.EmergencyProfile?.[0];
+  const contacts = profile?.EmergencyContact || [];
 
   return (
     <div className="space-y-8">

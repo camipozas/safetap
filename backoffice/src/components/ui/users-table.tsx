@@ -17,10 +17,10 @@ type User = {
   role: Role;
   createdAt: Date;
   _count: {
-    stickers: number;
-    payments: number;
+    Sticker: number;
+    Payment: number;
   };
-  profiles: {
+  EmergencyProfile: {
     bloodType: string | null;
     allergies: string[];
     conditions: string[];
@@ -135,9 +135,9 @@ export default function UsersTable({ users }: UsersTableProps) {
                 </td>
                 <td className="p-3">
                   <div className="text-sm">
-                    {user.profiles[0]?.bloodType ? (
+                    {user.EmergencyProfile?.[0]?.bloodType ? (
                       <span className="font-medium text-red-600">
-                        {user.profiles[0].bloodType}
+                        {user.EmergencyProfile[0].bloodType}
                       </span>
                     ) : (
                       <span className="text-gray-400">No especificado</span>
@@ -146,12 +146,12 @@ export default function UsersTable({ users }: UsersTableProps) {
                 </td>
                 <td className="p-3">
                   <div className="text-center">
-                    <span className="font-medium">{user._count.stickers}</span>
+                    <span className="font-medium">{user._count.Sticker}</span>
                   </div>
                 </td>
                 <td className="p-3">
                   <div className="text-center">
-                    <span className="font-medium">{user._count.payments}</span>
+                    <span className="font-medium">{user._count.Payment}</span>
                   </div>
                 </td>
                 <td className="p-3">
@@ -255,9 +255,9 @@ export default function UsersTable({ users }: UsersTableProps) {
               <div>
                 <span className="text-gray-500">Grupo Sanguíneo:</span>
                 <div>
-                  {user.profiles[0]?.bloodType ? (
+                  {user.EmergencyProfile?.[0]?.bloodType ? (
                     <span className="font-medium text-red-600">
-                      {user.profiles[0].bloodType}
+                      {user.EmergencyProfile[0].bloodType}
                     </span>
                   ) : (
                     <span className="text-gray-400">No especificado</span>
@@ -266,11 +266,11 @@ export default function UsersTable({ users }: UsersTableProps) {
               </div>
               <div>
                 <span className="text-gray-500">Stickers:</span>
-                <div className="font-medium">{user._count.stickers}</div>
+                <div className="font-medium">{user._count.Sticker}</div>
               </div>
               <div>
                 <span className="text-gray-500">Pagos:</span>
-                <div className="font-medium">{user._count.payments}</div>
+                <div className="font-medium">{user._count.Payment}</div>
               </div>
               <div>
                 <span className="text-gray-500">Total Gastado:</span>

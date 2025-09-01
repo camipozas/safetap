@@ -25,11 +25,11 @@ async function getUserDetails(userId: string) {
     include: {
       _count: {
         select: {
-          stickers: true,
-          payments: true,
+          Sticker: true,
+          Payment: true,
         },
       },
-      payments: {
+      Payment: {
         where: {
           status: 'VERIFIED',
         },
@@ -42,7 +42,7 @@ async function getUserDetails(userId: string) {
         },
         take: 5,
       },
-      stickers: {
+      Sticker: {
         select: {
           id: true,
           status: true,
@@ -54,9 +54,9 @@ async function getUserDetails(userId: string) {
         },
         take: 5,
       },
-      profiles: {
+      EmergencyProfile: {
         include: {
-          contacts: {
+          EmergencyContact: {
             select: {
               id: true,
               name: true,
@@ -96,9 +96,9 @@ export default async function UserDetailsPage(props: {
     );
   }
 
-  const profile = user.profiles[0];
-  const totalSpent = user.payments.reduce(
-    (sum, payment) => sum + payment.amount,
+  const profile = user.EmergencyProfile?.[0]; // Get the first profile since it's an array
+  const totalSpent = user.Payment.reduce(
+    (sum: number, payment: any) => sum + payment.amount,
     0
   );
 
@@ -209,7 +209,7 @@ export default async function UserDetailsPage(props: {
                 <Sticker className="h-8 w-8 text-blue-600 mx-auto mb-2" />
                 <p className="text-sm font-medium text-gray-600">Stickers</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {user._count.stickers}
+                  {user._count.Sticker}
                 </p>
               </div>
             </div>
@@ -223,7 +223,7 @@ export default async function UserDetailsPage(props: {
                 <CreditCard className="h-8 w-8 text-green-600 mx-auto mb-2" />
                 <p className="text-sm font-medium text-gray-600">Pagos</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {user._count.payments}
+                  {user._count.Payment}
                 </p>
               </div>
             </div>
@@ -253,7 +253,7 @@ export default async function UserDetailsPage(props: {
                 <Users className="h-8 w-8 text-orange-600 mx-auto mb-2" />
                 <p className="text-sm font-medium text-gray-600">Contactos</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {profile?.contacts?.length || 0}
+                  {profile?.EmergencyContact?.length || 0}
                 </p>
               </div>
             </div>
@@ -269,9 +269,9 @@ export default async function UserDetailsPage(props: {
             <CardTitle>Stickers Recientes</CardTitle>
           </CardHeader>
           <CardContent>
-            {user.stickers.length > 0 ? (
+            {user.Sticker.length > 0 ? (
               <div className="space-y-3">
-                {user.stickers.map((sticker) => (
+                {user.Sticker.map((sticker: any) => (
                   <div
                     key={sticker.id}
                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
@@ -297,13 +297,13 @@ export default async function UserDetailsPage(props: {
                     </span>
                   </div>
                 ))}
-                {user._count.stickers > 5 && (
+                {user._count.Sticker > 5 && (
                   <div className="text-center">
                     <Link
                       href="/dashboard/orders"
                       className="text-blue-600 hover:text-blue-800 text-sm"
                     >
-                      Ver todos los stickers ({user._count.stickers})
+                      Ver todos los stickers ({user._count.Sticker})
                     </Link>
                   </div>
                 )}
@@ -323,9 +323,9 @@ export default async function UserDetailsPage(props: {
             <CardTitle>Pagos Recientes</CardTitle>
           </CardHeader>
           <CardContent>
-            {user.payments.length > 0 ? (
+            {user.Payment.length > 0 ? (
               <div className="space-y-3">
-                {user.payments.map((payment, index) => (
+                {user.Payment.map((payment: any, index: number) => (
                   <div
                     key={index}
                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
@@ -343,13 +343,13 @@ export default async function UserDetailsPage(props: {
                     </span>
                   </div>
                 ))}
-                {user._count.payments > 5 && (
+                {user._count.Payment > 5 && (
                   <div className="text-center">
                     <Link
                       href="/dashboard/orders"
                       className="text-blue-600 hover:text-blue-800 text-sm"
                     >
-                      Ver todos los pagos ({user._count.payments})
+                      Ver todos los pagos ({user._count.Payment})
                     </Link>
                   </div>
                 )}
@@ -365,14 +365,14 @@ export default async function UserDetailsPage(props: {
       </div>
 
       {/* Emergency Contacts Summary */}
-      {profile?.contacts && profile.contacts.length > 0 && (
+      {profile?.EmergencyContact && profile.EmergencyContact.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Contactos de Emergencia</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {profile.contacts.slice(0, 3).map((contact) => (
+              {profile.EmergencyContact.slice(0, 3).map((contact: any) => (
                 <div key={contact.id} className="p-4 border rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <div className="font-medium">{contact.name}</div>
@@ -389,11 +389,11 @@ export default async function UserDetailsPage(props: {
                 </div>
               ))}
             </div>
-            {profile.contacts.length > 3 && (
+            {profile.EmergencyContact.length > 3 && (
               <div className="mt-4 text-center">
                 <Link href={`/dashboard/users/${user.id}/contacts`}>
                   <Button variant="outline" size="sm">
-                    Ver todos los contactos ({profile.contacts.length})
+                    Ver todos los contactos ({profile.EmergencyContact.length})
                   </Button>
                 </Link>
               </div>

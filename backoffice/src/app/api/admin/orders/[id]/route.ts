@@ -38,7 +38,7 @@ export async function PUT(
         where: { id: orderId },
         data: { status },
         include: {
-          owner: {
+          User: {
             select: {
               id: true,
               name: true,
@@ -121,7 +121,7 @@ export async function PUT(
       where: { id: orderId },
       data: { status },
       include: {
-        owner: {
+        User: {
           select: {
             id: true,
             name: true,
@@ -173,7 +173,7 @@ export async function GET(
     const sticker = await prisma.sticker.findUnique({
       where: { id: orderId },
       include: {
-        owner: {
+        User: {
           select: {
             id: true,
             name: true,
@@ -181,7 +181,7 @@ export async function GET(
             country: true,
           },
         },
-        payments: {
+        Payment: {
           where: {
             status: 'VERIFIED',
           },

@@ -10,11 +10,11 @@ async function getUser(id: string) {
   return await prisma.user.findUnique({
     where: { id },
     include: {
-      stickers: {
+      Sticker: {
         include: {
-          profile: {
+          EmergencyProfile: {
             include: {
-              contacts: {
+              EmergencyContact: {
                 orderBy: [{ preferred: 'desc' }, { createdAt: 'asc' }],
               },
             },
@@ -35,7 +35,7 @@ export default async function EditProfilePage({
     return <div>Usuario no encontrado</div>;
   }
 
-  const sticker = user.stickers[0]; // Asumimos que solo hay un sticker por usuario
+  const sticker = user.Sticker[0] as any; // Asumimos que solo hay un sticker por usuario
   if (!sticker) {
     return <div>El usuario no tiene stickers</div>;
   }
@@ -43,7 +43,7 @@ export default async function EditProfilePage({
   const handleSubmit = async (formData: FormData) => {
     'use server';
 
-    const profile = sticker.profile;
+    const profile = sticker.EmergencyProfile;
     if (!profile) return;
 
     const userName = formData.get('userName') as string;
@@ -147,7 +147,7 @@ export default async function EditProfilePage({
               phone: contactPhones[i],
               relation: contactRelations[i] || 'Contacto de emergencia',
               preferred: i === 0, // El primero es preferido
-            },
+            } as any,
           });
         }
       }
@@ -292,54 +292,58 @@ export default async function EditProfilePage({
             Contactos de Emergencia
           </h2>
 
-          {sticker.profile?.contacts?.map((contact, _index) => (
-            <div
-              key={contact.id}
-              className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 border rounded"
-            >
-              <div>
-                <label className="block text-sm font-medium mb-1">Nombre</label>
-                <input
-                  type="text"
-                  name="contactName"
-                  defaultValue={contact.name}
-                  className="w-full border rounded px-3 py-2"
-                />
+          {sticker.EmergencyProfile?.EmergencyContact?.map(
+            (contact: any, _index: any) => (
+              <div
+                key={contact.id}
+                className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 border rounded"
+              >
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Nombre
+                  </label>
+                  <input
+                    type="text"
+                    name="contactName"
+                    defaultValue={contact.name}
+                    className="w-full border rounded px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Teléfono
+                  </label>
+                  <input
+                    type="tel"
+                    name="contactPhone"
+                    defaultValue={contact.phone}
+                    className="w-full border rounded px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Relación
+                  </label>
+                  <select
+                    name="contactRelation"
+                    defaultValue={contact.relation}
+                    className="w-full border rounded px-3 py-2"
+                  >
+                    <option value="Padre/Madre">Padre/Madre</option>
+                    <option value="Hermano/a">Hermano/a</option>
+                    <option value="Hijo/a">Hijo/a</option>
+                    <option value="Esposo/a">Esposo/a</option>
+                    <option value="Pareja">Pareja</option>
+                    <option value="Amigo/a">Amigo/a</option>
+                    <option value="Médico">Médico</option>
+                    <option value="Contacto de emergencia">
+                      Contacto de emergencia
+                    </option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Teléfono
-                </label>
-                <input
-                  type="tel"
-                  name="contactPhone"
-                  defaultValue={contact.phone}
-                  className="w-full border rounded px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Relación
-                </label>
-                <select
-                  name="contactRelation"
-                  defaultValue={contact.relation}
-                  className="w-full border rounded px-3 py-2"
-                >
-                  <option value="Padre/Madre">Padre/Madre</option>
-                  <option value="Hermano/a">Hermano/a</option>
-                  <option value="Hijo/a">Hijo/a</option>
-                  <option value="Esposo/a">Esposo/a</option>
-                  <option value="Pareja">Pareja</option>
-                  <option value="Amigo/a">Amigo/a</option>
-                  <option value="Médico">Médico</option>
-                  <option value="Contacto de emergencia">
-                    Contacto de emergencia
-                  </option>
-                </select>
-              </div>
-            </div>
-          ))}
+            )
+          )}
         </div>
 
         {/* Salud Previsional */}

@@ -5,11 +5,17 @@ import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
 
 import { CountrySelect } from '@/components/CountrySelect';
+import DiscountCodeInput from '@/components/DiscountCodeInput';
 import { PRICE_PER_STICKER_CLP, formatCLPAmount } from '@/lib/constants';
 import { checkoutSchema } from '@/lib/validators';
 
 export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
   const [serverError, setServerError] = useState<string | null>(null);
+  const [appliedDiscount, setAppliedDiscount] = useState<{
+    code: string;
+    amount: number;
+    newTotal: number;
+  } | null>(null);
   const {
     register,
     handleSubmit,
@@ -33,7 +39,11 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
     const res = await fetch('/api/checkout/transfer/init', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ ...data, email: userEmail }),
+      body: JSON.stringify({
+        ...data,
+        email: userEmail,
+        discountCode: appliedDiscount?.code,
+      }),
     });
 
     console.log('📥 Checkout API response status:', res.status);
@@ -54,7 +64,8 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
 
   const qty = watch('quantity');
   const price = PRICE_PER_STICKER_CLP;
-  const total = qty * price;
+  const subtotal = qty * price;
+  const total = appliedDiscount ? appliedDiscount.newTotal : subtotal;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
@@ -106,7 +117,7 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
         <CountrySelect
           name="flagCode"
           value={watch('flagCode')}
-          onChange={(v) => setValue('flagCode', v as any)}
+          onChange={(v) => setValue('flagCode', v as string)}
           error={errors.flagCode?.message}
         />
       </div>
@@ -155,6 +166,26 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
         )}
       </div>
 
+      {/* Discount Code Input */}
+      <DiscountCodeInput
+        cartTotal={subtotal}
+        onDiscountApplied={(result) => {
+          if (
+            result.valid &&
+            result.newTotal !== undefined &&
+            result.appliedDiscount !== undefined
+          ) {
+            setAppliedDiscount({
+              code: result.code,
+              amount: result.appliedDiscount,
+              newTotal: result.newTotal,
+            });
+          }
+        }}
+        onDiscountRemoved={() => setAppliedDiscount(null)}
+        appliedDiscount={appliedDiscount}
+      />
+
       {/* Resumen de precio */}
       <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
         <h3 className="font-semibold text-slate-900 mb-4">
@@ -165,8 +196,14 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
             <span>
               {qty} sticker{qty > 1 ? 's' : ''} × ${formatCLPAmount(price)}
             </span>
-            <span>${formatCLPAmount(qty * price)}</span>
+            <span>${formatCLPAmount(subtotal)}</span>
           </div>
+          {appliedDiscount && (
+            <div className="flex justify-between text-green-600">
+              <span>Descuento ({appliedDiscount.code})</span>
+              <span>-${formatCLPAmount(appliedDiscount.amount)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-slate-600">
             <span>Envío</span>
             <span>Gratis</span>

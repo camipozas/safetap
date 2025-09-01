@@ -32,7 +32,7 @@ export async function PUT(
     const order = await prisma.sticker.findUnique({
       where: { id },
       include: {
-        payments: {
+        Payment: {
           orderBy: { createdAt: 'desc' },
         },
       },
@@ -48,15 +48,15 @@ export async function PUT(
     // Validar la transición de estado
     if (
       !isValidStatusTransition(order.status, newStatus, {
-        hasConfirmedPayment: order.payments.some(
+        hasConfirmedPayment: order.Payment.some(
           (p) => p.status === 'VERIFIED' || p.status === 'PAID'
         ),
-        hasPendingPayment: order.payments.some((p) => p.status === 'PENDING'),
-        hasRejectedPayment: order.payments.some((p) => p.status === 'REJECTED'),
-        totalAmount: order.payments.reduce((sum, p) => sum + p.amount, 0),
-        currency: order.payments[0]?.currency || 'EUR',
-        latestStatus: (order.payments[0]?.status as any) || null,
-        paymentCount: order.payments.length,
+        hasPendingPayment: order.Payment.some((p) => p.status === 'PENDING'),
+        hasRejectedPayment: order.Payment.some((p) => p.status === 'REJECTED'),
+        totalAmount: order.Payment.reduce((sum, p) => sum + p.amount, 0),
+        currency: order.Payment[0]?.currency || 'EUR',
+        latestStatus: (order.Payment[0]?.status as any) || null,
+        paymentCount: order.Payment.length,
       })
     ) {
       return NextResponse.json(
@@ -69,9 +69,9 @@ export async function PUT(
     if (newStatus === 'REJECTED') {
       // Para rechazar, actualizamos el pago pero NO el sticker
       // (el sticker mantiene su estado actual, típicamente ORDERED)
-      if (order.payments.length > 0) {
+      if (order.Payment.length > 0) {
         // Get the latest payment (already ordered by createdAt desc)
-        const latestPayment = order.payments[0];
+        const latestPayment = order.Payment[0];
         await prisma.payment.update({
           where: { id: latestPayment.id },
           data: { status: 'REJECTED' },
@@ -82,7 +82,7 @@ export async function PUT(
       const orderWithRejectedPayment = await prisma.sticker.findUnique({
         where: { id },
         include: {
-          payments: true,
+          Payment: true,
         },
       });
 
@@ -98,13 +98,13 @@ export async function PUT(
       where: { id },
       data: { status: newStatus },
       include: {
-        payments: true,
+        Payment: true,
       },
     });
 
     // Manejar pagos según el estado
     if (newStatus === 'PAID') {
-      if (order.payments.length === 0) {
+      if (order.Payment.length === 0) {
         // Crear un nuevo pago si no existe
         await prisma.payment.create({
           data: {
@@ -114,11 +114,11 @@ export async function PUT(
             currency: 'CLP',
             reference: `STK-${id}-${Date.now()}`,
             status: 'VERIFIED',
-          },
+          } as any,
         });
       } else {
         // Actualizar el pago más reciente
-        const latestPayment = order.payments[0];
+        const latestPayment = order.Payment[0];
         if (latestPayment.status === 'PENDING') {
           await prisma.payment.update({
             where: { id: latestPayment.id },

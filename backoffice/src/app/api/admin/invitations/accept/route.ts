@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
           email: invitation.email,
           role: invitation.role,
           name: invitation.email.split('@')[0],
-        },
+        } as any,
       });
 
       await tx.adminInvitation.update({
