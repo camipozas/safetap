@@ -191,6 +191,87 @@ export default async function DashboardPage() {
         ))}
       </div>
 
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <a
+          href="/dashboard/discounts"
+          className="block p-6 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
+        >
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg
+                className="h-6 w-6 text-blue-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                />
+              </svg>
+            </div>
+            <div className="ml-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                Códigos de Descuento
+              </h3>
+              <p className="text-sm text-gray-500">
+                Gestionar códigos de descuento
+              </p>
+            </div>
+          </div>
+        </a>
+
+        <a
+          href="/dashboard/payments"
+          className="block p-6 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
+        >
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <DollarSign className="h-6 w-6 text-green-600" />
+            </div>
+            <div className="ml-4">
+              <h3 className="text-lg font-medium text-gray-900">Pagos</h3>
+              <p className="text-sm text-gray-500">
+                Verificar pagos pendientes
+              </p>
+            </div>
+          </div>
+        </a>
+
+        <a
+          href="/dashboard/users"
+          className="block p-6 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
+        >
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <Users className="h-6 w-6 text-purple-600" />
+            </div>
+            <div className="ml-4">
+              <h3 className="text-lg font-medium text-gray-900">Usuarios</h3>
+              <p className="text-sm text-gray-500">Gestionar usuarios</p>
+            </div>
+          </div>
+        </a>
+
+        <a
+          href="/dashboard/stickers"
+          className="block p-6 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
+        >
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <Package className="h-6 w-6 text-orange-600" />
+            </div>
+            <div className="ml-4">
+              <h3 className="text-lg font-medium text-gray-900">Stickers</h3>
+              <p className="text-sm text-gray-500">Estado de stickers</p>
+            </div>
+          </div>
+        </a>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         <Card>
           <CardHeader>

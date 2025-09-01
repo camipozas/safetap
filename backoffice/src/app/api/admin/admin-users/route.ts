@@ -123,6 +123,8 @@ export async function POST(request: NextRequest) {
           email,
           role,
           name: null, // Will be filled when they first login
+          id: `user-${email}-id`,
+          updatedAt: new Date(),
         },
         select: {
           id: true,

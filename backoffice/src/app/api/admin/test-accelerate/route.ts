@@ -17,7 +17,7 @@ export async function GET() {
         name: true,
         country: true,
         updatedAt: true,
-        stickers: {
+        Sticker: {
           select: {
             id: true,
             nameOnSticker: true,

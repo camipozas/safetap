@@ -127,9 +127,9 @@ export async function GET(
     const contact = await prisma.emergencyContact.findUnique({
       where: { id: contactId },
       include: {
-        profile: {
+        EmergencyProfile: {
           include: {
-            user: {
+            User: {
               select: {
                 id: true,
                 name: true,

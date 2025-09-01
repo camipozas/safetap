@@ -8,18 +8,18 @@ export const revalidate = 0;
 async function getPayments() {
   return await prisma.payment.findMany({
     where: {
-      sticker: {
+      Sticker: {
         isNot: null, // Only include payments that have a sticker
       },
     },
     include: {
-      sticker: {
+      Sticker: {
         select: {
           id: true,
           slug: true,
           nameOnSticker: true,
           status: true,
-          owner: {
+          User: {
             select: {
               id: true,
               email: true,
@@ -159,7 +159,7 @@ export default async function PaymentsPage() {
       </div>
 
       {/* Payments Table */}
-      <PaymentsTable payments={payments} />
+      <PaymentsTable payments={payments as any} />
     </div>
   );
 }

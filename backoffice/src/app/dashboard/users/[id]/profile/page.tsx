@@ -39,13 +39,12 @@ export default async function ProfileViewPage({
   const user = await accelerateClient.user.findUnique({
     where: { id },
     include: {
-      stickers: true,
-      profiles: {
+      Sticker: true,
+      EmergencyProfile: {
         include: {
-          contacts: {
+          EmergencyContact: {
             orderBy: [{ preferred: 'desc' }, { createdAt: 'asc' }],
           },
-          sticker: true,
         },
       },
     },
@@ -55,8 +54,8 @@ export default async function ProfileViewPage({
     notFound();
   }
 
-  const profile = user.profiles[0]; // Tomar el primer perfil
-  const sticker = user.stickers[0]; // Tomar el primer sticker
+  const profile = user.EmergencyProfile?.[0]; // Tomar el primer perfil
+  const sticker = user.Sticker?.[0]; // Tomar el primer sticker
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100">
@@ -221,53 +220,56 @@ export default async function ProfileViewPage({
               )}
 
               {/* Emergency Contacts */}
-              {profile.contacts && profile.contacts.length > 0 && (
-                <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                  <div className="flex items-center mb-4">
-                    <Phone className="w-5 h-5 text-slate-600 mr-2" />
-                    <h3 className="text-lg font-semibold text-slate-900">
-                      Contactos de emergencia
-                    </h3>
-                  </div>
-                  <div className="grid gap-3">
-                    {profile.contacts.map((contact: EmergencyContact) => (
-                      <div
-                        key={contact.id}
-                        className={`p-3 rounded-lg border ${
-                          contact.preferred
-                            ? 'bg-yellow-50 border-yellow-200'
-                            : 'bg-white border-slate-200'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="flex items-center">
-                              <h4 className="font-semibold text-slate-900">
-                                {contact.name}
-                              </h4>
-                              {contact.preferred && (
-                                <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                                  Preferido
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-sm text-slate-600 capitalize">
-                              {contact.relation}
-                            </p>
-                          </div>
-                          <a
-                            href={`tel:${contact.phone}`}
-                            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
+              {profile.EmergencyContact &&
+                profile.EmergencyContact.length > 0 && (
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                    <div className="flex items-center mb-4">
+                      <Phone className="w-5 h-5 text-slate-600 mr-2" />
+                      <h3 className="text-lg font-semibold text-slate-900">
+                        Contactos de emergencia
+                      </h3>
+                    </div>
+                    <div className="grid gap-3">
+                      {profile.EmergencyContact.map(
+                        (contact: EmergencyContact) => (
+                          <div
+                            key={contact.id}
+                            className={`p-3 rounded-lg border ${
+                              contact.preferred
+                                ? 'bg-yellow-50 border-yellow-200'
+                                : 'bg-white border-slate-200'
+                            }`}
                           >
-                            <Phone className="w-4 h-4 mr-2" />
-                            {contact.phone}
-                          </a>
-                        </div>
-                      </div>
-                    ))}
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="flex items-center">
+                                  <h4 className="font-semibold text-slate-900">
+                                    {contact.name}
+                                  </h4>
+                                  {contact.preferred && (
+                                    <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                                      Preferido
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm text-slate-600 capitalize">
+                                  {contact.relation}
+                                </p>
+                              </div>
+                              <a
+                                href={`tel:${contact.phone}`}
+                                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
+                              >
+                                <Phone className="w-4 h-4 mr-2" />
+                                {contact.phone}
+                              </a>
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {/* User Information */}
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">

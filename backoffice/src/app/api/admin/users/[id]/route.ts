@@ -129,8 +129,8 @@ export async function GET(
         updatedAt: true,
         _count: {
           select: {
-            stickers: true,
-            payments: true,
+            Sticker: true,
+            Payment: true,
           },
         },
       },

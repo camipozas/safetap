@@ -67,7 +67,7 @@ describe('/api/admin/orders/[id] PUT', () => {
       where: { id: 'test-id' },
       data: { status: 'PAID' },
       include: {
-        owner: {
+        User: {
           select: {
             id: true,
             name: true,

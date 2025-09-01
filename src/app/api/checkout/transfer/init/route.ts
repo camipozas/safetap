@@ -6,11 +6,14 @@ import {
   PAYMENT_METHOD,
   PRICE_PER_STICKER_CLP,
 } from '@/lib/constants';
+import { applyDiscount } from '@/lib/discounts/applyDiscount';
 import { prisma } from '@/lib/prisma';
 import { generateSlug } from '@/lib/slug';
 import { checkoutSchema } from '@/lib/validators';
 
-const bodySchema = checkoutSchema;
+const bodySchema = checkoutSchema.extend({
+  discountCode: z.string().optional(),
+});
 
 export async function POST(req: Request) {
   console.log('💳 Starting checkout transfer initialization');
@@ -59,6 +62,42 @@ export async function POST(req: Request) {
       country: user.country,
     });
 
+    // Calculate base amount
+    const baseAmount = PRICE_PER_STICKER_CLP * data.quantity;
+
+    // Apply discount if provided
+    let discountResult = null;
+    let finalAmount = baseAmount;
+    let discountCodeId = null;
+    let discountAmount = 0;
+
+    if (data.discountCode) {
+      console.log('🎫 Applying discount code:', data.discountCode);
+      discountResult = await applyDiscount({
+        code: data.discountCode,
+        cartTotal: baseAmount,
+        userId: user.id,
+        preview: false, // This will increment usage count and create redemption
+      });
+
+      if (discountResult.valid && discountResult.newTotal !== undefined) {
+        finalAmount = discountResult.newTotal;
+        discountCodeId = discountResult.discountCodeId;
+        discountAmount = discountResult.appliedDiscount || 0;
+        console.log('✅ Discount applied:', {
+          code: data.discountCode,
+          discountAmount,
+          finalAmount,
+        });
+      } else {
+        console.log('❌ Invalid discount code:', discountResult.message);
+        return NextResponse.json(
+          { error: discountResult.message || 'Código de descuento inválido' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Create Sticker (ORDERED) and Payment (PENDING) with reference
     const reference = `SAFETAP-${generateSlug(6)}`;
     console.log('🔖 Generated reference:', reference);
@@ -88,9 +127,10 @@ export async function POST(req: Request) {
         },
       });
 
-      const amount = PRICE_PER_STICKER_CLP * data.quantity;
       console.log('💰 Creating payment:', {
-        amount,
+        amount: finalAmount,
+        originalAmount: discountCodeId ? baseAmount : undefined,
+        discountAmount: discountCodeId ? discountAmount : undefined,
         currency: DEFAULT_CURRENCY,
         reference,
         method: PAYMENT_METHOD,
@@ -101,7 +141,10 @@ export async function POST(req: Request) {
           id: crypto.randomUUID(),
           userId: user.id,
           stickerId: sticker.id,
-          amount,
+          amount: finalAmount,
+          originalAmount: discountCodeId ? baseAmount : undefined,
+          discountCodeId,
+          discountAmount: discountCodeId ? discountAmount : undefined,
           currency: DEFAULT_CURRENCY,
           method: PAYMENT_METHOD,
           reference,

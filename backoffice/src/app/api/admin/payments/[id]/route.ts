@@ -45,9 +45,9 @@ export async function PUT(
           updatedAt: new Date(),
         },
         include: {
-          sticker: {
+          Sticker: {
             include: {
-              owner: {
+              User: {
                 select: {
                   id: true,
                   name: true,
@@ -123,9 +123,9 @@ export async function PUT(
         updatedAt: new Date(),
       },
       include: {
-        sticker: {
+        Sticker: {
           include: {
-            owner: {
+            User: {
               select: {
                 id: true,
                 name: true,
@@ -185,9 +185,9 @@ export async function GET(
       const payment = await prisma.payment.findUnique({
         where: { id: paymentId },
         include: {
-          sticker: {
+          Sticker: {
             include: {
-              owner: {
+              User: {
                 select: {
                   id: true,
                   name: true,
@@ -248,9 +248,9 @@ export async function GET(
     const payment = await prisma.payment.findUnique({
       where: { id: paymentId },
       include: {
-        sticker: {
+        Sticker: {
           include: {
-            owner: {
+            User: {
               select: {
                 id: true,
                 name: true,

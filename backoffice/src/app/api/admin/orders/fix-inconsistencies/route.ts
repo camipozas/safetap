@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     // Get all orders with their payments
     const orders = await prisma.sticker.findMany({
       include: {
-        payments: {
+        Payment: {
           select: {
             id: true,
             status: true,
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     // Analyze each order for inconsistencies
     for (const order of orders) {
-      const paymentInfo = analyzePayments(order.payments);
+      const paymentInfo = analyzePayments(order.Payment);
       const displayStatus = getDisplayStatus(
         order.status as OrderStatus,
         paymentInfo
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     const updatePromises = updates.map((update) =>
       prisma.sticker.update({
         where: { id: update.id },
-        data: { status: update.newStatus },
+        data: { status: update.newStatus as any },
       })
     );
 
@@ -128,14 +128,14 @@ export async function GET(request: NextRequest) {
     // Get all orders with their payments
     const orders = await prisma.sticker.findMany({
       include: {
-        owner: {
+        User: {
           select: {
             id: true,
             name: true,
             email: true,
           },
         },
-        payments: {
+        Payment: {
           select: {
             id: true,
             status: true,
@@ -166,7 +166,7 @@ export async function GET(request: NextRequest) {
 
     // Analyze each order for inconsistencies
     for (const order of orders) {
-      const paymentInfo = analyzePayments(order.payments);
+      const paymentInfo = analyzePayments(order.Payment);
       const displayStatus = getDisplayStatus(
         order.status as OrderStatus,
         paymentInfo
@@ -179,7 +179,7 @@ export async function GET(request: NextRequest) {
           currentStatus: order.status as OrderStatus,
           suggestedStatus: displayStatus.primaryStatus,
           reason: displayStatus.description,
-          owner: order.owner,
+          owner: order.User,
           paymentInfo: {
             totalAmount: paymentInfo.totalAmount,
             hasConfirmedPayment: paymentInfo.hasConfirmedPayment,

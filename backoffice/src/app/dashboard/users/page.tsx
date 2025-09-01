@@ -1,29 +1,31 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PrismaClient } from '@prisma/client';
-import UsersTable from '../../../components/ui/users-table';
+import UsersTable from '@/components/ui/users-table';
+import { prisma } from '@/lib/prisma';
+import { User } from '@prisma/client';
 
-// Create a direct Accelerate client to avoid any local caching
-const accelerateClient = new PrismaClient({
-  datasourceUrl: process.env.DATABASE_URL, // This ensures we use the Accelerate URL
-});
+type UserWithCounts = User & {
+  _count: {
+    Sticker: number;
+    Payment: number;
+  };
+  EmergencyProfile: {
+    bloodType: string | null;
+  }[];
+};
 
-async function getUsers() {
-  return await accelerateClient.user.findMany({
+async function getUsers(): Promise<UserWithCounts[]> {
+  return await prisma.user.findMany({
     include: {
       _count: {
         select: {
-          stickers: true,
-          payments: true,
+          Sticker: true,
+          Payment: true,
         },
       },
-      profiles: {
+      EmergencyProfile: {
         select: {
           bloodType: true,
-          allergies: true,
-          conditions: true,
-          medications: true,
         },
-        take: 1,
       },
     },
     orderBy: {
@@ -45,8 +47,8 @@ export default async function UsersPage() {
   const stats = {
     total: users.length,
     admins: users.filter((u) => u.role === 'ADMIN').length,
-    withStickers: users.filter((u) => u._count.stickers > 0).length,
-    withPayments: users.filter((u) => u._count.payments > 0).length,
+    withStickers: users.filter((u) => u._count.Sticker > 0).length,
+    withPayments: users.filter((u) => u._count.Payment > 0).length,
   };
 
   return (
@@ -121,7 +123,7 @@ export default async function UsersPage() {
           <CardTitle>Usuarios Recientes</CardTitle>
         </CardHeader>
         <CardContent>
-          <UsersTable users={usersWithStats} />
+          <UsersTable users={usersWithStats as any} />
         </CardContent>
       </Card>
     </div>

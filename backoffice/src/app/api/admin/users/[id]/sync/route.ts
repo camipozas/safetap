@@ -136,11 +136,11 @@ export async function GET(
         updatedAt: true,
         _count: {
           select: {
-            stickers: true,
-            payments: true,
+            Sticker: true,
+            Payment: true,
           },
         },
-        stickers: {
+        Sticker: {
           select: {
             id: true,
             nameOnSticker: true,
