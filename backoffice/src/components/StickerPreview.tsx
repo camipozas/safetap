@@ -40,6 +40,7 @@ const StickerPreviewComponent = ({
       <div
         className="w-40 h-40 sm:w-48 sm:h-48 rounded-xl shadow-md border border-gray-200 p-2 sm:p-3 flex flex-col justify-between"
         style={{ backgroundColor: stickerColor }}
+        data-testid="sticker-container"
       >
         {/* Header */}
         <div className="text-center">

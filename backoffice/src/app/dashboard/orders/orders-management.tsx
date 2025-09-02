@@ -88,6 +88,7 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
         },
         pixelRatio: 2,
         quality: 1,
+        backgroundColor: 'transparent',
         filter: (_node) => {
           // Incluir todos los nodos
           return true;
@@ -142,6 +143,7 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
         },
         pixelRatio: 4, // Incrementar pixelRatio para mejor calidad del QR
         quality: 1,
+        backgroundColor: 'transparent',
         canvasWidth: stickerElement.offsetWidth * 10,
         canvasHeight: stickerElement.offsetHeight * 10,
         filter: (_node) => {
