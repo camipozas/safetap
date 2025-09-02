@@ -40,16 +40,14 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      - name: Ensure npm version (keeps optional deps on)
-        run: npm --version && node --version
-
       - name: Install dependencies
         run: npm ci
 
-      - name: Sanity check Rollup optional binary
+      - name: Ensure Rollup native binary (Linux x64)
+        if: runner.os == 'Linux'
         run: |
-          ls -la node_modules/@rollup || true
-          node -e "try{require('@rollup/rollup-linux-x64-gnu'); console.log('OK: rollup native present')}catch(e){console.error('MISSING: rollup native'); process.exit(1)}"
+          node -e "try{require('@rollup/rollup-linux-x64-gnu');console.log('OK: rollup native present')}catch(e){process.exit(1)}" \
+          || npm i @rollup/rollup-linux-x64-gnu@^4.50.0 --no-save
 
       - name: Setup Prisma
         run: npx prisma generate
@@ -122,10 +120,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Sanity check Rollup optional binary
+      - name: Ensure Rollup native binary (Linux x64)
+        if: runner.os == 'Linux'
         run: |
-          ls -la node_modules/@rollup || true
-          node -e "try{require('@rollup/rollup-linux-x64-gnu'); console.log('OK: rollup native present')}catch(e){console.error('MISSING: rollup native'); process.exit(1)}"
+          node -e "try{require('@rollup/rollup-linux-x64-gnu');console.log('OK: rollup native present')}catch(e){process.exit(1)}" \
+          || npm i @rollup/rollup-linux-x64-gnu@^4.50.0 --no-save
 
       - name: Setup Prisma
         run: npx prisma generate

@@ -91,11 +91,13 @@
     "vitest": "^3.2.4",
     "wait-on": "^8.0.4",
     "webpack-bundle-analyzer": "^4.10.1",
-    "rollup": "^4.21.0",
-    "@rollup/rollup-linux-x64-gnu": "^4.21.0"
+    "rollup": "^4.50.0"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.50.0"
   },
   "overrides": {
-    "rollup": "^4.21.0"
+    "rollup": "^4.50.0"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
