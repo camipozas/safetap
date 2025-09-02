@@ -100,6 +100,23 @@ jobs:
           EMAIL_SERVER_PASSWORD: ${{ secrets.EMAIL_SERVER_PASSWORD || 'testpassword' }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM || 'Test <test@example.com>' }}
 
+      - name: Fix ESLint dependencies (mitiga bug optional deps)
+        run: |
+          echo "Fixing ESLint and related dependencies..."
+          npm install eslint --no-optional --no-audit --no-fund
+          npm install @typescript-eslint/eslint-plugin @typescript-eslint/parser --no-optional --no-audit --no-fund
+          npm install eslint-import-resolver-typescript --no-optional --no-audit --no-fund
+          echo "ESLint dependencies fixed"
+
+      - name: Clean and reinstall problematic packages
+        run: |
+          echo "Cleaning and reinstalling problematic packages..."
+          rm -rf node_modules/unrs-resolver
+          rm -rf node_modules/eslint-import-resolver-typescript
+          npm install unrs-resolver --no-optional --no-audit --no-fund
+          npm install eslint-import-resolver-typescript --no-optional --no-audit --no-fund
+          echo "Problematic packages reinstalled"
+
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
