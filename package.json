@@ -32,8 +32,7 @@
     "accessibility": "axe --chrome --save accessibility-report.json http://localhost:3000",
     "analyze": "ANALYZE=true npm run build",
     "analyze:server": "BUNDLE_ANALYZE=server npm run build",
-    "analyze:browser": "BUNDLE_ANALYZE=browser npm run build",
-    "ci:install": "npm install --no-optional --no-audit --no-fund --prefer-offline && npm install --only=dev --no-optional --no-audit --no-fund --prefer-offline"
+    "analyze:browser": "BUNDLE_ANALYZE=browser npm run build"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
