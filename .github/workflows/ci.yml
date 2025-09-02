@@ -80,7 +80,7 @@ jobs:
         run: npm run type-check
 
       - name: Lint check
-        run: npm run lint
+        run: npm run lint:ci
 
       - name: Format check
         run: npm run format:check
@@ -116,6 +116,13 @@ jobs:
           npm install unrs-resolver --no-optional --no-audit --no-fund
           npm install eslint-import-resolver-typescript --no-optional --no-audit --no-fund
           echo "Problematic packages reinstalled"
+
+      - name: Force clean problematic dependencies
+        run: |
+          echo "Force cleaning problematic dependencies..."
+          npm uninstall unrs-resolver eslint-import-resolver-typescript
+          npm install --no-optional --no-audit --no-fund
+          echo "Dependencies force cleaned"
 
   e2e-tests:
     name: E2E Tests
