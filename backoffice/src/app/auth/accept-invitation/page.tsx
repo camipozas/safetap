@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { USER_ROLES } from '@/types/shared';
 import { CheckCircle, Loader2, Shield, XCircle } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
@@ -180,7 +181,7 @@ function AcceptInvitationContent() {
               <p className="font-medium">{invitation?.email}</p>
               <p className="text-sm text-gray-600">
                 Rol:{' '}
-                {invitation?.role === 'SUPER_ADMIN'
+                {invitation?.role === USER_ROLES.SUPER_ADMIN
                   ? 'Super Administrador'
                   : 'Administrador'}
               </p>

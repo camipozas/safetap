@@ -1,3 +1,4 @@
+import { USER_ROLES } from '@/types/shared';
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
@@ -106,7 +107,10 @@ export default async function OrdersPage() {
     select: { role: true },
   });
 
-  if (!user || !['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+  if (
+    !user ||
+    (user.role !== USER_ROLES.ADMIN && user.role !== USER_ROLES.SUPER_ADMIN)
+  ) {
     redirect('/dashboard');
   }
 

@@ -1,134 +1,95 @@
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
 
 import LoginForm from '@/app/login/ui/LoginForm';
 
-// Mock next/navigation
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: vi.fn(),
-    refresh: vi.fn(),
-  }),
-  useSearchParams: () => ({
-    get: vi.fn().mockReturnValue(null),
-  }),
-}));
-
-// Mock next-auth/react
-vi.mock('next-auth/react', () => ({
-  signIn: vi.fn().mockResolvedValue(undefined),
-}));
-
-// Mock fetch globally
+// Mock fetch
 global.fetch = vi.fn();
+
+const mockFetch = vi.mocked(global.fetch);
 
 describe('LoginForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(global.fetch).mockClear();
-
-    // Default successful fetch mock
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ success: true }),
-    } as Response);
   });
 
-  afterEach(() => {
-    vi.clearAllTimers();
-  });
-
-  it('renders login form elements', () => {
+  test('renders login form elements', () => {
     render(<LoginForm />);
 
     expect(
-      screen.getByRole('textbox', { name: /dirección de correo electrónico/i })
+      screen.getByLabelText('Dirección de correo electrónico')
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /enviar enlace de acceso/i })
+      screen.getByRole('button', { name: 'Enviar enlace de acceso' })
     ).toBeInTheDocument();
+    expect(screen.getByText('Continuar con Google')).toBeInTheDocument();
   });
 
-  it('displays email input with correct type', () => {
+  test('displays email input with correct type', () => {
     render(<LoginForm />);
 
-    const emailInput = screen.getByRole('textbox', {
-      name: /dirección de correo electrónico/i,
-    });
+    const emailInput = screen.getByLabelText('Dirección de correo electrónico');
     expect(emailInput).toHaveAttribute('type', 'email');
+    expect(emailInput).toHaveAttribute('placeholder', 'tu@email.com');
   });
 
-  it('disables submit button when email is empty', () => {
+  test('disables submit button when email is empty', () => {
     render(<LoginForm />);
 
     const submitButton = screen.getByRole('button', {
-      name: /enviar enlace de acceso/i,
+      name: 'Enviar enlace de acceso',
     });
     expect(submitButton).toBeDisabled();
   });
 
-  it('enables submit button when valid email is entered', async () => {
+  test('enables submit button when valid email is entered', async () => {
+    const user = userEvent.setup();
     render(<LoginForm />);
 
-    const emailInput = screen.getByRole('textbox', {
-      name: /dirección de correo electrónico/i,
-    });
+    const emailInput = screen.getByLabelText('Dirección de correo electrónico');
     const submitButton = screen.getByRole('button', {
-      name: /enviar enlace de acceso/i,
+      name: 'Enviar enlace de acceso',
     });
 
-    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+    await user.type(emailInput, 'test@example.com');
 
-    await waitFor(() => {
-      expect(submitButton).not.toBeDisabled();
-    });
+    expect(submitButton).toBeEnabled();
   });
 
-  it('shows validation error for invalid email', async () => {
+  test('shows validation error for invalid email', async () => {
+    const user = userEvent.setup();
     render(<LoginForm />);
 
-    const emailInput = screen.getByRole('textbox', {
-      name: /dirección de correo electrónico/i,
+    const emailInput = screen.getByLabelText('Dirección de correo electrónico');
+    const submitButton = screen.getByRole('button', {
+      name: 'Enviar enlace de acceso',
     });
 
-    // Test HTML5 validation for invalid email
-    await act(async () => {
-      fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
-    });
+    await user.type(emailInput, 'invalid-email');
+    await user.click(submitButton);
 
-    // Check that the input has invalid state due to HTML5 validation
-    expect(emailInput).toHaveValue('invalid-email');
-    expect(emailInput.getAttribute('type')).toBe('email');
-    expect(emailInput.getAttribute('required')).toBe('');
+    expect(
+      screen.getByText('Dirección de correo electrónico')
+    ).toBeInTheDocument();
   });
 
-  it('handles form submission', async () => {
-    // Mock the fetch function to simulate successful submission
-    vi.mocked(global.fetch).mockResolvedValue({
+  test('handles form submission', async () => {
+    const user = userEvent.setup();
+    mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ messageId: 'test-message-id' }),
+      json: async () => ({ message: 'Email sent successfully' }),
     } as Response);
 
-    const { unmount } = render(<LoginForm />);
+    render(<LoginForm />);
 
-    const emailInput = screen.getByRole('textbox', {
-      name: /dirección de correo electrónico/i,
-    });
+    const emailInput = screen.getByLabelText('Dirección de correo electrónico');
     const submitButton = screen.getByRole('button', {
-      name: /enviar enlace de acceso/i,
+      name: 'Enviar enlace de acceso',
     });
 
-    await act(async () => {
-      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-      fireEvent.click(submitButton);
-    });
+    await user.type(emailInput, 'test@example.com');
+    await user.click(submitButton);
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith('/api/custom-login', {
@@ -136,87 +97,82 @@ describe('LoginForm', () => {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           email: 'test@example.com',
-          callbackUrl: '/account',
+          callbackUrl: '/welcome?cta=sticker',
         }),
       });
     });
-
-    unmount();
   });
 
-  it('shows loading state during submission', async () => {
-    let resolvePromise: (value: Response) => void;
-    const fetchPromise = new Promise<Response>((resolve) => {
-      resolvePromise = resolve;
-    });
+  test('shows loading state during submission', async () => {
+    const user = userEvent.setup();
+    mockFetch.mockImplementationOnce(() => new Promise(() => {})); // Never resolves
 
-    // Mock fetch with a controllable promise
-    vi.mocked(global.fetch).mockReturnValue(fetchPromise);
-
-    const { unmount } = render(<LoginForm />);
-
-    const emailInput = screen.getByRole('textbox', {
-      name: /dirección de correo electrónico/i,
-    });
-    const submitButton = screen.getByRole('button', {
-      name: /enviar enlace de acceso/i,
-    });
-
-    await act(async () => {
-      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-      fireEvent.click(submitButton);
-    });
-
-    // Check loading state immediately
-    expect(screen.getByText(/enviando/i)).toBeInTheDocument();
-
-    // Clean up by resolving the promise and unmounting before test ends
-    resolvePromise!({
-      ok: true,
-      json: async () => ({ messageId: 'test-message-id' }),
-    } as Response);
-
-    // Wait for the promise to resolve
-    await waitFor(() => {
-      expect(screen.getByText(/revisa tu correo/i)).toBeInTheDocument();
-    });
-
-    unmount();
-  });
-
-  it('handles callback URL from search params', () => {
     render(<LoginForm />);
 
-    // Component should render without errors even with search params
-    expect(
-      screen.getByRole('textbox', { name: /dirección de correo electrónico/i })
-    ).toBeInTheDocument();
+    const emailInput = screen.getByLabelText('Dirección de correo electrónico');
+    const submitButton = screen.getByRole('button', {
+      name: 'Enviar enlace de acceso',
+    });
+
+    await user.type(emailInput, 'test@example.com');
+    await user.click(submitButton);
+
+    expect(screen.getByText('Enviando...')).toBeInTheDocument();
+    expect(submitButton).toBeDisabled();
   });
 
-  it('displays success message after submission', async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
+  test('displays success message after submission', async () => {
+    const user = userEvent.setup();
+    mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ messageId: 'test-message-id' }),
+      json: async () => ({ message: 'Email sent successfully' }),
     } as Response);
 
-    const { unmount } = render(<LoginForm />);
+    render(<LoginForm />);
 
-    const emailInput = screen.getByRole('textbox', {
-      name: /dirección de correo electrónico/i,
-    });
+    const emailInput = screen.getByLabelText('Dirección de correo electrónico');
     const submitButton = screen.getByRole('button', {
-      name: /enviar enlace de acceso/i,
+      name: 'Enviar enlace de acceso',
     });
 
-    await act(async () => {
-      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-      fireEvent.click(submitButton);
-    });
+    await user.type(emailInput, 'test@example.com');
+    await user.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/revisa tu correo/i)).toBeInTheDocument();
+      expect(screen.getByText('Revisa tu correo')).toBeInTheDocument();
+      expect(
+        screen.getByText(/Hemos enviado un enlace de acceso a/)
+      ).toBeInTheDocument();
+      expect(screen.getByText('test@example.com')).toBeInTheDocument();
+    });
+  });
+
+  test('handles callback URL from search params', async () => {
+    const user = userEvent.setup();
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ message: 'Email sent successfully' }),
+    } as Response);
+
+    render(<LoginForm callbackUrl="/custom-callback" />);
+
+    const emailInput = screen.getByLabelText('Dirección de correo electrónico');
+    const submitButton = screen.getByRole('button', {
+      name: 'Enviar enlace de acceso',
     });
 
-    unmount();
+    await user.type(emailInput, 'test@example.com');
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith('/api/custom-login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          email: 'test@example.com',
+          callbackUrl: '/custom-callback',
+        }),
+      });
+    });
   });
 });

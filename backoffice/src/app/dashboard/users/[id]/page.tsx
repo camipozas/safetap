@@ -1,7 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
-import { PrismaClient } from '@prisma/client';
+import { USER_ROLES } from '@/types/shared';
+import { PaymentStatus, PrismaClient, StickerStatus } from '@prisma/client';
 
 // Create a direct Accelerate client to avoid any local caching
 const accelerateClient = new PrismaClient({
@@ -31,7 +32,7 @@ async function getUserDetails(userId: string) {
       },
       Payment: {
         where: {
-          status: 'VERIFIED',
+          status: PaymentStatus.VERIFIED,
         },
         select: {
           amount: true,
@@ -166,9 +167,9 @@ export default async function UserDetailsPage(props: {
               <div className="mt-1">
                 <span
                   className={`inline-block px-2 py-1 text-xs rounded-full ${
-                    user.role === 'ADMIN'
+                    user.role === USER_ROLES.ADMIN
                       ? 'bg-blue-100 text-blue-800'
-                      : user.role === 'SUPER_ADMIN'
+                      : user.role === USER_ROLES.SUPER_ADMIN
                         ? 'bg-purple-100 text-purple-800'
                         : 'bg-gray-100 text-gray-800'
                   }`}
@@ -284,11 +285,11 @@ export default async function UserDetailsPage(props: {
                     </div>
                     <span
                       className={`inline-block px-2 py-1 text-xs rounded-full ${
-                        sticker.status === 'ACTIVE'
+                        sticker.status === StickerStatus.ACTIVE
                           ? 'bg-green-100 text-green-800'
-                          : sticker.status === 'PAID'
+                          : sticker.status === StickerStatus.PAID
                             ? 'bg-blue-100 text-blue-800'
-                            : sticker.status === 'SHIPPED'
+                            : sticker.status === StickerStatus.SHIPPED
                               ? 'bg-purple-100 text-purple-800'
                               : 'bg-gray-100 text-gray-800'
                       }`}
@@ -339,7 +340,7 @@ export default async function UserDetailsPage(props: {
                       </div>
                     </div>
                     <span className="inline-block px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                      VERIFICADO
+                      {PaymentStatus.VERIFIED}
                     </span>
                   </div>
                 ))}

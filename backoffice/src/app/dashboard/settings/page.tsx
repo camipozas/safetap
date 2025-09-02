@@ -406,7 +406,7 @@ export default function SettingsPage() {
                             <td className="p-3">
                               <span
                                 className={`inline-block px-2 py-1 text-xs rounded-full ${
-                                  invitation.role === 'SUPER_ADMIN'
+                                  invitation.role === USER_ROLES.SUPER_ADMIN
                                     ? 'bg-purple-100 text-purple-800'
                                     : 'bg-blue-100 text-blue-800'
                                 }`}
@@ -460,7 +460,7 @@ export default function SettingsPage() {
                           </div>
                           <span
                             className={`inline-block px-2 py-1 text-xs rounded-full whitespace-nowrap ml-2 ${
-                              invitation.role === 'SUPER_ADMIN'
+                              invitation.role === USER_ROLES.SUPER_ADMIN
                                 ? 'bg-purple-100 text-purple-800'
                                 : 'bg-blue-100 text-blue-800'
                             }`}

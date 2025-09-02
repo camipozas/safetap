@@ -1,15 +1,16 @@
-import { AccessVia, PaymentStatus, Role, StickerStatus } from '@prisma/client';
-
-export { AccessVia, PaymentStatus, Role, StickerStatus };
-
-// User roles with descriptions
 export const USER_ROLES = {
   USER: 'USER',
   ADMIN: 'ADMIN',
   SUPER_ADMIN: 'SUPER_ADMIN',
 } as const;
 
-export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
+export type Role = keyof typeof USER_ROLES;
+
+export const ROLE_LABELS = {
+  [USER_ROLES.ADMIN]: 'Admin',
+  [USER_ROLES.SUPER_ADMIN]: 'Super Admin',
+  [USER_ROLES.USER]: 'Usuario',
+} as const;
 
 export const ROLE_PERMISSIONS = {
   [USER_ROLES.USER]: {
@@ -36,13 +37,13 @@ export const ROLE_PERMISSIONS = {
 } as const;
 
 export type RolePermissions =
-  keyof (typeof ROLE_PERMISSIONS)[typeof USER_ROLES.USER];
+  keyof (typeof ROLE_PERMISSIONS)[keyof typeof USER_ROLES];
 
 export const hasPermission = (
-  role: UserRole,
+  role: Role,
   permission: RolePermissions
 ): boolean => {
-  return ROLE_PERMISSIONS[role as UserRole]?.[permission] ?? false;
+  return ROLE_PERMISSIONS[role]?.[permission] ?? false;
 };
 
 export const STICKER_STATUS_FLOW = {

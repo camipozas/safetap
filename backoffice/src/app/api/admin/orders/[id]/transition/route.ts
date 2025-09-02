@@ -1,8 +1,12 @@
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { authOptions } from '../../../../../../lib/auth';
-import { isValidStatusTransition } from '../../../../../../lib/order-helpers';
+import {
+  ORDER_STATUS,
+  isValidStatusTransition,
+} from '../../../../../../lib/order-helpers';
 import { prisma } from '../../../../../../lib/prisma';
+import { PaymentStatus, USER_ROLES } from '../../../../../../types/shared';
 
 export async function PUT(
   request: NextRequest,
@@ -21,7 +25,10 @@ export async function PUT(
       select: { role: true },
     });
 
-    if (!user || !['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+    if (
+      !user ||
+      (user.role !== USER_ROLES.ADMIN && user.role !== USER_ROLES.SUPER_ADMIN)
+    ) {
       return NextResponse.json({ error: 'Acceso denegado' }, { status: 403 });
     }
 
@@ -49,10 +56,16 @@ export async function PUT(
     if (
       !isValidStatusTransition(order.status, newStatus, {
         hasConfirmedPayment: order.Payment.some(
-          (p) => p.status === 'VERIFIED' || p.status === 'PAID'
+          (p) =>
+            p.status === PaymentStatus.VERIFIED ||
+            p.status === PaymentStatus.PAID
         ),
-        hasPendingPayment: order.Payment.some((p) => p.status === 'PENDING'),
-        hasRejectedPayment: order.Payment.some((p) => p.status === 'REJECTED'),
+        hasPendingPayment: order.Payment.some(
+          (p) => p.status === PaymentStatus.PENDING
+        ),
+        hasRejectedPayment: order.Payment.some(
+          (p) => p.status === PaymentStatus.REJECTED
+        ),
         totalAmount: order.Payment.reduce((sum, p) => sum + p.amount, 0),
         currency: order.Payment[0]?.currency || 'EUR',
         latestStatus: (order.Payment[0]?.status as any) || null,
@@ -66,7 +79,7 @@ export async function PUT(
     }
 
     // Manejar caso especial de rechazo
-    if (newStatus === 'REJECTED') {
+    if (newStatus === ORDER_STATUS.REJECTED) {
       // Para rechazar, actualizamos el pago pero NO el sticker
       // (el sticker mantiene su estado actual, típicamente ORDERED)
       if (order.Payment.length > 0) {
@@ -74,7 +87,7 @@ export async function PUT(
         const latestPayment = order.Payment[0];
         await prisma.payment.update({
           where: { id: latestPayment.id },
-          data: { status: 'REJECTED' },
+          data: { status: PaymentStatus.REJECTED },
         });
       }
 
@@ -103,7 +116,7 @@ export async function PUT(
     });
 
     // Manejar pagos según el estado
-    if (newStatus === 'PAID') {
+    if (newStatus === ORDER_STATUS.PAID) {
       if (order.Payment.length === 0) {
         // Crear un nuevo pago si no existe
         await prisma.payment.create({
@@ -113,16 +126,16 @@ export async function PUT(
             amount: 6990, // Precio estándar del sticker
             currency: 'CLP',
             reference: `STK-${id}-${Date.now()}`,
-            status: 'VERIFIED',
+            status: PaymentStatus.VERIFIED,
           } as any,
         });
       } else {
         // Actualizar el pago más reciente
         const latestPayment = order.Payment[0];
-        if (latestPayment.status === 'PENDING') {
+        if (latestPayment.status === PaymentStatus.PENDING) {
           await prisma.payment.update({
             where: { id: latestPayment.id },
-            data: { status: 'VERIFIED' },
+            data: { status: PaymentStatus.VERIFIED },
           });
         }
       }

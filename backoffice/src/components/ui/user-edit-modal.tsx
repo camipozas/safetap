@@ -1,5 +1,6 @@
 'use client';
 
+import { USER_ROLES } from '@/types/shared';
 import { Edit2, Save, Shield, User, X } from 'lucide-react';
 import { useState } from 'react';
 import ConfirmationModal from './confirmation-modal';
@@ -148,19 +149,21 @@ export default function UserEditModal({
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-safetap-500 focus:border-safetap-500"
               >
-                <option value="USER">Usuario</option>
-                <option value="ADMIN">Administrador</option>
+                <option value={USER_ROLES.USER}>Usuario</option>
+                <option value={USER_ROLES.ADMIN}>Administrador</option>
               </select>
-              {formData.role === 'ADMIN' && formData.role !== user.role && (
-                <p className="mt-1 text-xs text-orange-600">
-                  ⚠️ Le otorgarás permisos de administrador a este usuario
-                </p>
-              )}
-              {formData.role === 'USER' && user.role === 'ADMIN' && (
-                <p className="mt-1 text-xs text-red-600">
-                  ⚠️ Le quitarás permisos de administrador a este usuario
-                </p>
-              )}
+              {formData.role === USER_ROLES.ADMIN &&
+                formData.role !== user.role && (
+                  <p className="mt-1 text-xs text-orange-600">
+                    ⚠️ Le otorgarás permisos de administrador a este usuario
+                  </p>
+                )}
+              {formData.role === USER_ROLES.USER &&
+                user.role === USER_ROLES.ADMIN && (
+                  <p className="mt-1 text-xs text-red-600">
+                    ⚠️ Le quitarás permisos de administrador a este usuario
+                  </p>
+                )}
             </div>
 
             {/* Country */}
