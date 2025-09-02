@@ -114,8 +114,24 @@ jobs:
           node-version: '20.x'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Use latest npm (mitiga bug optional deps)
+        run: npm i -g npm@latest
+
+      - name: Clear npm cache
+        run: npm cache clean --force
+
+      - name: Clean install dependencies
+        run: |
+          rm -rf node_modules package-lock.json
+          npm run ci:install
+
+      - name: Verify critical dependencies
+        run: |
+          echo "Verifying critical dependencies..."
+          npm list vitest
+          npm list @playwright/test
+          npm list rollup || echo "Rollup not found (this is OK)"
+          echo "Dependencies verification complete"
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
