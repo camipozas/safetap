@@ -1,6 +1,6 @@
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { hasPermission } from '@/types/shared';
+import { hasPermission, PaymentStatus } from '@/types/shared';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -21,15 +21,7 @@ export async function PUT(
       const { status } = await request.json();
       const paymentId = params.id;
 
-      const validStatuses = [
-        'PENDING',
-        'TRANSFER_PAYMENT',
-        'VERIFIED',
-        'PAID',
-        'TRANSFERRED',
-        'REJECTED',
-        'CANCELLED',
-      ];
+      const validStatuses = Object.values(PaymentStatus);
 
       if (!validStatuses.includes(status)) {
         return NextResponse.json(
@@ -99,15 +91,7 @@ export async function PUT(
     const { status } = await request.json();
     const paymentId = params.id;
 
-    const validStatuses = [
-      'PENDING',
-      'TRANSFER_PAYMENT',
-      'VERIFIED',
-      'PAID',
-      'TRANSFERRED',
-      'REJECTED',
-      'CANCELLED',
-    ];
+    const validStatuses = Object.values(PaymentStatus);
 
     if (!validStatuses.includes(status)) {
       return NextResponse.json(

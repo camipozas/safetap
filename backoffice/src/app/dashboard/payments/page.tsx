@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PaymentsTable from '@/components/ui/payments-table';
+import { PAYMENT_STATUS } from '@/lib/order-helpers';
 import { prisma } from '@/lib/prisma';
 
 // Revalidate this page every time it's accessed
@@ -42,14 +43,19 @@ export default async function PaymentsPage() {
 
   const stats = {
     total: payments.length,
-    pending: payments.filter((p) => p.status === 'PENDING').length,
-    transferPayment: payments.filter((p) => p.status === 'TRANSFER_PAYMENT')
+    pending: payments.filter((p) => p.status === PAYMENT_STATUS.PENDING).length,
+    transferPayment: payments.filter(
+      (p) => p.status === PAYMENT_STATUS.TRANSFERRED
+    ).length,
+    verified: payments.filter((p) => p.status === PAYMENT_STATUS.VERIFIED)
       .length,
-    verified: payments.filter((p) => p.status === 'VERIFIED').length,
-    paid: payments.filter((p) => p.status === 'PAID').length,
-    transferred: payments.filter((p) => p.status === 'TRANSFERRED').length,
-    rejected: payments.filter((p) => p.status === 'REJECTED').length,
-    cancelled: payments.filter((p) => p.status === 'CANCELLED').length,
+    paid: payments.filter((p) => p.status === PAYMENT_STATUS.PAID).length,
+    transferred: payments.filter((p) => p.status === PAYMENT_STATUS.TRANSFERRED)
+      .length,
+    rejected: payments.filter((p) => p.status === PAYMENT_STATUS.REJECTED)
+      .length,
+    cancelled: payments.filter((p) => p.status === PAYMENT_STATUS.REJECTED)
+      .length,
   };
 
   return (

@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { ORDER_STATUS, PAYMENT_STATUS } from '@/lib/order-helpers';
 import { formatDate } from '@/lib/utils';
 import { Order } from '@/types/dashboard';
 import { Edit, Eye } from 'lucide-react';
@@ -318,14 +319,14 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
                     </Button>
 
                     {/* Botones de transición de estado */}
-                    {order.displayStatus === 'ORDERED' && (
+                    {order.displayStatus === ORDER_STATUS.ORDERED && (
                       <>
                         <Button
                           size="sm"
                           variant="outline"
                           className="text-green-600 border-green-200 hover:bg-green-50"
                           onClick={() =>
-                            handleStatusTransition(order.id, 'PAID')
+                            handleStatusTransition(order.id, ORDER_STATUS.PAID)
                           }
                           disabled={isUpdating === order.id}
                         >
@@ -338,7 +339,10 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
                           variant="outline"
                           className="text-orange-600 border-orange-200 hover:bg-orange-50"
                           onClick={() =>
-                            handleStatusTransition(order.id, 'REJECTED')
+                            handleStatusTransition(
+                              order.id,
+                              ORDER_STATUS.REJECTED
+                            )
                           }
                           disabled={isUpdating === order.id}
                         >
@@ -349,14 +353,17 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
                       </>
                     )}
 
-                    {order.displayStatus === 'PAID' && (
+                    {order.displayStatus === ORDER_STATUS.PAID && (
                       <>
                         <Button
                           size="sm"
                           variant="outline"
                           className="text-purple-600 border-purple-200 hover:bg-purple-50"
                           onClick={() =>
-                            handleStatusTransition(order.id, 'PRINTING')
+                            handleStatusTransition(
+                              order.id,
+                              ORDER_STATUS.PRINTING
+                            )
                           }
                           disabled={isUpdating === order.id}
                         >
@@ -369,7 +376,10 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
                           variant="outline"
                           className="text-blue-600 border-blue-200 hover:bg-blue-50"
                           onClick={() =>
-                            handleStatusTransition(order.id, 'ORDERED')
+                            handleStatusTransition(
+                              order.id,
+                              ORDER_STATUS.ORDERED
+                            )
                           }
                           disabled={isUpdating === order.id}
                         >
@@ -380,14 +390,17 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
                       </>
                     )}
 
-                    {order.displayStatus === 'PRINTING' && (
+                    {order.displayStatus === ORDER_STATUS.PRINTING && (
                       <>
                         <Button
                           size="sm"
                           variant="outline"
                           className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
                           onClick={() =>
-                            handleStatusTransition(order.id, 'SHIPPED')
+                            handleStatusTransition(
+                              order.id,
+                              ORDER_STATUS.SHIPPED
+                            )
                           }
                           disabled={isUpdating === order.id}
                         >
@@ -400,7 +413,7 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
                           variant="outline"
                           className="text-green-600 border-green-200 hover:bg-green-50"
                           onClick={() =>
-                            handleStatusTransition(order.id, 'PAID')
+                            handleStatusTransition(order.id, ORDER_STATUS.PAID)
                           }
                           disabled={isUpdating === order.id}
                         >
@@ -411,14 +424,17 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
                       </>
                     )}
 
-                    {order.displayStatus === 'SHIPPED' && (
+                    {order.displayStatus === ORDER_STATUS.SHIPPED && (
                       <>
                         <Button
                           size="sm"
                           variant="outline"
                           className="text-green-600 border-green-200 hover:bg-green-50"
                           onClick={() =>
-                            handleStatusTransition(order.id, 'ACTIVE')
+                            handleStatusTransition(
+                              order.id,
+                              ORDER_STATUS.ACTIVE
+                            )
                           }
                           disabled={isUpdating === order.id}
                         >
@@ -431,7 +447,10 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
                           variant="outline"
                           className="text-blue-600 border-blue-200 hover:bg-blue-50"
                           onClick={() =>
-                            handleStatusTransition(order.id, 'PRINTING')
+                            handleStatusTransition(
+                              order.id,
+                              ORDER_STATUS.PRINTING
+                            )
                           }
                           disabled={isUpdating === order.id}
                         >
@@ -442,14 +461,14 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
                       </>
                     )}
 
-                    {order.displayStatus === 'ACTIVE' && (
+                    {order.displayStatus === ORDER_STATUS.ACTIVE && (
                       <>
                         <Button
                           size="sm"
                           variant="outline"
                           className="text-red-600 border-red-200 hover:bg-red-50"
                           onClick={() =>
-                            handleStatusTransition(order.id, 'LOST')
+                            handleStatusTransition(order.id, ORDER_STATUS.LOST)
                           }
                           disabled={isUpdating === order.id}
                         >
@@ -462,7 +481,10 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
                           variant="outline"
                           className="text-blue-600 border-blue-200 hover:bg-blue-50"
                           onClick={() =>
-                            handleStatusTransition(order.id, 'SHIPPED')
+                            handleStatusTransition(
+                              order.id,
+                              ORDER_STATUS.SHIPPED
+                            )
                           }
                           disabled={isUpdating === order.id}
                         >
@@ -606,8 +628,8 @@ function getStatusLabel(status: string): string {
 function getPaymentStatus(payments: { status: string }[]): string {
   if (!payments || payments.length === 0) return 'Sin pagos';
 
-  const hasPaid = payments.some((p) => p.status === 'PAID');
-  const hasPending = payments.some((p) => p.status === 'PENDING');
+  const hasPaid = payments.some((p) => p.status === PAYMENT_STATUS.PAID);
+  const hasPending = payments.some((p) => p.status === PAYMENT_STATUS.PENDING);
 
   if (hasPaid) return 'Pagado';
   if (hasPending) return 'Pendiente';
