@@ -21,6 +21,34 @@ vi.mock('@/lib/prisma', () => ({
   },
 }));
 
+// Mock the order helpers
+vi.mock('@/lib/order-helpers', () => ({
+  analyzePayments: vi.fn((payments) => {
+    if (!payments || payments.length === 0) {
+      return {
+        totalAmount: 0,
+        hasValidPayment: false,
+        latestStatus: null,
+        currency: 'EUR',
+      };
+    }
+    return {
+      totalAmount: payments.reduce(
+        (sum: number, p: any) => sum + (p.amount || 0),
+        0
+      ),
+      hasValidPayment: payments.some((p: any) => p.status === 'VERIFIED'),
+      latestStatus: payments[0]?.status || null,
+      currency: payments[0]?.currency || 'EUR',
+    };
+  }),
+  getDisplayStatus: vi.fn((status, paymentInfo) => ({
+    primaryStatus: status,
+    description: status === 'ORDERED' ? 'Pedido creado' : 'Pedido pagado',
+    secondaryStatuses: [],
+  })),
+}));
+
 const mockOrders = [
   {
     id: 'order-1',
@@ -40,6 +68,7 @@ const mockOrders = [
       email: 'john@example.com',
       name: 'John Doe',
       country: 'US',
+      totalSpent: 0,
     },
     EmergencyProfile: {
       bloodType: 'O+',
@@ -47,22 +76,24 @@ const mockOrders = [
       conditions: [],
       medications: [],
       notes: null,
-      EmergencyContact: [],
+      EmergencyContact: [
+        {
+          name: 'Emergency Contact',
+          phone: '+1234567890',
+          relation: 'Family',
+        },
+      ],
     },
     Payment: [
       {
         id: 'payment-1',
         status: 'VERIFIED',
-        amount: 699000, // $6,990 CLP in cents
+        amount: 699000,
         currency: 'CLP',
         createdAt: new Date('2024-01-01'),
+        reference: 'REF001',
       },
     ],
-    paymentInfo: {
-      totalAmount: 699000,
-      hasValidPayment: true,
-      latestStatus: 'VERIFIED',
-    },
   },
   {
     id: 'order-2',
@@ -73,8 +104,8 @@ const mockOrders = [
     stickerColor: '#f0f0f0',
     textColor: '#333333',
     status: 'PAID',
-    displayStatus: 'ORDERED',
-    displayDescription: 'Pedido creado',
+    displayStatus: 'PAID',
+    displayDescription: 'Pedido pagado',
     displaySecondaryStatuses: [],
     createdAt: new Date('2024-01-02'),
     User: {
@@ -82,14 +113,10 @@ const mockOrders = [
       email: 'jane@example.com',
       name: 'Jane Smith',
       country: 'GB',
+      totalSpent: 0,
     },
     EmergencyProfile: null,
     Payment: [],
-    paymentInfo: {
-      totalAmount: 0,
-      hasValidPayment: false,
-      latestStatus: null,
-    },
   },
   {
     id: 'order-3',
@@ -99,7 +126,7 @@ const mockOrders = [
     flagCode: '🇨🇦',
     stickerColor: '#ffffff',
     textColor: '#000000',
-    status: 'ACTIVE',
+    status: 'ORDERED',
     displayStatus: 'ORDERED',
     displayDescription: 'Pedido creado',
     displaySecondaryStatuses: [],
@@ -109,14 +136,10 @@ const mockOrders = [
       email: 'bob@example.com',
       name: 'Bob Wilson',
       country: 'CA',
+      totalSpent: 0,
     },
     EmergencyProfile: null,
     Payment: [],
-    paymentInfo: {
-      totalAmount: 0,
-      hasValidPayment: false,
-      latestStatus: null,
-    },
   },
 ];
 
@@ -148,21 +171,36 @@ describe('Orders Page', () => {
     ).toBeInTheDocument();
   });
 
-  it('displays main page elements', async () => {
+  it('displays orders table with correct data', async () => {
     const page = await OrdersPage();
     render(page);
 
-    expect(screen.getByText('Total')).toBeInTheDocument();
-    expect(screen.getByText('Creadas')).toBeInTheDocument();
+    // Check table headers
+    expect(screen.getByText('Usuario')).toBeInTheDocument();
+    expect(screen.getByText('Estado')).toBeInTheDocument();
+    expect(screen.getByText('País')).toBeInTheDocument();
+    expect(screen.getByText('Contacto')).toBeInTheDocument();
+    expect(screen.getByText('Pago')).toBeInTheDocument();
+    expect(screen.getByText('Fecha')).toBeInTheDocument();
+    expect(screen.getByText('Acciones')).toBeInTheDocument();
 
-    // The page shows statistics cards with numbers
-    // Based on the current mock data:
-    // - Total: 3 orders
-    // - Creadas (ORDERED): 2 orders
-    // - Pagadas (PAID): 1 order
-    expect(screen.getByText('3')).toBeInTheDocument(); // Total
-    expect(screen.getByText('2')).toBeInTheDocument(); // Creadas
-    expect(screen.getByText('1')).toBeInTheDocument(); // Pagadas
+    // Check order data
+    expect(screen.getByText('John Doe')).toBeInTheDocument();
+    expect(screen.getByText('john@example.com')).toBeInTheDocument();
+    expect(screen.getByText('Jane Smith')).toBeInTheDocument();
+    expect(screen.getByText('jane@example.com')).toBeInTheDocument();
+    expect(screen.getByText('Bob Wilson')).toBeInTheDocument();
+    expect(screen.getByText('bob@example.com')).toBeInTheDocument();
+
+    // Check status - use getAllByText for multiple elements
+    const createdStatuses = screen.getAllByText('Creada');
+    expect(createdStatuses).toHaveLength(2);
+    expect(screen.getByText('Pagada')).toBeInTheDocument();
+
+    // Check countries
+    expect(screen.getByText('US')).toBeInTheDocument();
+    expect(screen.getByText('GB')).toBeInTheDocument();
+    expect(screen.getByText('CA')).toBeInTheDocument();
   });
 
   it('calls prisma with correct parameters', async () => {
@@ -209,6 +247,7 @@ describe('Orders Page', () => {
             createdAt: true,
             id: true,
             status: true,
+            reference: true,
           },
         },
       },
