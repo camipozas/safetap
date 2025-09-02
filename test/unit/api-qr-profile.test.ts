@@ -250,7 +250,7 @@ describe('/api/qr/profile/[profileId]', () => {
             Payment: {
               some: {
                 status: {
-                  in: ['TRANSFER_PAYMENT', 'VERIFIED', 'PAID', 'TRANSFERRED'],
+                  in: ['VERIFIED', 'PAID'],
                 },
               },
             },

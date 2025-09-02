@@ -39,7 +39,7 @@ const mockOrder = {
   payments: [
     {
       id: 'payment-workflow-1',
-      status: 'TRANSFER_PAYMENT',
+      status: 'VERIFIED',
       amount: 6990, // $6,990 CLP
       currency: 'CLP',
       createdAt: new Date('2024-01-01'),
@@ -130,7 +130,8 @@ describe('Orders Workflow Integration', () => {
     const { container } = render(<OrdersTable orders={[orderOrdered]} />);
 
     const statusElement = container.querySelector('.inline-block.px-2.py-1');
-    expect(statusElement).toHaveClass('bg-slate-100');
-    expect(statusElement).toHaveClass('text-slate-800');
+    // Since the order has a VERIFIED payment, it should show as PAID with emerald colors
+    expect(statusElement).toHaveClass('bg-emerald-100');
+    expect(statusElement).toHaveClass('text-emerald-800');
   });
 });

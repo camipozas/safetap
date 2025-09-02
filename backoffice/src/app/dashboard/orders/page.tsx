@@ -116,6 +116,17 @@ export default async function OrdersPage() {
 
   const orders = await getOrdersData();
 
+  // Calculate payment statistics from all orders
+  const allPayments = orders.flatMap((order) => order.payments);
+  const paymentStats = {
+    total: allPayments.length,
+    pending: allPayments.filter((p) => p.status === 'PENDING').length,
+    verified: allPayments.filter((p) => p.status === 'VERIFIED').length,
+    paid: allPayments.filter((p) => p.status === 'PAID').length,
+    rejected: allPayments.filter((p) => p.status === 'REJECTED').length,
+    cancelled: allPayments.filter((p) => p.status === 'CANCELLED').length,
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
@@ -123,6 +134,51 @@ export default async function OrdersPage() {
         <p className="text-gray-600 mt-2">
           Administra y supervisa todas las órdenes del sistema
         </p>
+      </div>
+
+      {/* Payment Statistics */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          Resumen de Pagos
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="bg-white rounded-lg border p-4 text-center">
+            <div className="text-2xl font-bold text-gray-900">
+              {paymentStats.total}
+            </div>
+            <div className="text-sm text-gray-600">Total Pagos</div>
+          </div>
+          <div className="bg-white rounded-lg border p-4 text-center">
+            <div className="text-2xl font-bold text-yellow-600">
+              {paymentStats.pending}
+            </div>
+            <div className="text-sm text-gray-600">Pendientes</div>
+          </div>
+          <div className="bg-white rounded-lg border p-4 text-center">
+            <div className="text-2xl font-bold text-blue-600">
+              {paymentStats.verified}
+            </div>
+            <div className="text-sm text-gray-600">Verificados</div>
+          </div>
+          <div className="bg-white rounded-lg border p-4 text-center">
+            <div className="text-2xl font-bold text-purple-600">
+              {paymentStats.paid}
+            </div>
+            <div className="text-sm text-gray-600">Pagados</div>
+          </div>
+          <div className="bg-white rounded-lg border p-4 text-center">
+            <div className="text-2xl font-bold text-red-600">
+              {paymentStats.rejected}
+            </div>
+            <div className="text-sm text-gray-600">Rechazados</div>
+          </div>
+          <div className="bg-white rounded-lg border p-4 text-center">
+            <div className="text-2xl font-bold text-gray-600">
+              {paymentStats.cancelled}
+            </div>
+            <div className="text-sm text-gray-600">Cancelados</div>
+          </div>
+        </div>
       </div>
 
       <Suspense fallback={<div>Cargando órdenes...</div>}>

@@ -15,10 +15,10 @@ export const ORDER_STATUS = {
 // Payment status constants
 export const PAYMENT_STATUS = {
   PENDING: 'PENDING',
-  PAID: 'PAID',
   VERIFIED: 'VERIFIED',
-  TRANSFERRED: 'TRANSFERRED',
   REJECTED: 'REJECTED',
+  PAID: 'PAID',
+  CANCELLED: 'CANCELLED',
 } as const;
 
 // Transition direction constants
@@ -61,7 +61,6 @@ export function analyzePayments(payments: Order['payments']): PaymentInfo {
   const confirmedStatuses: PaymentStatus[] = [
     PAYMENT_STATUS.PAID,
     PAYMENT_STATUS.VERIFIED,
-    PAYMENT_STATUS.TRANSFERRED,
   ];
 
   const hasConfirmedPayment = payments.some((p) =>
@@ -89,6 +88,35 @@ export function analyzePayments(payments: Order['payments']): PaymentInfo {
     latestStatus: (latestPayment?.status as PaymentStatus) || null,
     paymentCount: payments.length,
   };
+}
+
+/**
+ * Synchronizes payment statuses when order status changes
+ * This ensures consistency between order and payment states
+ */
+export function getPaymentStatusForOrderStatus(
+  orderStatus: OrderStatus
+): PaymentStatus | null {
+  switch (orderStatus) {
+    case ORDER_STATUS.ORDERED:
+      return PAYMENT_STATUS.PENDING;
+    case ORDER_STATUS.PAID:
+      return PAYMENT_STATUS.VERIFIED;
+    case ORDER_STATUS.PRINTING:
+      return PAYMENT_STATUS.PAID;
+    case ORDER_STATUS.SHIPPED:
+      return PAYMENT_STATUS.PAID;
+    case ORDER_STATUS.ACTIVE:
+      return PAYMENT_STATUS.PAID;
+    case ORDER_STATUS.REJECTED:
+      return PAYMENT_STATUS.REJECTED;
+    case ORDER_STATUS.CANCELLED:
+      return PAYMENT_STATUS.CANCELLED;
+    case ORDER_STATUS.LOST:
+      return PAYMENT_STATUS.PAID; // Keep payment as paid even if sticker is lost
+    default:
+      return null;
+  }
 }
 
 /**

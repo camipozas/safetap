@@ -23,6 +23,23 @@ vi.mock('@/lib/prisma', () => ({
 
 // Mock the order helpers
 vi.mock('@/lib/order-helpers', () => ({
+  PAYMENT_STATUS: {
+    PENDING: 'PENDING',
+    VERIFIED: 'VERIFIED',
+    PAID: 'PAID',
+    REJECTED: 'REJECTED',
+    CANCELLED: 'CANCELLED',
+  },
+  ORDER_STATUS: {
+    ORDERED: 'ORDERED',
+    PAID: 'PAID',
+    PRINTING: 'PRINTING',
+    SHIPPED: 'SHIPPED',
+    ACTIVE: 'ACTIVE',
+    LOST: 'LOST',
+    REJECTED: 'REJECTED',
+    CANCELLED: 'CANCELLED',
+  },
   analyzePayments: vi.fn((payments) => {
     if (!payments || payments.length === 0) {
       return {

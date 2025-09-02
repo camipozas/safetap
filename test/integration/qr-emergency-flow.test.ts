@@ -113,7 +113,7 @@ describe('QR Emergency Profile Integration Flow', () => {
         payment: {
           update: vi.fn().mockResolvedValue({
             ...mockPayment,
-            status: 'TRANSFER_PAYMENT',
+            status: 'VERIFIED',
             receivedAt: new Date(),
           }),
         },
@@ -149,7 +149,7 @@ describe('QR Emergency Profile Integration Flow', () => {
     const verificationData = await response.json();
 
     expect(response.status).toBe(200);
-    expect(verificationData.payment.status).toBe('TRANSFER_PAYMENT');
+    expect(verificationData.payment.status).toBe('VERIFIED');
 
     // Step 3: Profile access via QR
     const activeProfile = {
@@ -158,7 +158,7 @@ describe('QR Emergency Profile Integration Flow', () => {
       Sticker: {
         ...mockSticker,
         status: 'ACTIVE',
-        Payment: [{ status: 'TRANSFER_PAYMENT' }],
+        Payment: [{ status: 'VERIFIED' }],
       },
       User: mockUser,
     };

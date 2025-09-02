@@ -22,7 +22,7 @@ export async function GET(req: Request, { params }: ProfileUrlParams) {
           Payment: {
             some: {
               status: {
-                in: ['TRANSFER_PAYMENT', 'VERIFIED', 'PAID', 'TRANSFERRED'],
+                in: ['VERIFIED', 'PAID'],
               },
             },
           },
