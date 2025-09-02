@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import BankAccountInfo from '@/components/BankAccountInfo';
 import DiscountCodeInput from '@/components/DiscountCodeInput';
 import { StickerCustomization } from '@/components/StickerCustomizerNew';
 import { getColorPresetById } from '@/lib/color-presets';
@@ -286,6 +287,9 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
           </div>
         </div>
       </div>
+
+      {/* Datos Bancarios */}
+      <BankAccountInfo />
 
       {/* Server error */}
       {serverError && (

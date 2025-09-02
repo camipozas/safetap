@@ -1,3 +1,5 @@
+import BankAccountInfo from '@/components/BankAccountInfo';
+
 export default function TermsPage() {
   return (
     <div className="max-w-4xl mx-auto py-8">
@@ -246,6 +248,19 @@ export default function TermsPage() {
                   <strong>Dirección:</strong> Santiago, Chile
                 </p>
               </div>
+            </div>
+          </section>
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold text-slate-900 mb-4">
+              13. Información Bancaria
+            </h2>
+            <div className="text-slate-700">
+              <p className="mb-4">
+                Para realizar pagos por transferencia bancaria, utiliza los
+                siguientes datos:
+              </p>
+              <BankAccountInfo />
             </div>
           </section>
 

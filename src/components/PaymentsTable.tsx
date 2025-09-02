@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
+import BankAccountInfo from './BankAccountInfo';
+
 interface Payment {
   id: string;
   fecha: string;
@@ -166,6 +168,13 @@ export function PaymentsTable() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Mostrar información bancaria si hay pagos pendientes */}
+      {payments.some((payment) => payment.estado === 'PENDING') && (
+        <div className="mt-6">
+          <BankAccountInfo />
         </div>
       )}
     </div>

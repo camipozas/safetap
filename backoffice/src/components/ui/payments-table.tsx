@@ -17,6 +17,7 @@ type Payment = {
     | 'CANCELLED';
   amount: number;
   currency: string;
+  reference?: string | null; // Referencia de pago
   createdAt: Date;
   updatedAt: Date;
   sticker: {
@@ -201,6 +202,9 @@ export default function PaymentsTable({ payments }: PaymentsTableProps) {
                   Monto
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Referencia
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Estado
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -233,6 +237,36 @@ export default function PaymentsTable({ payments }: PaymentsTableProps) {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {formatCurrency(payment.amount, payment.currency)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm font-mono text-gray-900 bg-gray-100 px-2 py-1 rounded">
+                        {payment.reference || 'N/A'}
+                      </span>
+                      {payment.reference && (
+                        <button
+                          onClick={() =>
+                            navigator.clipboard.writeText(payment.reference!)
+                          }
+                          className="text-gray-500 hover:text-gray-700 transition-colors"
+                          title="Copiar referencia"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                            />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span

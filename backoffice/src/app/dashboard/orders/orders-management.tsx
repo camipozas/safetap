@@ -1,627 +1,622 @@
 'use client';
 
-import {
-  ChevronDown,
-  Download,
-  Edit,
-  Eye,
-  Filter,
-  MoreHorizontal,
-  Search,
-} from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { Badge } from '../../../components/ui/badge';
-import { Button } from '../../../components/ui/button';
-import { Card } from '../../../components/ui/card';
-import { formatCLPAmount } from '../../../lib/utils';
+import { Button } from '@/components/ui/button';
+import { formatDate } from '@/lib/utils';
+import { Order } from '@/types/dashboard';
+import { Edit, Eye } from 'lucide-react';
+import { useState } from 'react';
 
-interface Order {
-  id: string;
-  status: string;
-  displayStatus: string;
-  displayDescription: string;
-  displaySecondaryStatuses: string[];
-  createdAt: Date;
-  owner: {
-    id: string;
-    email: string;
-    name: string | null;
-    country: string | null;
-  };
-  profile: {
-    bloodType: string | null;
-    allergies: string[] | null;
-    conditions: string[] | null;
-    medications: string[] | null;
-    notes: string | null;
-    contacts: Array<{
-      name: string;
-      phone: string;
-      relation: string;
-    }>;
-  } | null;
-  payments: Array<{
-    id: string;
-    status: string;
-    amount: number;
-    currency: string;
-    createdAt: Date;
-  }>;
-  paymentInfo: {
-    totalAmount: number;
-    currency: string;
-    hasConfirmedPayment: boolean;
-    hasPendingPayment: boolean;
-    hasRejectedPayment: boolean;
-    latestStatus: string | null;
-    paymentCount: number;
-  };
-}
+// Import StickerPreview from local components
+import StickerPreview from '../../../components/StickerPreview';
 
 interface OrdersManagementProps {
   orders: Order[];
 }
 
-const statusColors = {
-  ORDERED: 'bg-blue-100 text-blue-800',
-  PAID: 'bg-green-100 text-green-800',
-  PRINTING: 'bg-purple-100 text-purple-800',
-  SHIPPED: 'bg-indigo-100 text-indigo-800',
-  ACTIVE: 'bg-emerald-100 text-emerald-800',
-  LOST: 'bg-red-100 text-red-800',
-  REJECTED: 'bg-orange-100 text-orange-800',
-  CANCELLED: 'bg-gray-100 text-gray-800',
-};
-
-const statusLabels = {
-  ORDERED: 'Creada',
-  PAID: 'Pagada',
-  PRINTING: 'Imprimiendo',
-  SHIPPED: 'Enviada',
-  ACTIVE: 'Activa',
-  LOST: 'Perdida',
-  REJECTED: 'Rechazada',
-  CANCELLED: 'Cancelada',
-};
-
 export default function OrdersManagement({ orders }: OrdersManagementProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
-  const [countryFilter, setCountryFilter] = useState('ALL');
-  const [showFilters, setShowFilters] = useState(false);
-
-  // Calculate statistics
-  const stats = useMemo(() => {
-    return {
-      total: orders.length,
-      ordered: orders.filter((o) => o.displayStatus === 'ORDERED').length,
-      paid: orders.filter((o) => o.displayStatus === 'PAID').length,
-      printing: orders.filter((o) => o.displayStatus === 'PRINTING').length,
-      shipped: orders.filter((o) => o.displayStatus === 'SHIPPED').length,
-      active: orders.filter((o) => o.displayStatus === 'ACTIVE').length,
-      lost: orders.filter((o) => o.displayStatus === 'LOST').length,
-      rejected: orders.filter((o) => o.displayStatus === 'REJECTED').length,
-      cancelled: orders.filter((o) => o.displayStatus === 'CANCELLED').length,
-    };
-  }, [orders]);
-
-  // Filter orders
-  const filteredOrders = useMemo(() => {
-    return orders.filter((order) => {
-      // Search filter
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        const matchesSearch =
-          order.owner.email.toLowerCase().includes(searchLower) ||
-          (order.owner.name &&
-            order.owner.name.toLowerCase().includes(searchLower)) ||
-          order.id.toLowerCase().includes(searchLower);
-
-        if (!matchesSearch) return false;
-      }
-
-      // Status filter
-      if (statusFilter !== 'ALL' && order.displayStatus !== statusFilter) {
-        return false;
-      }
-
-      // Country filter
-      if (countryFilter !== 'ALL' && order.owner.country !== countryFilter) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [orders, searchTerm, statusFilter, countryFilter]);
-
-  // Get unique countries for filter
-  const countries = useMemo(() => {
-    const countrySet = new Set<string>();
-    orders.forEach((o) => {
-      if (o.owner.country) {
-        countrySet.add(o.owner.country);
-      }
-    });
-    return Array.from(countrySet).sort();
-  }, [orders]);
-
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('es-CL', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(date));
-  };
-
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const handleStatusTransition = async (orderId: string, newStatus: string) => {
+    setIsUpdating(orderId);
     try {
-      setIsUpdating(orderId);
-
-      const response = await fetch(`/api/admin/orders/${orderId}/transition`, {
+      const response = await fetch(`/api/admin/orders/${orderId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          newStatus,
-          updatePayment: newStatus === 'PAID' || newStatus === 'REJECTED',
-        }),
+        body: JSON.stringify({ status: newStatus }),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        alert(`Error: ${error.error}`);
-        return;
+        throw new Error('Error al actualizar el estado');
       }
 
-      const result = await response.json();
-      alert(`✅ ${result.message}`);
-
-      // Recargar la página para mostrar los cambios
+      // Reload the page to reflect changes
       window.location.reload();
     } catch (error) {
-      console.error('Error al actualizar estado:', error);
+      console.error('Error al actualizar orden:', error);
       alert('Error al actualizar el estado de la orden');
     } finally {
       setIsUpdating(null);
     }
   };
 
+  const handleViewOrder = (order: Order) => {
+    setSelectedOrder(order);
+    setShowPreview(true);
+  };
+
+  const handleEditOrder = (order: Order) => {
+    // Redirigir a la página de edición del usuario
+    window.location.href = `/dashboard/users/${order.owner.id}/edit`;
+  };
+
+  const handleDownloadSVG = async (order: Order) => {
+    try {
+      // Capturar solo el sticker sin sombras ni efectos del modal
+      const stickerElement = document.querySelector(
+        '[data-testid="sticker-preview"]'
+      ) as HTMLElement;
+      if (!stickerElement) {
+        alert('No se pudo encontrar el sticker para descargar');
+        return;
+      }
+
+      // Esperar a que las imágenes se carguen completamente
+      const images = stickerElement.querySelectorAll('img');
+      await Promise.all(
+        Array.from(images).map((img) => {
+          if (img.complete) return Promise.resolve();
+          return new Promise((resolve) => {
+            img.onload = () => resolve(undefined);
+            img.onerror = () => resolve(undefined);
+          });
+        })
+      );
+
+      const htmlToImage = await import('html-to-image');
+
+      // Generar SVG con alta resolución
+      const svgDataUrl = await htmlToImage.toSvg(stickerElement, {
+        width: stickerElement.offsetWidth * 8,
+        height: stickerElement.offsetHeight * 8,
+        style: {
+          transform: 'scale(8)',
+          transformOrigin: 'top left',
+        },
+        pixelRatio: 2,
+        quality: 1,
+        backgroundColor: 'transparent',
+        filter: (_node) => {
+          // Incluir todos los nodos
+          return true;
+        },
+      });
+
+      // Descargar directamente el data URL como SVG
+      const link = document.createElement('a');
+      link.href = svgDataUrl;
+      link.download = `sticker-${order.id}.svg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error generando SVG:', error);
+      alert('Error al generar el archivo SVG');
+    }
+  };
+
+  const handleDownloadPNG = async (order: Order) => {
+    try {
+      // Capturar solo el sticker sin sombras ni efectos del modal
+      const stickerElement = document.querySelector(
+        '[data-testid="sticker-preview"]'
+      ) as HTMLElement;
+      if (!stickerElement) {
+        alert('No se pudo encontrar el sticker para descargar');
+        return;
+      }
+
+      // Esperar a que las imágenes se carguen completamente
+      const images = stickerElement.querySelectorAll('img');
+      await Promise.all(
+        Array.from(images).map((img) => {
+          if (img.complete) return Promise.resolve();
+          return new Promise((resolve) => {
+            img.onload = () => resolve(undefined);
+            img.onerror = () => resolve(undefined);
+          });
+        })
+      );
+
+      const htmlToImage = await import('html-to-image');
+
+      // Generar PNG con máxima resolución
+      const dataUrl = await htmlToImage.toPng(stickerElement, {
+        width: stickerElement.offsetWidth * 10,
+        height: stickerElement.offsetHeight * 10,
+        style: {
+          transform: 'scale(10)',
+          transformOrigin: 'top left',
+        },
+        pixelRatio: 4, // Incrementar pixelRatio para mejor calidad del QR
+        quality: 1,
+        backgroundColor: 'transparent',
+        canvasWidth: stickerElement.offsetWidth * 10,
+        canvasHeight: stickerElement.offsetHeight * 10,
+        filter: (_node) => {
+          // Incluir todos los nodos
+          return true;
+        },
+      });
+
+      // Convertir data URL a blob
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      downloadFile(blob, `sticker-${order.id}.png`, 'image/png');
+    } catch (error) {
+      console.error('Error generando PNG:', error);
+      alert('Error al generar el archivo PNG');
+    }
+  };
+
+  const downloadFile = (
+    content: string | Blob,
+    filename: string,
+    mimeType: string
+  ) => {
+    const blob =
+      typeof content === 'string'
+        ? new Blob([content], { type: mimeType })
+        : content;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6">
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-        <Card className="p-4">
-          <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
-          <div className="text-sm text-gray-600">Total</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-2xl font-bold text-blue-600">
-            {stats.ordered}
-          </div>
-          <div className="text-sm text-gray-600">Creadas</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-2xl font-bold text-green-600">{stats.paid}</div>
-          <div className="text-sm text-gray-600">Pagadas</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-2xl font-bold text-purple-600">
-            {stats.printing}
-          </div>
-          <div className="text-sm text-gray-600">Imprimiendo</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-2xl font-bold text-indigo-600">
-            {stats.shipped}
-          </div>
-          <div className="text-sm text-gray-600">Enviadas</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-2xl font-bold text-emerald-600">
-            {stats.active}
-          </div>
-          <div className="text-sm text-gray-600">Activas</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-2xl font-bold text-red-600">{stats.lost}</div>
-          <div className="text-sm text-gray-600">Perdidas</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-2xl font-bold text-orange-600">
-            {stats.rejected}
-          </div>
-          <div className="text-sm text-gray-600">Rechazadas</div>
-        </Card>
+      {/* Tabla de órdenes */}
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Usuario
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Estado
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                País
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Contacto
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Pago
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Fecha
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Acciones
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {orders.map((order) => (
+              <tr key={order.id}>
+                {/* Usuario */}
+                <td className="py-4 px-6">
+                  <div className="flex items-center">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {order.owner.name || 'Sin nombre'}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {order.owner.email}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                {/* Estado */}
+                <td className="py-4 px-6">
+                  <div className="flex flex-col gap-1">
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.displayStatus || order.status)}`}
+                    >
+                      {getStatusLabel(order.displayStatus || order.status)}
+                    </span>
+                  </div>
+                </td>
+
+                {/* País */}
+                <td className="py-4 px-6">
+                  <div className="text-sm text-gray-900">
+                    {order.owner.country}
+                  </div>
+                </td>
+
+                {/* Contacto */}
+                <td className="py-4 px-6">
+                  <div className="text-sm text-gray-900">
+                    {order.profile?.contacts &&
+                    order.profile.contacts.length > 0 ? (
+                      <div>
+                        <div>{order.profile.contacts[0].name}</div>
+                        <div className="text-gray-500">
+                          {order.profile.contacts[0].phone}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-gray-500">Sin contacto</span>
+                    )}
+                  </div>
+                </td>
+
+                {/* Pago */}
+                <td className="py-4 px-6">
+                  <div className="text-sm">
+                    <div className="font-medium text-gray-900">
+                      {order.payments.length > 0
+                        ? formatCurrency(
+                            order.payments[0].amount,
+                            order.payments[0].currency
+                          )
+                        : 'Sin pago'}
+                    </div>
+                    <div className="text-gray-500">
+                      {getPaymentStatus(order.payments)}
+                    </div>
+                    {order.payments.length > 0 &&
+                      order.payments[0].reference && (
+                        <div className="text-xs text-blue-600 font-mono mt-1">
+                          Ref: {order.payments[0].reference}
+                        </div>
+                      )}
+                  </div>
+                </td>
+
+                {/* Fecha */}
+                <td className="py-4 px-6">
+                  <div className="text-sm text-gray-500">
+                    {formatDate(order.createdAt)}
+                  </div>
+                </td>
+
+                {/* Acciones */}
+                <td className="py-4 px-6">
+                  <div className="flex items-center gap-2">
+                    {/* Botón Ver */}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleViewOrder(order)}
+                      title="Ver detalles"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+
+                    {/* Botón Editar Perfil */}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEditOrder(order)}
+                      title="Editar perfil del usuario"
+                      className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+
+                    {/* Botones de transición de estado */}
+                    {order.displayStatus === 'ORDERED' && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-green-600 border-green-200 hover:bg-green-50"
+                          onClick={() =>
+                            handleStatusTransition(order.id, 'PAID')
+                          }
+                          disabled={isUpdating === order.id}
+                        >
+                          {isUpdating === order.id
+                            ? 'Actualizando...'
+                            : 'Marcar Pagada'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-orange-600 border-orange-200 hover:bg-orange-50"
+                          onClick={() =>
+                            handleStatusTransition(order.id, 'REJECTED')
+                          }
+                          disabled={isUpdating === order.id}
+                        >
+                          {isUpdating === order.id
+                            ? 'Actualizando...'
+                            : 'Rechazar'}
+                        </Button>
+                      </>
+                    )}
+
+                    {order.displayStatus === 'PAID' && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                          onClick={() =>
+                            handleStatusTransition(order.id, 'PRINTING')
+                          }
+                          disabled={isUpdating === order.id}
+                        >
+                          {isUpdating === order.id
+                            ? 'Actualizando...'
+                            : 'Imprimir'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                          onClick={() =>
+                            handleStatusTransition(order.id, 'ORDERED')
+                          }
+                          disabled={isUpdating === order.id}
+                        >
+                          {isUpdating === order.id
+                            ? 'Actualizando...'
+                            : 'Volver a Creada'}
+                        </Button>
+                      </>
+                    )}
+
+                    {order.displayStatus === 'PRINTING' && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                          onClick={() =>
+                            handleStatusTransition(order.id, 'SHIPPED')
+                          }
+                          disabled={isUpdating === order.id}
+                        >
+                          {isUpdating === order.id
+                            ? 'Actualizando...'
+                            : 'Enviar'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-green-600 border-green-200 hover:bg-green-50"
+                          onClick={() =>
+                            handleStatusTransition(order.id, 'PAID')
+                          }
+                          disabled={isUpdating === order.id}
+                        >
+                          {isUpdating === order.id
+                            ? 'Actualizando...'
+                            : 'Volver a Pagada'}
+                        </Button>
+                      </>
+                    )}
+
+                    {order.displayStatus === 'SHIPPED' && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-green-600 border-green-200 hover:bg-green-50"
+                          onClick={() =>
+                            handleStatusTransition(order.id, 'ACTIVE')
+                          }
+                          disabled={isUpdating === order.id}
+                        >
+                          {isUpdating === order.id
+                            ? 'Actualizando...'
+                            : 'Activar'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                          onClick={() =>
+                            handleStatusTransition(order.id, 'PRINTING')
+                          }
+                          disabled={isUpdating === order.id}
+                        >
+                          {isUpdating === order.id
+                            ? 'Actualizando...'
+                            : 'Volver a Imprimiendo'}
+                        </Button>
+                      </>
+                    )}
+
+                    {order.displayStatus === 'ACTIVE' && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 border-red-200 hover:bg-red-50"
+                          onClick={() =>
+                            handleStatusTransition(order.id, 'LOST')
+                          }
+                          disabled={isUpdating === order.id}
+                        >
+                          {isUpdating === order.id
+                            ? 'Actualizando...'
+                            : 'Marcar Perdida'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                          onClick={() =>
+                            handleStatusTransition(order.id, 'SHIPPED')
+                          }
+                          disabled={isUpdating === order.id}
+                        >
+                          {isUpdating === order.id
+                            ? 'Actualizando...'
+                            : 'Volver a Enviada'}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {/* Search and Filters */}
-      <Card className="p-6">
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Search */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <input
-              type="text"
-              placeholder="Buscar por email, nombre o ID..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
+      {/* Modal de vista previa */}
+      {showPreview && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">
+                Vista previa del sticker
+              </h3>
+              <Button variant="outline" onClick={() => setShowPreview(false)}>
+                Cerrar
+              </Button>
+            </div>
 
-          {/* Filter Toggle */}
-          <Button
-            variant="outline"
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2"
-          >
-            <Filter className="h-4 w-4" />
-            Filtros
-            <ChevronDown
-              className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`}
-            />
-          </Button>
-
-          {/* Export */}
-          <Button variant="outline" className="flex items-center gap-2">
-            <Download className="h-4 w-4" />
-            Exportar
-          </Button>
-        </div>
-
-        {/* Filters Panel */}
-        {showFilters && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Status Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Estado
-                </label>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="ALL">Todos los estados</option>
-                  <option value="ORDERED">Creadas</option>
-                  <option value="PAID">Pagadas</option>
-                  <option value="PRINTING">Imprimiendo</option>
-                  <option value="SHIPPED">Enviadas</option>
-                  <option value="ACTIVE">Activas</option>
-                  <option value="LOST">Perdidas</option>
-                  <option value="REJECTED">Rechazadas</option>
-                  <option value="CANCELLED">Canceladas</option>
-                </select>
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-medium mb-2">Información del cliente</h4>
+                  <p>
+                    <strong>Nombre:</strong> {selectedOrder.owner.name}
+                  </p>
+                  <p>
+                    <strong>Email:</strong> {selectedOrder.owner.email}
+                  </p>
+                  <p>
+                    <strong>País:</strong> {selectedOrder.owner.country}
+                  </p>
+                  {selectedOrder.payments.length > 0 &&
+                    selectedOrder.payments[0].reference && (
+                      <p>
+                        <strong>Referencia:</strong>
+                        <span className="font-mono text-sm text-blue-600 ml-1">
+                          {selectedOrder.payments[0].reference}
+                        </span>
+                      </p>
+                    )}
+                </div>
+                <div>
+                  <h4 className="font-medium mb-2">Detalles del sticker</h4>
+                  <p>
+                    <strong>Nombre en sticker:</strong>{' '}
+                    {selectedOrder.nameOnSticker}
+                  </p>
+                  <p>
+                    <strong>Bandera:</strong> {selectedOrder.flagCode}
+                  </p>
+                  <p>
+                    <strong>Estado:</strong>{' '}
+                    {getStatusLabel(
+                      selectedOrder.displayStatus || selectedOrder.status
+                    )}
+                  </p>
+                </div>
               </div>
 
-              {/* Country Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  País
-                </label>
-                <select
-                  value={countryFilter}
-                  onChange={(e) => setCountryFilter(e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              <div className="border-t pt-4">
+                <h4 className="font-medium mb-4">Vista previa del sticker</h4>
+                <div
+                  className="flex justify-center mb-4"
+                  id="sticker-preview-for-download"
                 >
-                  <option value="ALL">Todos los países</option>
-                  {countries.map((country) => (
-                    <option key={country} value={country}>
-                      {country}
-                    </option>
-                  ))}
-                </select>
+                  <StickerPreview
+                    name={selectedOrder.nameOnSticker}
+                    flagCode={selectedOrder.flagCode}
+                    stickerColor={selectedOrder.stickerColor}
+                    textColor={selectedOrder.textColor}
+                    stickerId={selectedOrder.id}
+                    serial={selectedOrder.serial}
+                    showRealQR={true}
+                  />
+                </div>
+
+                <h4 className="font-medium mb-2">Acciones disponibles</h4>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => handleDownloadSVG(selectedOrder)}
+                  >
+                    Descargar SVG
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => handleDownloadPNG(selectedOrder)}
+                  >
+                    Descargar PNG
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
-        )}
-      </Card>
-
-      {/* Orders Table */}
-      <Card>
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">
-              Órdenes ({filteredOrders.length} de {orders.length})
-            </h2>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">
-                    Usuario
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">
-                    Estado
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">
-                    País
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">
-                    Contacto
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">
-                    Pago
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">
-                    Fecha
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredOrders.map((order) => (
-                  <tr
-                    key={order.id}
-                    className="border-b border-gray-100 hover:bg-gray-50"
-                  >
-                    {/* Usuario */}
-                    <td className="py-4 px-4">
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {order.owner.name ||
-                            (order.profile?.contacts &&
-                            order.profile.contacts.length > 0
-                              ? order.profile.contacts[0].name
-                              : 'Sin nombre')}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {order.owner.email}
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Estado */}
-                    <td className="py-4 px-4">
-                      <div className="space-y-1">
-                        <Badge
-                          className={
-                            statusColors[
-                              order.displayStatus as keyof typeof statusColors
-                            ] || 'bg-gray-100 text-gray-800'
-                          }
-                        >
-                          {statusLabels[
-                            order.displayStatus as keyof typeof statusLabels
-                          ] || order.displayStatus}
-                        </Badge>
-                        {order.displaySecondaryStatuses.map(
-                          (secondaryStatus, index) => (
-                            <Badge
-                              key={index}
-                              variant="outline"
-                              className="text-xs"
-                            >
-                              {statusLabels[
-                                secondaryStatus as keyof typeof statusLabels
-                              ] || secondaryStatus}
-                            </Badge>
-                          )
-                        )}
-                      </div>
-                      {order.displayDescription && (
-                        <div className="text-xs text-gray-500 mt-1">
-                          {order.displayDescription}
-                        </div>
-                      )}
-                    </td>
-
-                    {/* País */}
-                    <td className="py-4 px-4">
-                      <div className="text-sm">
-                        {order.owner.country || 'Sin país'}
-                      </div>
-                    </td>
-
-                    {/* Contacto */}
-                    <td className="py-4 px-4">
-                      {order.profile?.contacts &&
-                      order.profile.contacts.length > 0 ? (
-                        <div className="text-sm">
-                          <div className="font-medium">
-                            {order.profile.contacts[0].name}
-                          </div>
-                          <div className="text-gray-500">
-                            {order.profile.contacts[0].phone}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-sm text-gray-500">
-                          Sin contacto
-                        </div>
-                      )}
-                    </td>
-
-                    {/* Pago */}
-                    <td className="py-4 px-4">
-                      <div className="text-sm">
-                        <div className="font-medium">
-                          {formatCLPAmount(order.paymentInfo.totalAmount)}
-                        </div>
-                        <div className="text-gray-500">
-                          {order.paymentInfo.latestStatus === 'PENDING' &&
-                            'Pendiente'}
-                          {order.paymentInfo.latestStatus === 'VERIFIED' &&
-                            'Verificado'}
-                          {order.paymentInfo.latestStatus === 'REJECTED' &&
-                            'Rechazado'}
-                          {order.paymentInfo.latestStatus === 'CANCELLED' &&
-                            'Cancelado'}
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Fecha */}
-                    <td className="py-4 px-4">
-                      <div className="text-sm text-gray-500">
-                        {formatDate(order.createdAt)}
-                      </div>
-                    </td>
-
-                    {/* Acciones */}
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-
-                        {/* Botones de transición de estado */}
-                        {order.displayStatus === 'ORDERED' && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-green-600 border-green-200 hover:bg-green-50"
-                              onClick={() =>
-                                handleStatusTransition(order.id, 'PAID')
-                              }
-                              disabled={isUpdating === order.id}
-                            >
-                              {isUpdating === order.id
-                                ? 'Actualizando...'
-                                : 'Marcar Pagada'}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-orange-600 border-orange-200 hover:bg-orange-50"
-                              onClick={() =>
-                                handleStatusTransition(order.id, 'REJECTED')
-                              }
-                              disabled={isUpdating === order.id}
-                            >
-                              {isUpdating === order.id
-                                ? 'Actualizando...'
-                                : 'Rechazar'}
-                            </Button>
-                          </>
-                        )}
-
-                        {order.displayStatus === 'PAID' && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-purple-600 border-purple-200 hover:bg-purple-50"
-                              onClick={() =>
-                                handleStatusTransition(order.id, 'PRINTING')
-                              }
-                              disabled={isUpdating === order.id}
-                            >
-                              {isUpdating === order.id
-                                ? 'Actualizando...'
-                                : 'Imprimir'}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                              onClick={() =>
-                                handleStatusTransition(order.id, 'ORDERED')
-                              }
-                              disabled={isUpdating === order.id}
-                            >
-                              {isUpdating === order.id
-                                ? 'Actualizando...'
-                                : 'Volver a Creada'}
-                            </Button>
-                          </>
-                        )}
-
-                        {order.displayStatus === 'PRINTING' && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
-                              onClick={() =>
-                                handleStatusTransition(order.id, 'SHIPPED')
-                              }
-                              disabled={isUpdating === order.id}
-                            >
-                              {isUpdating === order.id
-                                ? 'Actualizando...'
-                                : 'Enviar'}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-green-600 border-green-200 hover:bg-green-50"
-                              onClick={() =>
-                                handleStatusTransition(order.id, 'PAID')
-                              }
-                              disabled={isUpdating === order.id}
-                            >
-                              {isUpdating === order.id
-                                ? 'Actualizando...'
-                                : 'Volver a Pagada'}
-                            </Button>
-                          </>
-                        )}
-
-                        {order.displayStatus === 'SHIPPED' && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-emerald-600 border-emerald-200 hover:bg-emerald-50"
-                              onClick={() =>
-                                handleStatusTransition(order.id, 'ACTIVE')
-                              }
-                              disabled={isUpdating === order.id}
-                            >
-                              {isUpdating === order.id
-                                ? 'Actualizando...'
-                                : 'Activar'}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-red-600 border-red-200 hover:bg-red-50"
-                              onClick={() =>
-                                handleStatusTransition(order.id, 'LOST')
-                              }
-                              disabled={isUpdating === order.id}
-                            >
-                              {isUpdating === order.id
-                                ? 'Actualizando...'
-                                : 'Marcar Perdida'}
-                            </Button>
-                          </>
-                        )}
-
-                        <Button size="sm" variant="outline">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {filteredOrders.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                No se encontraron órdenes que coincidan con los filtros
-                aplicados.
-              </div>
-            )}
-          </div>
         </div>
-      </Card>
+      )}
     </div>
   );
+}
+
+function getStatusColor(status: string): string {
+  const colors = {
+    ORDERED: 'bg-blue-100 text-blue-800',
+    PAID: 'bg-green-100 text-green-800',
+    PRINTING: 'bg-purple-100 text-purple-800',
+    SHIPPED: 'bg-indigo-100 text-indigo-800',
+    ACTIVE: 'bg-gray-100 text-gray-800',
+    LOST: 'bg-red-100 text-red-800',
+    REJECTED: 'bg-orange-100 text-orange-800',
+    CANCELLED: 'bg-gray-100 text-gray-800',
+  };
+  return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+}
+
+function getStatusLabel(status: string): string {
+  const labels = {
+    ORDERED: 'Creada',
+    PAID: 'Pagada',
+    PRINTING: 'Imprimiendo',
+    SHIPPED: 'Enviada',
+    ACTIVE: 'Activa',
+    LOST: 'Perdida',
+    REJECTED: 'Rechazada',
+    CANCELLED: 'Cancelada',
+  };
+  return labels[status as keyof typeof labels] || status;
+}
+
+function getPaymentStatus(payments: { status: string }[]): string {
+  if (!payments || payments.length === 0) return 'Sin pagos';
+
+  const hasPaid = payments.some((p) => p.status === 'PAID');
+  const hasPending = payments.some((p) => p.status === 'PENDING');
+
+  if (hasPaid) return 'Pagado';
+  if (hasPending) return 'Pendiente';
+  return 'Sin pagos';
+}
+
+function formatCurrency(amount: number, currency: string): string {
+  return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: currency,
+  }).format(amount);
 }

@@ -27,7 +27,11 @@ test.describe('Discount Code System', () => {
     await page.waitForLoadState('networkidle');
 
     // Fill in the discount code input
-    await page.getByPlaceholder('Ingresa tu código').fill('INVALID123');
+    const input = page.getByPlaceholder('Ingresa tu código');
+    await input.fill('INVALID123');
+
+    // Wait a bit for the state to update
+    await page.waitForTimeout(100);
 
     // Wait for the button to be enabled (it's disabled when no code is entered)
     await expect(page.getByRole('button', { name: /aplicar/i })).toBeEnabled();

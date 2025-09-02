@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
 
+import BankAccountInfo from '@/components/BankAccountInfo';
 import { CountrySelect } from '@/components/CountrySelect';
 import DiscountCodeInput from '@/components/DiscountCodeInput';
 import { PRICE_PER_STICKER_CLP, formatCLPAmount } from '@/lib/constants';
@@ -247,6 +248,9 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
           </div>
         </div>
       </div>
+
+      {/* Datos Bancarios */}
+      <BankAccountInfo />
 
       {/* Error del servidor */}
       {serverError && (
