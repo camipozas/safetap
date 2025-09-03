@@ -1,6 +1,6 @@
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { canManageAdmins } from '@/types/shared';
+import { canManageAdmins, USER_ROLES } from '@/types/shared';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -11,7 +11,7 @@ export async function GET(_request: NextRequest) {
       const adminUsers = await prisma.user.findMany({
         where: {
           role: {
-            in: ['ADMIN', 'SUPER_ADMIN'],
+            in: [USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN],
           },
         },
         select: {
@@ -47,7 +47,7 @@ export async function GET(_request: NextRequest) {
     const adminUsers = await prisma.user.findMany({
       where: {
         role: {
-          in: ['ADMIN', 'SUPER_ADMIN'],
+          in: [USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN],
         },
       },
       select: {

@@ -10,6 +10,9 @@ vi.mock('@/lib/prisma', () => ({
     sticker: {
       update: vi.fn(),
     },
+    payment: {
+      updateMany: vi.fn(),
+    },
   },
 }));
 
@@ -43,6 +46,7 @@ describe('/api/admin/orders/[id] PUT', () => {
     };
 
     (prisma.sticker.update as any).mockResolvedValue(mockUpdatedSticker);
+    (prisma.payment.updateMany as any).mockResolvedValue({ count: 1 });
 
     const request = new NextRequest(
       'http://localhost:3001/api/admin/orders/test-id',
@@ -74,6 +78,194 @@ describe('/api/admin/orders/[id] PUT', () => {
             email: true,
           },
         },
+      },
+    });
+
+    // Verify that payments were also updated
+    expect(prisma.payment.updateMany).toHaveBeenCalledWith({
+      where: {
+        Sticker: {
+          id: 'test-id',
+        },
+      },
+      data: {
+        status: 'VERIFIED',
+      },
+    });
+  });
+
+  it('synchronizes payment status when order status changes to PRINTING', async () => {
+    const mockUpdatedSticker = {
+      id: 'test-id',
+      status: 'PRINTING',
+      owner: {
+        id: 'user-id',
+        name: 'Test User',
+        email: 'test@example.com',
+      },
+    };
+
+    (prisma.sticker.update as any).mockResolvedValue(mockUpdatedSticker);
+    (prisma.payment.updateMany as any).mockResolvedValue({ count: 2 });
+
+    const request = new NextRequest(
+      'http://localhost:3001/api/admin/orders/test-id',
+      {
+        method: 'PUT',
+        body: JSON.stringify({ status: 'PRINTING' }),
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+
+    const response = await PUT(request, {
+      params: Promise.resolve({ id: 'test-id' }),
+    });
+    const responseData = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(responseData.success).toBe(true);
+
+    // Verify that payments were updated to PAID status
+    expect(prisma.payment.updateMany).toHaveBeenCalledWith({
+      where: {
+        Sticker: {
+          id: 'test-id',
+        },
+      },
+      data: {
+        status: 'PAID',
+      },
+    });
+  });
+
+  it('synchronizes payment status when order status changes to REJECTED', async () => {
+    const mockUpdatedSticker = {
+      id: 'test-id',
+      status: 'REJECTED',
+      owner: {
+        id: 'user-id',
+        name: 'Test User',
+        email: 'test@example.com',
+      },
+    };
+
+    (prisma.sticker.update as any).mockResolvedValue(mockUpdatedSticker);
+    (prisma.payment.updateMany as any).mockResolvedValue({ count: 1 });
+
+    const request = new NextRequest(
+      'http://localhost:3001/api/admin/orders/test-id',
+      {
+        method: 'PUT',
+        body: JSON.stringify({ status: 'REJECTED' }),
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+
+    const response = await PUT(request, {
+      params: Promise.resolve({ id: 'test-id' }),
+    });
+    const responseData = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(responseData.success).toBe(true);
+
+    // Verify that payments were updated to REJECTED status
+    expect(prisma.payment.updateMany).toHaveBeenCalledWith({
+      where: {
+        Sticker: {
+          id: 'test-id',
+        },
+      },
+      data: {
+        status: 'REJECTED',
+      },
+    });
+  });
+
+  it('synchronizes payment status when order status changes to CANCELLED', async () => {
+    const mockUpdatedSticker = {
+      id: 'test-id',
+      status: 'CANCELLED',
+      owner: {
+        id: 'user-id',
+        name: 'Test User',
+        email: 'test@example.com',
+      },
+    };
+
+    (prisma.sticker.update as any).mockResolvedValue(mockUpdatedSticker);
+    (prisma.payment.updateMany as any).mockResolvedValue({ count: 1 });
+
+    const request = new NextRequest(
+      'http://localhost:3001/api/admin/orders/test-id',
+      {
+        method: 'PUT',
+        body: JSON.stringify({ status: 'CANCELLED' }),
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+
+    const response = await PUT(request, {
+      params: Promise.resolve({ id: 'test-id' }),
+    });
+    const responseData = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(responseData.success).toBe(true);
+
+    // Verify that payments were updated to CANCELLED status
+    expect(prisma.payment.updateMany).toHaveBeenCalledWith({
+      where: {
+        Sticker: {
+          id: 'test-id',
+        },
+      },
+      data: {
+        status: 'CANCELLED',
+      },
+    });
+  });
+
+  it('does not update payments when order status has no corresponding payment status', async () => {
+    const mockUpdatedSticker = {
+      id: 'test-id',
+      status: 'LOST',
+      owner: {
+        id: 'user-id',
+        name: 'Test User',
+        email: 'test@example.com',
+      },
+    };
+
+    (prisma.sticker.update as any).mockResolvedValue(mockUpdatedSticker);
+    (prisma.payment.updateMany as any).mockResolvedValue({ count: 0 });
+
+    const request = new NextRequest(
+      'http://localhost:3001/api/admin/orders/test-id',
+      {
+        method: 'PUT',
+        body: JSON.stringify({ status: 'LOST' }),
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+
+    const response = await PUT(request, {
+      params: Promise.resolve({ id: 'test-id' }),
+    });
+    const responseData = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(responseData.success).toBe(true);
+
+    // Verify that payments were updated to PAID status (LOST orders keep payments as PAID)
+    expect(prisma.payment.updateMany).toHaveBeenCalledWith({
+      where: {
+        Sticker: {
+          id: 'test-id',
+        },
+      },
+      data: {
+        status: 'PAID',
       },
     });
   });

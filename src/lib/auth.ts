@@ -1,35 +1,21 @@
-import { PrismaAdapter } from '@next-auth/prisma-adapter';
-import { NextAuthOptions, getServerSession } from 'next-auth';
+import cuid from 'cuid';
+import NextAuth, { NextAuthOptions, getServerSession } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 
-import { environment } from '@/environment/config';
 import { prisma } from '@/lib/prisma';
+import { USER_ROLES } from '@/types/shared';
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  session: {
+    strategy: 'jwt',
+  },
   providers: [
     GoogleProvider({
-      clientId: environment.auth.googleClientId!,
-      clientSecret: environment.auth.googleClientSecret!,
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       allowDangerousEmailAccountLinking: true,
-      authorization: {
-        params: {
-          prompt: 'consent',
-          access_type: 'offline',
-          response_type: 'code',
-        },
-      },
-      httpOptions: {
-        timeout: 40000,
-      },
     }),
   ],
-  pages: {
-    signIn: '/login',
-    error: '/auth/error',
-    signOut: '/login',
-    verifyRequest: '/login',
-  },
   callbacks: {
     async signIn({ user, account, profile }) {
       console.log('🔐 Sign-in attempt:', {
@@ -38,10 +24,9 @@ export const authOptions: NextAuthOptions = {
         provider: account?.provider,
         accountId: account?.providerAccountId,
         profileId: profile?.sub,
-        environment: process.env.NODE_ENV,
-        nextauthUrl: process.env.NEXTAUTH_URL,
       });
 
+      // Permitir sign-in para usuarios de Google (nuevos y existentes)
       if (account?.provider === 'google') {
         try {
           // Check if user exists in database
@@ -72,10 +57,19 @@ export const authOptions: NextAuthOptions = {
               );
             }
           } else {
-            console.log(
-              'ℹ️ New user will be created with Google name:',
-              user.name
-            );
+            // Crear nuevo usuario manualmente
+            console.log('ℹ️ Creating new user with Google profile:', user.name);
+            const newUser = await prisma.user.create({
+              data: {
+                id: cuid(),
+                email: user.email!,
+                name: user.name || 'Usuario',
+                role: USER_ROLES.USER,
+                emailVerified: new Date(),
+                updatedAt: new Date(),
+              },
+            });
+            console.log('✅ New user created:', newUser.id);
           }
 
           console.log('✅ Google sign-in allowed for:', user.email);
@@ -92,40 +86,63 @@ export const authOptions: NextAuthOptions = {
       );
       return false;
     },
-    async redirect({ url, baseUrl }) {
-      console.log('🔀 Auth redirect:', { url, baseUrl });
-      // If user is trying to go to a callback URL
-      if (url.startsWith('/')) {
-        const finalUrl = `${baseUrl}${url}`;
-        console.log('✅ Redirecting to relative URL:', finalUrl);
-        return finalUrl;
+    async jwt({ token, user }) {
+      if (user && user.email) {
+        try {
+          // Buscar usuario en la base de datos para obtener datos actualizados
+          const dbUser = await prisma.user.findUnique({
+            where: { email: user.email },
+          });
+
+          if (dbUser) {
+            token.id = dbUser.id;
+            token.role = dbUser.role;
+            token.country = dbUser.country;
+            token.totalSpent = dbUser.totalSpent;
+            token.emailVerified = dbUser.emailVerified;
+          }
+        } catch (error) {
+          console.error('❌ Error fetching user data for JWT:', error);
+        }
       }
-      // If URL is from same origin
-      if (new URL(url).origin === baseUrl) {
-        console.log('✅ Redirecting to same origin URL:', url);
-        return url;
-      }
-      // Default to /account page after successful login
-      const defaultUrl = `${baseUrl}/account`;
-      console.log('✅ Redirecting to default account page:', defaultUrl);
-      return defaultUrl;
+      return token;
     },
-    async session({ session, user }) {
-      console.log('👤 Creating session for user:', session.user?.email);
-      if (session?.user?.email && user) {
-        session.user.id = user.id;
-        session.user.role = user.role as typeof session.user.role;
-        session.user.country = user.country || undefined;
-        session.user.totalSpent = user.totalSpent || 0;
-        session.user.emailVerified = user.emailVerified || undefined;
+    async session({ session, token }) {
+      // Asegurar que el role esté disponible en la sesión
+      if (token) {
+        session.user.id = token.id as string;
+        session.user.role =
+          (token.role as 'USER' | 'ADMIN' | 'SUPER_ADMIN') || USER_ROLES.USER;
+        session.user.country = token.country as string;
+        session.user.totalSpent = (token.totalSpent as number) || 0;
+        session.user.emailVerified = token.emailVerified as Date | undefined;
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      console.log('🔀 Auth redirect:', { url, baseUrl });
+
+      // Tras login exitoso, SIEMPRE enviar a welcome con CTA sticker
+      if (url.startsWith('/') || url.startsWith(baseUrl)) {
+        const finalUrl = `${baseUrl}/welcome?cta=sticker`;
+        console.log('✅ Redirecting to welcome with CTA:', finalUrl);
+        return finalUrl;
+      }
+
+      // Default a welcome con CTA
+      const defaultUrl = `${baseUrl}/welcome?cta=sticker`;
+      console.log('✅ Redirecting to default welcome page:', defaultUrl);
+      return defaultUrl;
+    },
   },
-  session: {
-    strategy: 'database',
+  pages: {
+    signIn: '/login',
+    error: '/auth/error',
   },
-  secret: environment.auth.secret,
 };
+
+const handler = NextAuth(authOptions);
+
+export { handler as GET, handler as POST };
 
 export const auth = () => getServerSession(authOptions);

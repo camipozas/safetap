@@ -1,4 +1,8 @@
 import { authOptions } from '@/lib/auth';
+import {
+  ORDER_STATUS,
+  getPaymentStatusForOrderStatus,
+} from '@/lib/order-helpers';
 import { prisma } from '@/lib/prisma';
 import { hasPermission } from '@/types/shared';
 import { getServerSession } from 'next-auth';
@@ -21,19 +25,16 @@ export async function PUT(
       const { status } = await request.json();
       const orderId = params.id;
 
-      const validStatuses = [
-        'ORDERED',
-        'PAID',
-        'PRINTING',
-        'SHIPPED',
-        'ACTIVE',
-        'LOST',
-      ];
+      const validStatuses = Object.values(ORDER_STATUS);
 
       if (!validStatuses.includes(status)) {
         return NextResponse.json({ error: 'Invalid state' }, { status: 400 });
       }
 
+      // Get the target payment status for this order status
+      const targetPaymentStatus = getPaymentStatusForOrderStatus(status);
+
+      // Update the sticker status
       const updatedSticker = await prisma.sticker.update({
         where: { id: orderId },
         data: { status },
@@ -47,6 +48,20 @@ export async function PUT(
           },
         },
       });
+
+      // If we have a target payment status, update all related payments
+      if (targetPaymentStatus) {
+        await prisma.payment.updateMany({
+          where: {
+            Sticker: {
+              id: orderId,
+            },
+          },
+          data: {
+            status: targetPaymentStatus,
+          },
+        });
+      }
 
       return NextResponse.json({
         success: true,
@@ -104,19 +119,16 @@ export async function PUT(
     const { status } = await request.json();
     const orderId = params.id;
 
-    const validStatuses = [
-      'ORDERED',
-      'PAID',
-      'PRINTING',
-      'SHIPPED',
-      'ACTIVE',
-      'LOST',
-    ];
+    const validStatuses = Object.values(ORDER_STATUS);
 
     if (!validStatuses.includes(status)) {
       return NextResponse.json({ error: 'Invalid state' }, { status: 400 });
     }
 
+    // Get the target payment status for this order status
+    const targetPaymentStatus = getPaymentStatusForOrderStatus(status);
+
+    // Update the sticker status
     const updatedSticker = await prisma.sticker.update({
       where: { id: orderId },
       data: { status },
@@ -130,6 +142,20 @@ export async function PUT(
         },
       },
     });
+
+    // If we have a target payment status, update all related payments
+    if (targetPaymentStatus) {
+      await prisma.payment.updateMany({
+        where: {
+          Sticker: {
+            id: orderId,
+          },
+        },
+        data: {
+          status: targetPaymentStatus,
+        },
+      });
+    }
 
     return NextResponse.json({
       success: true,

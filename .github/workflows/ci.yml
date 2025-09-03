@@ -7,9 +7,99 @@ on:
     branches: [main, develop]
 
 jobs:
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.changes.outputs.code }}
+      tests: ${{ steps.changes.outputs.tests }}
+      deps: ${{ steps.changes.outputs.deps }}
+      config: ${{ steps.changes.outputs.config }}
+      prisma: ${{ steps.changes.outputs.prisma }}
+      e2e: ${{ steps.changes.outputs.e2e }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # Fetch full history for PR comparisons
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+      - name: Check for changes
+        id: changes
+        run: |
+          # Get the list of changed files
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.sha }}"
+            CHANGED_FILES=$(git diff --name-only $BASE_SHA $HEAD_SHA 2>/dev/null || echo "")
+          else
+            # For push events, compare with the previous commit
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
+          fi
+
+          # If we can't detect changes, assume all types have changed (safer fallback)
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "Warning: Could not detect changed files, assuming all types changed"
+            echo "code=true" >> $GITHUB_OUTPUT
+            echo "tests=true" >> $GITHUB_OUTPUT
+            echo "deps=true" >> $GITHUB_OUTPUT
+            echo "config=true" >> $GITHUB_OUTPUT
+            echo "prisma=true" >> $GITHUB_OUTPUT
+            echo "e2e=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          # Check for code changes
+          if echo "$CHANGED_FILES" | grep -qE '\.(ts|tsx|js|jsx)$|^src/.*\.(ts|tsx|js|jsx)$|^backoffice/src/.*\.(ts|tsx|js|jsx)$'; then
+            echo "code=true" >> $GITHUB_OUTPUT
+          else
+            echo "code=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Check for test changes
+          if echo "$CHANGED_FILES" | grep -qE '^test/|^backoffice/test/|\.test\.(ts|tsx|js|jsx)$|\.spec\.(ts|tsx|js|jsx)$'; then
+            echo "tests=true" >> $GITHUB_OUTPUT
+          else
+            echo "tests=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Check for dependency changes
+          if echo "$CHANGED_FILES" | grep -qE '^package\.json$|^package-lock\.json$|^backoffice/package\.json$|^backoffice/package-lock\.json$'; then
+            echo "deps=true" >> $GITHUB_OUTPUT
+          else
+            echo "deps=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Check for config changes
+          if echo "$CHANGED_FILES" | grep -qE '\.config\.(ts|js|mjs)$|^tsconfig\.json$|^backoffice/tsconfig\.json$|eslint\.config\.|^\.eslintrc|\.github/workflows/|\.yml$|\.yaml$'; then
+            echo "config=true" >> $GITHUB_OUTPUT
+          else
+            echo "config=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Check for Prisma changes
+          if echo "$CHANGED_FILES" | grep -qE '^prisma/|^backoffice/prisma/'; then
+            echo "prisma=true" >> $GITHUB_OUTPUT
+          else
+            echo "prisma=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Check for E2E changes
+          if echo "$CHANGED_FILES" | grep -qE '^test/e2e/|^playwright\.config\.ts$'; then
+            echo "e2e=true" >> $GITHUB_OUTPUT
+          else
+            echo "e2e=false" >> $GITHUB_OUTPUT
+          fi
+
   quality-checks:
     name: Code Quality & Tests
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true' || needs.changes.outputs.tests == 'true' || needs.changes.outputs.deps == 'true' || needs.changes.outputs.config == 'true' || needs.changes.outputs.prisma == 'true'
     environment: ${{ github.ref == 'refs/heads/main' && 'Production – safetap' || 'Preview – safetap' }}
 
     services:
@@ -40,36 +130,72 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
+      - name: Cache Prisma schema and types
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules/.prisma
+            prisma/generated
+          key: prisma-${{ hashFiles('prisma/schema.prisma', 'package-lock.json') }}
+
+      - name: Cache TypeScript build info
+        uses: actions/cache@v4
+        with:
+          path: |
+            **/*.tsbuildinfo
+            .next/cache
+          key: ts-build-${{ hashFiles('**/*.ts', '**/*.tsx', 'tsconfig.json') }}-${{ github.sha }}
+          restore-keys: |
+            ts-build-${{ hashFiles('**/*.ts', '**/*.tsx', 'tsconfig.json') }}-
+            ts-build-
+
       - name: Install dependencies
+        if: needs.changes.outputs.deps == 'true' || needs.changes.outputs.code == 'true' || needs.changes.outputs.config == 'true'
         run: npm ci
 
+      - name: Restore dependencies from cache
+        if: needs.changes.outputs.deps != 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: deps-${{ hashFiles('package-lock.json') }}
+          restore-keys: deps-
+
+      - name: Ensure Rollup native binary (Linux x64)
+        if: runner.os == 'Linux'
+        run: |
+          node -e "try{require('@rollup/rollup-linux-x64-gnu');console.log('OK: rollup native present')}catch(e){process.exit(1)}" \
+          || npm i @rollup/rollup-linux-x64-gnu@^4.50.0 --no-save
+
       - name: Setup Prisma
+        if: needs.changes.outputs.prisma == 'true' || needs.changes.outputs.config == 'true'
         run: npx prisma generate
 
       - name: Apply database migrations
         run: |
-          # Wait for PostgreSQL to be ready
           while ! pg_isready -h localhost -p 5432; do
             echo "Waiting for PostgreSQL..."
             sleep 2
           done
-
-          # Apply migrations
           npx prisma migrate deploy
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_test' }}
           DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_test' }}
 
       - name: Type check
+        if: needs.changes.outputs.code == 'true' || needs.changes.outputs.config == 'true'
         run: npm run type-check
 
       - name: Lint check
-        run: npm run lint
+        if: needs.changes.outputs.code == 'true' || needs.changes.outputs.config == 'true'
+        run: npm run lint:ci
 
       - name: Format check
+        if: needs.changes.outputs.code == 'true' || needs.changes.outputs.config == 'true'
         run: npm run format:check
 
       - name: Run tests
+        if: needs.changes.outputs.tests == 'true' || needs.changes.outputs.code == 'true' || needs.changes.outputs.config == 'true'
         run: npm run test
 
       - name: Build application
@@ -87,7 +213,8 @@ jobs:
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
-    needs: quality-checks
+    needs: [changes, quality-checks]
+    if: needs.changes.outputs.e2e == 'true' || needs.changes.outputs.code == 'true'
     environment: ${{ github.ref == 'refs/heads/main' && 'Production – safetap' || 'Preview – safetap' }}
 
     services:
@@ -114,36 +241,44 @@ jobs:
           node-version: '20.x'
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Restore dependencies from cache
+        id: cache-deps
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: deps-${{ hashFiles('package-lock.json') }}
+          restore-keys: deps-
+
+      - name: Install dependencies if not cached
+        if: steps.cache-deps.outputs.cache-hit != 'true'
         run: npm ci
 
+      - name: Ensure Rollup native binary (Linux x64)
+        if: runner.os == 'Linux'
+        run: |
+          node -e "try{require('@rollup/rollup-linux-x64-gnu');console.log('OK: rollup native present')}catch(e){process.exit(1)}" \
+          || npm i @rollup/rollup-linux-x64-gnu@^4.50.0 --no-save
+
       - name: Cache Playwright browsers
+        id: cache-playwright
         uses: actions/cache@v4
-        id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ hashFiles('package-lock.json') }}-chromium-${{ runner.os }}
+          key: playwright-${{ hashFiles('package-lock.json') }}
 
       - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        if: steps.cache-playwright.outputs.cache-hit != 'true' || needs.changes.outputs.e2e == 'true'
         run: npx playwright install chromium --with-deps
-
-      - name: Install Playwright dependencies only
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
 
       - name: Setup Prisma
         run: npx prisma generate
 
       - name: Apply database migrations
         run: |
-          # Wait for PostgreSQL to be ready
           while ! pg_isready -h localhost -p 5432; do
-            echo "Waiting for PostgreSQL..."
+            echo 'Waiting for PostgreSQL...'
             sleep 2
           done
-
-          # Apply migrations
           npx prisma migrate deploy
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_test' }}
@@ -171,7 +306,6 @@ jobs:
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'fallback-secret-for-ci-testing-only' }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_test' }}
-          # Email variables no son necesarias en test mode pero las dejamos por compatibilidad
           EMAIL_SERVER_HOST: ${{ secrets.EMAIL_SERVER_HOST || 'smtp.example.com' }}
           EMAIL_SERVER_USER: ${{ secrets.EMAIL_SERVER_USER || 'test@example.com' }}
           EMAIL_SERVER_PASSWORD: ${{ secrets.EMAIL_SERVER_PASSWORD || 'testpassword' }}

@@ -305,15 +305,13 @@ export default async function AccountPage({
                               ? '✅ Verificado'
                               : s.Payment[0].status === 'PAID'
                                 ? '💰 Confirmado'
-                                : s.Payment[0].status === 'TRANSFERRED'
-                                  ? '💳 Transferido'
-                                  : s.Payment[0].status === 'PENDING'
-                                    ? '⏳ Pendiente'
-                                    : s.Payment[0].status === 'REJECTED'
-                                      ? '❌ Rechazado'
-                                      : s.Payment[0].status === 'CANCELLED'
-                                        ? '🚫 Cancelado'
-                                        : s.Payment[0].status}
+                                : s.Payment[0].status === 'PENDING'
+                                  ? '⏳ Pendiente'
+                                  : s.Payment[0].status === 'REJECTED'
+                                    ? '❌ Rechazado'
+                                    : s.Payment[0].status === 'CANCELLED'
+                                      ? '🚫 Cancelado'
+                                      : s.Payment[0].status}
                           </span>
                         </p>
                       </div>

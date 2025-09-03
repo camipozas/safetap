@@ -3,7 +3,7 @@ import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 
 export default function LoginForm({
-  callbackUrl = '/account',
+  callbackUrl = '/welcome?cta=sticker',
 }: {
   callbackUrl?: string;
 }) {
@@ -205,7 +205,7 @@ export default function LoginForm({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2v10a2 2 0 002 2z"
                 />
               </svg>
             </>
@@ -285,49 +285,10 @@ export default function LoginForm({
         )}
       </button>
 
-      {/* Desarrollo */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mt-8 pt-6 border-t border-slate-200">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-            <div className="flex items-center mb-2">
-              <svg
-                className="w-5 h-5 text-yellow-600 mr-2"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <h3 className="font-semibold text-yellow-800">Modo desarrollo</h3>
-            </div>
-            <p className="text-yellow-700 text-sm mb-3">
-              Para desarrollo, puedes usar el login simplificado sin email.
-            </p>
-            <a
-              href="/dev-login"
-              className="inline-flex items-center px-3 py-2 text-sm font-medium text-yellow-800 bg-yellow-100 border border-yellow-300 rounded-lg hover:bg-yellow-200 transition-colors"
-            >
-              Ir al login de desarrollo
-              <svg
-                className="w-4 h-4 ml-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 8l4 4m0 0l-4 4m4-4H3"
-                />
-              </svg>
-            </a>
-          </div>
-        </div>
-      )}
+      <p className="text-xs text-slate-500 mt-3 text-center">
+        Al continuar con Google, se creará tu cuenta automáticamente si es tu
+        primera vez.
+      </p>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import OrdersTable from '@/components/ui/orders-table';
+import { OrderStatus, PaymentStatus } from '@/lib/order-helpers';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -14,7 +15,7 @@ const mockOrder = {
   colorPresetId: 'classic-white',
   stickerColor: '#ffffff',
   textColor: '#000000',
-  status: 'ORDERED' as const,
+  status: 'ORDERED' as OrderStatus,
   createdAt: new Date('2024-01-01'),
   owner: {
     id: 'user-workflow',
@@ -39,7 +40,7 @@ const mockOrder = {
   payments: [
     {
       id: 'payment-workflow-1',
-      status: 'TRANSFER_PAYMENT',
+      status: 'VERIFIED' as PaymentStatus,
       amount: 6990, // $6,990 CLP
       currency: 'CLP',
       createdAt: new Date('2024-01-01'),
@@ -130,7 +131,8 @@ describe('Orders Workflow Integration', () => {
     const { container } = render(<OrdersTable orders={[orderOrdered]} />);
 
     const statusElement = container.querySelector('.inline-block.px-2.py-1');
-    expect(statusElement).toHaveClass('bg-slate-100');
-    expect(statusElement).toHaveClass('text-slate-800');
+    // Since the order has a VERIFIED payment, it should show as PAID with emerald colors
+    expect(statusElement).toHaveClass('bg-emerald-100');
+    expect(statusElement).toHaveClass('text-emerald-800');
   });
 });

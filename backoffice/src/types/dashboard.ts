@@ -1,3 +1,4 @@
+import { OrderStatus, PaymentStatus } from '@/lib/order-helpers';
 export interface DashboardStats {
   totalUsers: number;
   totalOrders: number;
@@ -45,15 +46,7 @@ export interface Order {
   flagCode: string;
   stickerColor: string;
   textColor: string;
-  status:
-    | 'ORDERED'
-    | 'PAID'
-    | 'PRINTING'
-    | 'SHIPPED'
-    | 'ACTIVE'
-    | 'LOST'
-    | 'REJECTED'
-    | 'CANCELLED';
+  status: OrderStatus;
   createdAt: Date;
   owner: {
     id: string;
@@ -75,7 +68,7 @@ export interface Order {
   } | null;
   payments: {
     id: string;
-    status: string;
+    status: PaymentStatus;
     amount: number;
     currency: string;
     reference?: string;

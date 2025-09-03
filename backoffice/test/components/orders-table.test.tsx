@@ -1,4 +1,5 @@
 import OrdersTable from '@/components/ui/orders-table';
+import { OrderStatus, PaymentStatus } from '@/lib/order-helpers';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -24,7 +25,7 @@ const mockOrders = [
     colorPresetId: 'classic-white',
     stickerColor: '#ffffff',
     textColor: '#000000',
-    status: 'ORDERED' as const,
+    status: 'ORDERED' as OrderStatus,
     createdAt: new Date('2024-01-01'),
     owner: {
       id: 'user-1',
@@ -49,7 +50,7 @@ const mockOrders = [
     payments: [
       {
         id: 'payment-1',
-        status: 'VERIFIED',
+        status: 'VERIFIED' as PaymentStatus,
         amount: 699000, // $6,990 CLP in cents
         currency: 'CLP',
         createdAt: new Date('2024-01-01'),
@@ -65,7 +66,7 @@ const mockOrders = [
     colorPresetId: 'classic-gray',
     stickerColor: '#f0f0f0',
     textColor: '#333333',
-    status: 'PAID' as const,
+    status: 'PAID' as OrderStatus,
     createdAt: new Date('2024-01-02'),
     owner: {
       id: 'user-2',

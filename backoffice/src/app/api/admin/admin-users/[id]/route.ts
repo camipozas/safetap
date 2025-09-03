@@ -142,7 +142,7 @@ export async function DELETE(
     // Finally, set role back to USER
     const updatedUser = await prisma.user.update({
       where: { id },
-      data: { role: 'USER' },
+      data: { role: USER_ROLES.USER },
       select: {
         id: true,
         email: true,

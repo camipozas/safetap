@@ -1,4 +1,5 @@
 import OrdersTable from '@/components/ui/orders-table';
+import { OrderStatus, PaymentStatus } from '@/lib/order-helpers';
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -36,7 +37,7 @@ interface MockOrder {
   flagCode: string;
   stickerColor: string;
   textColor: string;
-  status: 'ORDERED' | 'PAID' | 'PRINTING' | 'SHIPPED' | 'ACTIVE' | 'LOST';
+  status: OrderStatus;
   createdAt: Date;
   updatedAt: Date;
   owner: {
@@ -61,7 +62,7 @@ interface MockOrder {
     id: string;
     amount: number;
     currency: string;
-    status: string;
+    status: PaymentStatus;
     createdAt: Date;
   }>;
 }

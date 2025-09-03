@@ -1,289 +1,212 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import type { Session } from 'next-auth';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { signIn, useSession } from 'next-auth/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-// Type for mocked useSession return
-type MockSessionReturn = {
-  data: Session | null;
-  status: 'authenticated' | 'unauthenticated' | 'loading';
-  update: ReturnType<typeof vi.fn>;
-};
-
-// Mock NextAuth
-vi.mock('next-auth/react', () => ({
-  signIn: vi.fn(),
-  getSession: vi.fn(),
-  useSession: vi.fn(
-    (): MockSessionReturn => ({
-      data: null,
-      status: 'unauthenticated',
-      update: vi.fn(),
-    })
-  ),
-}));
+import { vi } from 'vitest';
 
 import LoginForm from '@/app/login/ui/LoginForm';
 
-// Mock next/navigation
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: vi.fn(),
-    replace: vi.fn(),
-    refresh: vi.fn(),
-  }),
-  useSearchParams: () => ({
-    get: vi.fn(() => null),
-  }),
+// Mock next-auth
+vi.mock('next-auth/react', () => ({
+  signIn: vi.fn(),
+  useSession: vi.fn(),
 }));
+
+const mockSignIn = vi.mocked(signIn);
 
 describe('Google SSO Authentication', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    (useSession as any).mockReturnValue({
+      data: null,
+      status: 'unauthenticated',
+    });
   });
 
   describe('LoginForm Component', () => {
-    it('renders Google sign-in button', () => {
+    test('renders Google sign-in button', () => {
       render(<LoginForm />);
-
-      const googleButton = screen.getByRole('button', {
-        name: /continuar con google/i,
-      });
-      expect(googleButton).toBeInTheDocument();
+      expect(screen.getByText('Continuar con Google')).toBeInTheDocument();
     });
 
-    it('calls signIn with google provider when Google button is clicked', async () => {
-      const mockSignIn = vi.mocked(signIn);
+    test('calls signIn with google provider when Google button is clicked', async () => {
+      const user = userEvent.setup();
       render(<LoginForm />);
 
-      const googleButton = screen.getByRole('button', {
-        name: /continuar con google/i,
-      });
-      fireEvent.click(googleButton);
+      const googleButton = screen.getByText('Continuar con Google');
+      await user.click(googleButton);
 
       await waitFor(() => {
         expect(mockSignIn).toHaveBeenCalledWith('google', {
-          callbackUrl: '/account',
+          callbackUrl: '/welcome?cta=sticker',
           redirect: false,
         });
       });
     });
 
-    it('handles Google sign-in error gracefully', async () => {
-      const mockSignIn = vi
-        .mocked(signIn)
-        .mockRejectedValue(new Error('Google sign-in failed'));
-      const consoleErrorSpy = vi
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
-
-      render(<LoginForm />);
-
-      const googleButton = screen.getByRole('button', {
-        name: /continuar con google/i,
-      });
-      fireEvent.click(googleButton);
-
-      await waitFor(() => {
-        expect(consoleErrorSpy).toHaveBeenCalledWith(
-          '❌ Error signing in with Google:',
-          expect.any(Error)
-        );
-      });
-
-      consoleErrorSpy.mockRestore();
-    });
-
-    it('disables Google button while signing in', async () => {
-      // Mock successful signIn to test loading state
-      const mockSignIn = vi
-        .mocked(signIn)
-        .mockImplementation(
-          () =>
-            new Promise((resolve) =>
-              setTimeout(
-                () =>
-                  resolve({ ok: true, error: null, status: 200, url: null }),
-                100
-              )
-            )
-        );
-
-      render(<LoginForm />);
-
-      const googleButton = screen.getByRole('button', {
-        name: /continuar con google/i,
-      });
-
-      fireEvent.click(googleButton);
-
-      // Button should be disabled immediately after click
-      await waitFor(() => {
-        expect(googleButton).toBeDisabled();
-      });
-    });
-
-    it('shows loading state with correct text', async () => {
-      // Mock slow signIn to capture loading state
-      const mockSignIn = vi
-        .mocked(signIn)
-        .mockImplementation(
-          () =>
-            new Promise((resolve) =>
-              setTimeout(
-                () =>
-                  resolve({ ok: true, error: null, status: 200, url: null }),
-                100
-              )
-            )
-        );
-
-      render(<LoginForm />);
-
-      const googleButton = screen.getByRole('button', {
-        name: /continuar con google/i,
-      });
-
-      fireEvent.click(googleButton);
-
-      await waitFor(() => {
-        expect(
-          screen.getByText('Conectando con Google...')
-        ).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Authentication Flow', () => {
-    it('redirects to account page after successful Google authentication', async () => {
-      const mockSignIn = vi
-        .mocked(signIn)
-        .mockResolvedValue({ ok: true, error: null, status: 200, url: null });
-
-      render(<LoginForm />);
-
-      const googleButton = screen.getByRole('button', {
-        name: /continuar con google/i,
-      });
-      fireEvent.click(googleButton);
-
-      await waitFor(() => {
-        expect(mockSignIn).toHaveBeenCalledWith('google', {
-          callbackUrl: '/account',
-          redirect: false,
-        });
-      });
-    });
-
-    it('handles authentication errors from Google', async () => {
-      const mockSignIn = vi.mocked(signIn).mockResolvedValue({
-        ok: false,
+    test('handles Google sign-in error gracefully', async () => {
+      const user = userEvent.setup();
+      mockSignIn.mockResolvedValueOnce({
         error: 'OAuthAccountNotLinked',
+        ok: false,
         status: 401,
         url: null,
       });
 
       render(<LoginForm />);
 
-      const googleButton = screen.getByRole('button', {
-        name: /continuar con google/i,
-      });
-      fireEvent.click(googleButton);
+      const googleButton = screen.getByText('Continuar con Google');
+      await user.click(googleButton);
 
       await waitFor(() => {
-        expect(mockSignIn).toHaveBeenCalled();
+        expect(
+          screen.getByText(/No se pudo iniciar sesión con Google/)
+        ).toBeInTheDocument();
+      });
+    });
+
+    test('disables Google button while signing in', async () => {
+      const user = userEvent.setup();
+      mockSignIn.mockImplementationOnce(() => new Promise(() => {})); // Never resolves
+
+      render(<LoginForm />);
+
+      const googleButton = screen.getByText('Continuar con Google');
+      await user.click(googleButton);
+
+      expect(googleButton).toBeDisabled();
+      expect(screen.getByText('Conectando con Google...')).toBeInTheDocument();
+    });
+
+    test('shows loading state with correct text', async () => {
+      const user = userEvent.setup();
+      mockSignIn.mockImplementationOnce(() => new Promise(() => {})); // Never resolves
+
+      render(<LoginForm />);
+
+      const googleButton = screen.getByText('Continuar con Google');
+      await user.click(googleButton);
+
+      expect(screen.getByText('Conectando con Google...')).toBeInTheDocument();
+    });
+  });
+
+  describe('Authentication Flow', () => {
+    test('redirects to welcome page after successful Google authentication', async () => {
+      const user = userEvent.setup();
+      mockSignIn.mockResolvedValueOnce({
+        ok: true,
+        error: null,
+        status: 200,
+        url: null,
+      });
+
+      render(<LoginForm />);
+
+      const googleButton = screen.getByText('Continuar con Google');
+      await user.click(googleButton);
+
+      await waitFor(() => {
+        expect(mockSignIn).toHaveBeenCalledWith('google', {
+          callbackUrl: '/welcome?cta=sticker',
+          redirect: false,
+        });
+      });
+    });
+
+    test('handles authentication errors from Google', async () => {
+      const user = userEvent.setup();
+      mockSignIn.mockResolvedValueOnce({
+        error: 'OAuthAccountNotLinked',
+        ok: false,
+        status: 401,
+        url: null,
+      });
+
+      render(<LoginForm />);
+
+      const googleButton = screen.getByText('Continuar con Google');
+      await user.click(googleButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/No se pudo iniciar sesión con Google/)
+        ).toBeInTheDocument();
       });
     });
   });
 
   describe('Session Management', () => {
-    it('shows user info when authenticated with Google', () => {
-      const mockSessionData: MockSessionReturn = {
+    test('shows user info when authenticated with Google', () => {
+      (useSession as any).mockReturnValue({
         data: {
           user: {
-            id: 'user-123',
-            email: 'test@gmail.com',
             name: 'Test User',
-            image: 'https://lh3.googleusercontent.com/test.jpg',
+            email: 'test@example.com',
             role: 'USER',
-            totalSpent: 0,
           },
-        } as Session,
+        },
         status: 'authenticated',
-        update: vi.fn(),
-      };
+      });
 
-      vi.mocked(useSession).mockReturnValue(mockSessionData as any);
-
-      const session = useSession();
-      expect(session.data?.user.email).toBe('test@gmail.com');
-      expect(session.status).toBe('authenticated');
+      render(<LoginForm />);
+      // The form should not be visible when authenticated
+      expect(screen.queryByText('Inicia sesión')).not.toBeInTheDocument();
     });
 
-    it('handles user creation for new Google accounts', () => {
-      const mockSessionData: MockSessionReturn = {
+    test('handles user creation for new Google accounts', () => {
+      (useSession as any).mockReturnValue({
         data: {
           user: {
-            id: 'new-user-123',
-            email: 'newuser@gmail.com',
             name: 'New User',
-            image: 'https://lh3.googleusercontent.com/new.jpg',
+            email: 'new@example.com',
             role: 'USER',
-            totalSpent: 0,
-            emailVerified: new Date(),
           },
-        } as Session,
+        },
         status: 'authenticated',
-        update: vi.fn(),
-      };
+      });
 
-      vi.mocked(useSession).mockReturnValue(mockSessionData as any);
-
-      const session = useSession();
-      expect(session.data?.user.emailVerified).toBeDefined();
-      expect(session.data?.user.role).toBe('USER');
+      render(<LoginForm />);
+      // The form should not be visible when authenticated
+      expect(screen.queryByText('Inicia sesión')).not.toBeInTheDocument();
     });
   });
 
   describe('Error Handling', () => {
-    it('shows error message for invalid credentials', () => {
-      const mockSessionData: MockSessionReturn = {
-        data: null,
-        status: 'unauthenticated',
-        update: vi.fn(),
-      };
-
-      vi.mocked(useSession).mockReturnValue(mockSessionData as any);
-
-      render(<LoginForm />);
-
-      // Should handle the error gracefully
-      expect(
-        screen.getByRole('button', { name: /continuar con google/i })
-      ).toBeInTheDocument();
-    });
-
-    it('handles network errors during authentication', async () => {
-      const mockSignIn = vi
-        .mocked(signIn)
-        .mockRejectedValue(new Error('Network error'));
-      const consoleErrorSpy = vi
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
-
-      render(<LoginForm />);
-
-      const googleButton = screen.getByRole('button', {
-        name: /continuar con google/i,
+    test('shows error message for invalid credentials', async () => {
+      const user = userEvent.setup();
+      mockSignIn.mockResolvedValueOnce({
+        error: 'InvalidCredentials',
+        ok: false,
+        status: 401,
+        url: null,
       });
-      fireEvent.click(googleButton);
+
+      render(<LoginForm />);
+
+      const googleButton = screen.getByText('Continuar con Google');
+      await user.click(googleButton);
 
       await waitFor(() => {
-        expect(consoleErrorSpy).toHaveBeenCalled();
+        expect(
+          screen.getByText(/No se pudo iniciar sesión con Google/)
+        ).toBeInTheDocument();
       });
+    });
 
-      consoleErrorSpy.mockRestore();
+    test('handles network errors during authentication', async () => {
+      const user = userEvent.setup();
+      mockSignIn.mockRejectedValueOnce(new Error('Network error'));
+
+      render(<LoginForm />);
+
+      const googleButton = screen.getByText('Continuar con Google');
+      await user.click(googleButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/No se pudo iniciar sesión con Google/)
+        ).toBeInTheDocument();
+      });
     });
   });
 });

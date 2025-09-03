@@ -23,7 +23,7 @@ export default async function QrProfilePage({ params }: QrProfilePageProps) {
         Payment: {
           some: {
             status: {
-              in: ['TRANSFER_PAYMENT', 'VERIFIED', 'PAID', 'TRANSFERRED'], // Accept paid and transferred statuses
+              in: ['VERIFIED', 'PAID'], // Accept paid and verified statuses
             },
           },
         },
@@ -116,7 +116,7 @@ export async function generateMetadata({ params }: QrProfilePageProps) {
         Payment: {
           some: {
             status: {
-              in: ['TRANSFER_PAYMENT', 'VERIFIED'],
+              in: ['VERIFIED'],
             },
           },
         },

@@ -31,14 +31,7 @@ type Order = {
   } | null;
   payments: {
     id: string;
-    status:
-      | 'PENDING'
-      | 'TRANSFER_PAYMENT'
-      | 'VERIFIED'
-      | 'PAID'
-      | 'TRANSFERRED'
-      | 'REJECTED'
-      | 'CANCELLED';
+    status: 'PENDING' | 'VERIFIED' | 'PAID' | 'REJECTED' | 'CANCELLED';
     amount: number;
     currency: string;
     createdAt: Date;
@@ -52,7 +45,7 @@ const isValidTransition = (
   payments: Order['payments']
 ): boolean => {
   const hasConfirmedPayment = payments.some((p) =>
-    ['PAID', 'VERIFIED', 'TRANSFERRED'].includes(p.status)
+    ['PAID', 'VERIFIED'].includes(p.status)
   );
   const hasPendingPayment = payments.some((p) => p.status === 'PENDING');
 
@@ -291,11 +284,6 @@ describe('Order Status Transitions', () => {
   describe('Payment status consistency rules', () => {
     test('VERIFIED payment should be treated as confirmed', () => {
       const payments = [createPayment('VERIFIED')];
-      expect(isValidTransition('ORDERED', 'PAID', payments)).toBe(true);
-    });
-
-    test('TRANSFERRED payment should be treated as confirmed', () => {
-      const payments = [createPayment('TRANSFERRED')];
       expect(isValidTransition('ORDERED', 'PAID', payments)).toBe(true);
     });
 

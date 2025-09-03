@@ -29,10 +29,12 @@ export async function POST() {
         '3. Las tablas ya están creadas y funcionando',
       ],
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
       {
-        error: error.message,
+        error: errorMessage,
         note: 'Error de conexión a la base de datos',
       },
       { status: 500 }

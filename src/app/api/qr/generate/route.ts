@@ -62,7 +62,7 @@ export async function GET(req: Request) {
         errorCorrectionLevel: 'H', // High error correction for printing
       });
 
-      return new NextResponse(buffer as any, {
+      return new NextResponse(new Uint8Array(buffer), {
         headers: {
           'Content-Type': 'image/png',
           'Content-Disposition': `attachment; filename="SafeTap-qr-${Date.now()}.png"`,
