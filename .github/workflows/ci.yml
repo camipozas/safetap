@@ -126,6 +126,9 @@ jobs:
           node -e "try{require('@rollup/rollup-linux-x64-gnu');console.log('OK: rollup native present')}catch(e){process.exit(1)}" \
           || npm i @rollup/rollup-linux-x64-gnu@^4.50.0 --no-save
 
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
       - name: Setup Prisma
         run: npx prisma generate
 
