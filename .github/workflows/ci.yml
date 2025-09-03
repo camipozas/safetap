@@ -22,40 +22,78 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # Fetch full history for PR comparisons
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
 
       - name: Check for changes
-        uses: dorny/paths-filter@v3
         id: changes
-        with:
-          filters: |
-            code:
-              - 'src/**/*.{ts,tsx,js,jsx}'
-              - 'backoffice/src/**/*.{ts,tsx,js,jsx}'
-              - '*.{ts,tsx,js,jsx}'
-            tests:
-              - 'test/**/*'
-              - 'backoffice/test/**/*'
-              - '**/*.test.{ts,tsx,js,jsx}'
-              - '**/*.spec.{ts,tsx,js,jsx}'
-            deps:
-              - 'package.json'
-              - 'package-lock.json'
-              - 'backoffice/package.json'
-              - 'backoffice/package-lock.json'
-            config:
-              - '*.config.{ts,js,mjs}'
-              - 'backoffice/*.config.{ts,js,mjs}'
-              - 'tsconfig.json'
-              - 'backoffice/tsconfig.json'
-              - '.eslintrc*'
-              - 'eslint.config.*'
-              - 'backoffice/eslint.config.*'
-            prisma:
-              - 'prisma/**/*'
-              - 'backoffice/prisma/**/*'
-            e2e:
-              - 'test/e2e/**/*'
-              - 'playwright.config.ts'
+        run: |
+          # Get the list of changed files
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.sha }}"
+            CHANGED_FILES=$(git diff --name-only $BASE_SHA $HEAD_SHA 2>/dev/null || echo "")
+          else
+            # For push events, compare with the previous commit
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
+          fi
+          
+          # If we can't detect changes, assume all types have changed (safer fallback)
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "Warning: Could not detect changed files, assuming all types changed"
+            echo "code=true" >> $GITHUB_OUTPUT
+            echo "tests=true" >> $GITHUB_OUTPUT
+            echo "deps=true" >> $GITHUB_OUTPUT
+            echo "config=true" >> $GITHUB_OUTPUT
+            echo "prisma=true" >> $GITHUB_OUTPUT
+            echo "e2e=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          
+          # Check for code changes
+          if echo "$CHANGED_FILES" | grep -qE '\.(ts|tsx|js|jsx)$|^src/.*\.(ts|tsx|js|jsx)$|^backoffice/src/.*\.(ts|tsx|js|jsx)$'; then
+            echo "code=true" >> $GITHUB_OUTPUT
+          else
+            echo "code=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Check for test changes
+          if echo "$CHANGED_FILES" | grep -qE '^test/|^backoffice/test/|\.test\.(ts|tsx|js|jsx)$|\.spec\.(ts|tsx|js|jsx)$'; then
+            echo "tests=true" >> $GITHUB_OUTPUT
+          else
+            echo "tests=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Check for dependency changes
+          if echo "$CHANGED_FILES" | grep -qE '^package\.json$|^package-lock\.json$|^backoffice/package\.json$|^backoffice/package-lock\.json$'; then
+            echo "deps=true" >> $GITHUB_OUTPUT
+          else
+            echo "deps=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Check for config changes
+          if echo "$CHANGED_FILES" | grep -qE '\.config\.(ts|js|mjs)$|^tsconfig\.json$|^backoffice/tsconfig\.json$|eslint\.config\.|^\.eslintrc'; then
+            echo "config=true" >> $GITHUB_OUTPUT
+          else
+            echo "config=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Check for Prisma changes
+          if echo "$CHANGED_FILES" | grep -qE '^prisma/|^backoffice/prisma/'; then
+            echo "prisma=true" >> $GITHUB_OUTPUT
+          else
+            echo "prisma=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Check for E2E changes
+          if echo "$CHANGED_FILES" | grep -qE '^test/e2e/|^playwright\.config\.ts$'; then
+            echo "e2e=true" >> $GITHUB_OUTPUT
+          else
+            echo "e2e=false" >> $GITHUB_OUTPUT
+          fi
 
   quality-checks:
     name: Code Quality & Tests
