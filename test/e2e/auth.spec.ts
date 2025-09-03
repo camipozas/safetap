@@ -29,9 +29,14 @@ test.describe('Authentication Flow', () => {
       timeout: 10000,
     });
 
-    // Check for guest sign in button
+    // Check for email form elements
+    await expect(page.locator('input[type="email"]')).toBeVisible({
+      timeout: 10000,
+    });
+
+    // Check for submit button with correct text
     await expect(
-      page.locator('button:has-text("Entrar sin SSO (Invitado)")')
+      page.locator('button:has-text("Enviar enlace de acceso")')
     ).toBeVisible({
       timeout: 10000,
     });
@@ -45,23 +50,26 @@ test.describe('Authentication Flow', () => {
     await expect(submitButton).toBeDisabled();
   });
 
-  test('guest sign in button is properly styled and accessible', async ({
+  test('google sign in button is properly styled and accessible', async ({
     page,
   }) => {
     await page.goto('/login');
     await page.waitForLoadState('networkidle');
 
-    const guestButton = page.locator(
-      'button:has-text("Entrar sin SSO (Invitado)")'
+    const googleButton = page.locator(
+      'button:has-text("Continuar con Google")'
     );
 
     // Check button is visible and enabled
-    await expect(guestButton).toBeVisible();
-    await expect(guestButton).toBeEnabled();
+    await expect(googleButton).toBeVisible();
+    await expect(googleButton).toBeEnabled();
 
     // Check button has proper styling classes
-    await expect(guestButton).toHaveClass(/bg-slate-100/);
-    await expect(guestButton).toHaveClass(/border/);
+    await expect(googleButton).toHaveClass(/bg-white/);
+    await expect(googleButton).toHaveClass(/border/);
+
+    // Check Google icon is present
+    await expect(googleButton.locator('svg')).toBeVisible();
   });
 
   // Removed problematic tests that were consistently failing
