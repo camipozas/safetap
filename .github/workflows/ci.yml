@@ -75,7 +75,7 @@ jobs:
           fi
           
           # Check for config changes
-          if echo "$CHANGED_FILES" | grep -qE '\.config\.(ts|js|mjs)$|^tsconfig\.json$|^backoffice/tsconfig\.json$|eslint\.config\.|^\.eslintrc'; then
+          if echo "$CHANGED_FILES" | grep -qE '\.config\.(ts|js|mjs)$|^tsconfig\.json$|^backoffice/tsconfig\.json$|eslint\.config\.|^\.eslintrc|\.github/workflows/|\.yml$|\.yaml$'; then
             echo "config=true" >> $GITHUB_OUTPUT
           else
             echo "config=false" >> $GITHUB_OUTPUT
