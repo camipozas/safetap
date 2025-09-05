@@ -3,6 +3,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 
+import ProfileTemplateManager from '@/components/ProfileTemplateManager';
+import StickerSelector from '@/components/StickerSelector';
 import {
   bloodTypeEnum,
   profileFormSchema,
@@ -13,13 +15,35 @@ import {
 export default function ProfileForm({
   stickerId,
   profile,
+  showTemplates = false,
 }: {
   stickerId?: string;
-  profile?: any;
+  showTemplates?: boolean;
+  profile?: {
+    id?: string;
+    bloodType?: string;
+    allergies?: string | string[];
+    conditions?: string | string[];
+    medications?: string | string[];
+    notes?: string;
+    language?: string;
+    organDonor?: boolean;
+    insurance?: Record<string, unknown>;
+    consentPublic?: boolean;
+    contacts?: Array<{
+      name: string;
+      relation: string;
+      phone: string;
+      country?: string;
+      preferred: boolean;
+    }>;
+    user?: { name?: string };
+  };
 }) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [userName, setUserName] = useState(profile?.user?.name || '');
   const [userNameError, setUserNameError] = useState<string | null>(null);
+  const [selectedStickerIds, setSelectedStickerIds] = useState<string[]>([]);
 
   const {
     register,
@@ -62,7 +86,16 @@ export default function ProfileForm({
   useEffect(() => {
     if (profile) {
       const formValues = {
-        bloodType: profile.bloodType || undefined,
+        bloodType: profile.bloodType as
+          | 'A+'
+          | 'A-'
+          | 'B+'
+          | 'B-'
+          | 'AB+'
+          | 'AB-'
+          | 'O+'
+          | 'O-'
+          | undefined,
         allergies: Array.isArray(profile.allergies)
           ? profile.allergies.join(', ')
           : profile.allergies || '',
@@ -78,7 +111,7 @@ export default function ProfileForm({
         insurance: profile.insurance || {},
         consentPublic: profile.consentPublic !== false,
         contacts:
-          profile.contacts?.length > 0
+          profile.contacts && profile.contacts.length > 0
             ? profile.contacts
             : [{ name: '', relation: '', phone: '', preferred: true }],
       };
@@ -87,6 +120,65 @@ export default function ProfileForm({
   }, [profile, reset]);
 
   const contacts = useFieldArray({ control, name: 'contacts' });
+
+  const handleApplyTemplate = (templateData: {
+    id: string;
+    bloodType?: string;
+    allergies?: string[];
+    conditions?: string[];
+    medications?: string[];
+    notes?: string;
+    language?: string;
+    organDonor?: boolean;
+    insurance?: Record<string, unknown>;
+    consentPublic?: boolean;
+    contacts?: Array<{
+      id: string;
+      name: string;
+      relation: string;
+      phone: string;
+      country?: string;
+      preferred: boolean;
+    }>;
+  }) => {
+    const formValues = {
+      bloodType: templateData.bloodType as
+        | 'A+'
+        | 'A-'
+        | 'B+'
+        | 'B-'
+        | 'AB+'
+        | 'AB-'
+        | 'O+'
+        | 'O-'
+        | undefined,
+      allergies: Array.isArray(templateData.allergies)
+        ? templateData.allergies.join(', ')
+        : '',
+      conditions: Array.isArray(templateData.conditions)
+        ? templateData.conditions.join(', ')
+        : '',
+      medications: Array.isArray(templateData.medications)
+        ? templateData.medications.join(', ')
+        : '',
+      notes: templateData.notes || '',
+      language: templateData.language || 'es',
+      organDonor: Boolean(templateData.organDonor),
+      insurance: templateData.insurance || {},
+      consentPublic: templateData.consentPublic !== false,
+      contacts:
+        Array.isArray(templateData.contacts) && templateData.contacts.length > 0
+          ? templateData.contacts.map((contact) => ({
+              name: contact.name,
+              relation: contact.relation,
+              phone: contact.phone,
+              country: contact.country,
+              preferred: contact.preferred,
+            }))
+          : [{ name: '', relation: '', phone: '', preferred: true }],
+    };
+    reset(formValues);
+  };
 
   async function onSubmit(formValues: ProfileFormInput) {
     setServerError(null);
@@ -136,7 +228,13 @@ export default function ProfileForm({
     const res = await fetch('/api/profile', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ stickerId, profileId: profile?.id, values }),
+      body: JSON.stringify({
+        stickerId,
+        profileId: profile?.id,
+        values,
+        selectedStickerIds:
+          selectedStickerIds.length > 0 ? selectedStickerIds : undefined,
+      }),
     });
     if (!res.ok) {
       const j = await res.json().catch(() => ({}));
@@ -147,7 +245,7 @@ export default function ProfileForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4" noValidate>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
       <div>
         <label className="label" htmlFor="userName">
           Nombre completo
@@ -168,6 +266,52 @@ export default function ProfileForm({
             {userNameError}
           </p>
         )}
+      </div>
+
+      {/* Profile Template Manager - Solo mostrar cuando es apropiado */}
+      {showTemplates && (
+        <div>
+          <ProfileTemplateManager
+            onTemplateApply={handleApplyTemplate}
+            showTitle={true}
+          />
+        </div>
+      )}
+
+      {/* Sticker Selection Section */}
+      <div className="space-y-3">
+        <div className="rounded-lg bg-blue-50 p-3 border border-blue-200">
+          <div className="flex items-start">
+            <svg
+              className="w-4 h-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <div>
+              <h4 className="text-sm font-medium text-blue-900">
+                Selecciona los stickers a actualizar
+              </h4>
+              <p className="text-sm text-blue-800 mt-1">
+                Elige a qué stickers aplicar esta información médica. Solo se
+                actualizarán los stickers que selecciones.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <StickerSelector
+          selectedStickers={selectedStickerIds}
+          onSelectionChange={setSelectedStickerIds}
+          showTitle={false}
+        />
       </div>
 
       <div>

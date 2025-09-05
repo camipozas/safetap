@@ -10,7 +10,7 @@ import { StickerCustomization } from '@/components/StickerCustomizerNew';
 import { getColorPresetById } from '@/lib/color-presets';
 import { PRICE_PER_STICKER_CLP, formatCLPAmount } from '@/lib/constants';
 
-// Simplified schema for checkout form (quantity + optional email if not logged in)
+// Schema for checkout form (quantity + optional email if not logged in)
 const checkoutSchema = z.object({
   quantity: z
     .number()
@@ -35,6 +35,8 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
     handleSubmit,
     formState: { errors, isSubmitting },
     watch,
+    setValue,
+    trigger,
   } = useForm<z.infer<typeof checkoutSchema>>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: { quantity: 1 },
@@ -164,31 +166,58 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
       {/* Quantity */}
       <div>
         <label
-          className="block text-sm font-semibold text-slate-900 mb-2"
+          className="block text-sm font-semibold text-slate-900 mb-3"
           htmlFor="quantity"
         >
-          Cantidad
+          Cantidad de stickers
         </label>
-        <div className="relative">
-          <input
-            id="quantity"
-            type="number"
-            min={1}
-            max={10}
-            className="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all duration-200"
-            aria-invalid={!!errors.quantity}
-            aria-describedby={errors.quantity ? 'qty-error' : undefined}
-            {...register('quantity', { valueAsNumber: true })}
-          />
-          <div className="absolute right-3 top-3 text-slate-500">
-            <span className="text-sm">unidades</span>
+
+        <div className="flex items-center justify-center">
+          <div className="flex items-center bg-white border border-slate-300 rounded-lg">
+            <button
+              type="button"
+              onClick={() => {
+                const currentValue = Number(watch('quantity')) || 1;
+                if (currentValue > 1) {
+                  setValue('quantity', currentValue - 1);
+                  trigger('quantity');
+                }
+              }}
+              disabled={Number(watch('quantity')) <= 1}
+              className="w-8 h-8 rounded-l-lg bg-slate-100 hover:bg-slate-200 disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center font-bold"
+            >
+              -
+            </button>
+
+            <div className="w-12 h-8 flex items-center justify-center border-x border-slate-300">
+              <span className="text-lg font-bold text-slate-900">
+                {watch('quantity') || 1}
+              </span>
+              <input
+                type="hidden"
+                {...register('quantity', { valueAsNumber: true })}
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                const currentValue = Number(watch('quantity')) || 1;
+                if (currentValue < 10) {
+                  setValue('quantity', currentValue + 1);
+                  trigger('quantity');
+                }
+              }}
+              disabled={Number(watch('quantity')) >= 10}
+              className="w-8 h-8 rounded-r-lg bg-slate-100 hover:bg-slate-200 disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center font-bold"
+            >
+              +
+            </button>
           </div>
         </div>
+
         {errors.quantity && (
-          <p
-            id="qty-error"
-            className="text-red-600 text-sm mt-1 flex items-center"
-          >
+          <p className="text-red-600 text-sm mt-2 flex items-center justify-center">
             <svg
               className="w-4 h-4 mr-1"
               fill="currentColor"
@@ -316,7 +345,7 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
         className="w-full bg-brand hover:bg-brand-600 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
         type="submit"
         disabled={isSubmitting || !customization.name.trim()}
-        aria-label={`Confirmar pedido de ${qty} sticker${qty > 1 ? 's' : ''} por €${total}`}
+        aria-label={`Confirmar pedido de ${qty} sticker${qty > 1 ? 's' : ''} por $${formatCLPAmount(total)}`}
       >
         {isSubmitting ? (
           <>

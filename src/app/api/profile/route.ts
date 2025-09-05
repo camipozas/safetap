@@ -11,6 +11,7 @@ interface RequestBody {
   stickerId?: string;
   profileId?: string;
   values: ProfileValues;
+  selectedStickerIds?: string[];
 }
 
 export async function POST(req: Request) {
@@ -27,7 +28,8 @@ export async function POST(req: Request) {
 
   try {
     const json = await req.json();
-    const { stickerId, profileId, values } = json as RequestBody;
+    const { stickerId, profileId, values, selectedStickerIds } =
+      json as RequestBody;
     const data = profileSchema.parse(values);
 
     if (profileId) {
@@ -37,6 +39,24 @@ export async function POST(req: Request) {
       });
       if (!existing) {
         return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+      }
+
+      // If selectedStickerIds is provided, validate all stickers belong to the user
+      if (selectedStickerIds && selectedStickerIds.length > 0) {
+        const userStickers = await prisma.sticker.findMany({
+          where: {
+            id: { in: selectedStickerIds },
+            ownerId: user.id,
+          },
+          select: { id: true },
+        });
+
+        if (userStickers.length !== selectedStickerIds.length) {
+          return NextResponse.json(
+            { error: 'Algunos stickers no pertenecen al usuario' },
+            { status: 403 }
+          );
+        }
       }
 
       const updated = await prisma.emergencyProfile.update({
@@ -54,6 +74,62 @@ export async function POST(req: Request) {
           },
         },
       });
+
+      // If selectedStickerIds is provided, update/create individual profiles for each selected sticker
+      if (selectedStickerIds && selectedStickerIds.length > 0) {
+        // Get stickers that don't have the current profile assigned
+        const stickersToUpdate = await prisma.sticker.findMany({
+          where: {
+            id: { in: selectedStickerIds },
+            ownerId: user.id,
+          },
+          include: {
+            EmergencyProfile: true,
+          },
+        });
+
+        // Update or create profiles for each selected sticker
+        for (const sticker of stickersToUpdate) {
+          if (sticker.EmergencyProfile) {
+            // Update existing profile for this sticker
+            await prisma.emergencyProfile.update({
+              where: { id: sticker.EmergencyProfile.id },
+              data: {
+                ...data,
+                updatedByUserAt: new Date(),
+                EmergencyContact: {
+                  deleteMany: { profileId: sticker.EmergencyProfile.id },
+                  create: data.contacts.map((contact) => ({
+                    id: crypto.randomUUID(),
+                    ...contact,
+                    updatedAt: new Date(),
+                  })),
+                },
+              },
+            });
+          } else {
+            // Create new profile for this sticker
+            await prisma.emergencyProfile.create({
+              data: {
+                id: crypto.randomUUID(),
+                userId: user.id,
+                stickerId: sticker.id,
+                ...data,
+                updatedByUserAt: new Date(),
+                updatedAt: new Date(),
+                EmergencyContact: {
+                  create: data.contacts.map((contact) => ({
+                    id: crypto.randomUUID(),
+                    ...contact,
+                    updatedAt: new Date(),
+                  })),
+                },
+              },
+            });
+          }
+        }
+      }
+
       return NextResponse.json({ id: updated.id });
     }
 

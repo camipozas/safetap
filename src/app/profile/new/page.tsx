@@ -17,7 +17,7 @@ export default async function NewProfilePage({
   return (
     <div className="max-w-2xl">
       <h1 className="text-2xl font-semibold mb-4">Perfil de emergencia</h1>
-      <ProfileForm stickerId={stickerId} />
+      <ProfileForm stickerId={stickerId} showTemplates={true} />
     </div>
   );
 }

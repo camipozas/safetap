@@ -4,6 +4,7 @@ import { memo, useCallback, useState } from 'react';
 
 import { CountrySelect } from '@/components/CountrySelect';
 import StickerPreview from '@/components/StickerPreview';
+import StickerTemplateManager from '@/components/StickerTemplateManager';
 import {
   COLOR_PRESETS,
   DEFAULT_COLOR_PRESET,
@@ -12,6 +13,7 @@ import {
 
 interface StickerCustomizerProps {
   onCustomizationChange?: (data: StickerCustomization) => void;
+  showTemplates?: boolean;
 }
 
 export interface StickerCustomization {
@@ -24,6 +26,7 @@ export interface StickerCustomization {
 
 const StickerCustomizerComponent = ({
   onCustomizationChange,
+  showTemplates = false,
 }: StickerCustomizerProps) => {
   const [customization, setCustomization] = useState<StickerCustomization>({
     name: '',
@@ -40,6 +43,14 @@ const StickerCustomizerComponent = ({
       onCustomizationChange?.(newCustomization);
     },
     [customization, onCustomizationChange]
+  );
+
+  const handleTemplateApply = useCallback(
+    (template: StickerCustomization) => {
+      setCustomization(template);
+      onCustomizationChange?.(template);
+    },
+    [onCustomizationChange]
   );
 
   const selectColorPreset = useCallback(
@@ -85,6 +96,20 @@ const StickerCustomizerComponent = ({
       <div className="space-y-6 order-2 lg:order-1">
         <div>
           <h2 className="text-2xl font-bold mb-6">Personaliza tu sticker</h2>
+
+          {/* Template Manager - only show if showTemplates is true */}
+          {showTemplates && (
+            <div className="mb-6">
+              <StickerTemplateManager
+                onTemplateApply={handleTemplateApply}
+                onSaveAsTemplate={(customization, name) => {
+                  console.log('Template saved:', name, customization);
+                }}
+                currentCustomization={customization}
+                showSaveOption={customization.name.trim().length > 0}
+              />
+            </div>
+          )}
 
           {/* Nombre */}
           <div className="mb-6">

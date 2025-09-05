@@ -13,37 +13,41 @@ interface UserEditFormProps {
       id: string;
       nameOnSticker: string;
       flagCode: string;
-      EmergencyProfile: {
+      status: string;
+    }>;
+    EmergencyProfile: Array<{
+      id: string;
+      bloodType: string | null;
+      allergies: string[];
+      conditions: string[];
+      medications: string[];
+      notes: string | null;
+      EmergencyContact: Array<{
         id: string;
-        bloodType: string | null;
-        allergies: string[];
-        conditions: string[];
-        medications: string[];
-        notes: string | null;
-        EmergencyContact: Array<{
-          id: string;
-          name: string;
-          phone: string;
-          relation: string;
-          preferred: boolean;
-        }>;
-      } | null;
+        name: string;
+        phone: string;
+        relation: string;
+        preferred: boolean;
+      }>;
     }>;
   };
 }
 
 export default function UserEditForm({ user }: UserEditFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Get the most recent emergency profile (optimized approach)
+  const emergencyProfile = user.EmergencyProfile?.[0];
+
   const [formData, setFormData] = useState({
     name: user.name || '',
     country: user.country || '',
-    bloodType: user.Sticker[0]?.EmergencyProfile?.bloodType || '',
-    allergies: user.Sticker[0]?.EmergencyProfile?.allergies?.join(', ') || '',
-    conditions: user.Sticker[0]?.EmergencyProfile?.conditions?.join(', ') || '',
-    medications:
-      user.Sticker[0]?.EmergencyProfile?.medications?.join(', ') || '',
-    notes: user.Sticker[0]?.EmergencyProfile?.notes || '',
-    contacts: user.Sticker[0]?.EmergencyProfile?.EmergencyContact || [
+    bloodType: emergencyProfile?.bloodType || '',
+    allergies: emergencyProfile?.allergies?.join(', ') || '',
+    conditions: emergencyProfile?.conditions?.join(', ') || '',
+    medications: emergencyProfile?.medications?.join(', ') || '',
+    notes: emergencyProfile?.notes || '',
+    contacts: emergencyProfile?.EmergencyContact || [
       { id: '', name: '', phone: '', relation: '', preferred: true },
     ],
   });

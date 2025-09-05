@@ -97,7 +97,7 @@ describe('LoginForm', () => {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           email: 'test@example.com',
-          callbackUrl: '/welcome?cta=sticker',
+          callbackUrl: '/account',
         }),
       });
     });

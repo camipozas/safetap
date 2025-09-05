@@ -26,21 +26,28 @@ export default async function EditUserPage({
     redirect('/dashboard');
   }
 
-  // Get the user data with their sticker and profile
+  // Get the user data with their emergency profile (optimized approach)
   const userData = await prisma.user.findUnique({
     where: { id },
     include: {
       Sticker: {
+        select: {
+          id: true,
+          nameOnSticker: true,
+          flagCode: true,
+          status: true,
+        },
+      },
+      EmergencyProfile: {
         include: {
-          EmergencyProfile: {
-            include: {
-              EmergencyContact: {
-                orderBy: {
-                  preferred: 'desc',
-                },
-              },
+          EmergencyContact: {
+            orderBy: {
+              preferred: 'desc',
             },
           },
+        },
+        orderBy: {
+          updatedByUserAt: 'desc',
         },
       },
     },

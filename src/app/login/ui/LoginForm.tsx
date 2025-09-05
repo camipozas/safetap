@@ -3,7 +3,7 @@ import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 
 export default function LoginForm({
-  callbackUrl = '/welcome?cta=sticker',
+  callbackUrl = '/account',
 }: {
   callbackUrl?: string;
 }) {
