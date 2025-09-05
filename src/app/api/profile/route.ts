@@ -11,7 +11,7 @@ interface RequestBody {
   stickerId?: string;
   profileId?: string;
   values: ProfileValues;
-  selectedStickerIds?: string[];
+  selectedStickerIds?: string[]; // Para operaciones en múltiples stickers
 }
 
 export async function POST(req: Request) {
@@ -30,43 +30,65 @@ export async function POST(req: Request) {
     const json = await req.json();
     const { stickerId, profileId, values, selectedStickerIds } =
       json as RequestBody;
+
+    // Debug logs temporales
+    console.log('=== PROFILE API DEBUG ===');
+    console.log('stickerId:', stickerId);
+    console.log('profileId:', profileId);
+    console.log('selectedStickerIds:', selectedStickerIds);
+    console.log(
+      'Modo:',
+      stickerId
+        ? 'INDIVIDUAL'
+        : selectedStickerIds?.length
+          ? 'MÚLTIPLE'
+          : 'CREAR NUEVO'
+    );
+    console.log('Datos recibidos en API:', JSON.stringify(values, null, 2));
+
     const data = profileSchema.parse(values);
 
-    if (profileId) {
-      // Ensure the profile belongs to the current user
+    // Separate contacts from other profile data
+    const { contacts, ...profileData } = data;
+
+    // MODO INDIVIDUAL: actualizar perfil específico de un sticker
+    if (stickerId && profileId) {
+      console.log('Modo INDIVIDUAL - Actualizando perfil existente');
+
+      // Verificar que el perfil existe y pertenece al usuario y al sticker correcto
       const existing = await prisma.emergencyProfile.findFirst({
-        where: { id: profileId, userId: user.id },
+        where: {
+          id: profileId,
+          userId: user.id,
+          stickerId, // Asegurar que es el perfil del sticker correcto
+        },
       });
+
       if (!existing) {
-        return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
-      }
-
-      // If selectedStickerIds is provided, validate all stickers belong to the user
-      if (selectedStickerIds && selectedStickerIds.length > 0) {
-        const userStickers = await prisma.sticker.findMany({
-          where: {
-            id: { in: selectedStickerIds },
-            ownerId: user.id,
+        return NextResponse.json(
+          {
+            error: 'Perfil no encontrado o no autorizado para este sticker',
           },
-          select: { id: true },
-        });
-
-        if (userStickers.length !== selectedStickerIds.length) {
-          return NextResponse.json(
-            { error: 'Algunos stickers no pertenecen al usuario' },
-            { status: 403 }
-          );
-        }
+          { status: 403 }
+        );
       }
 
+      console.log(
+        'Actualizando perfil:',
+        profileId,
+        'para sticker:',
+        stickerId
+      );
+
+      // Update the profile
       const updated = await prisma.emergencyProfile.update({
         where: { id: profileId },
         data: {
-          ...data,
+          ...profileData,
           updatedByUserAt: new Date(),
           EmergencyContact: {
             deleteMany: { profileId },
-            create: data.contacts.map((contact) => ({
+            create: contacts.map((contact) => ({
               id: crypto.randomUUID(),
               ...contact,
               updatedAt: new Date(),
@@ -75,66 +97,13 @@ export async function POST(req: Request) {
         },
       });
 
-      // If selectedStickerIds is provided, update/create individual profiles for each selected sticker
-      if (selectedStickerIds && selectedStickerIds.length > 0) {
-        // Get stickers that don't have the current profile assigned
-        const stickersToUpdate = await prisma.sticker.findMany({
-          where: {
-            id: { in: selectedStickerIds },
-            ownerId: user.id,
-          },
-          include: {
-            EmergencyProfile: true,
-          },
-        });
-
-        // Update or create profiles for each selected sticker
-        for (const sticker of stickersToUpdate) {
-          if (sticker.EmergencyProfile) {
-            // Update existing profile for this sticker
-            await prisma.emergencyProfile.update({
-              where: { id: sticker.EmergencyProfile.id },
-              data: {
-                ...data,
-                updatedByUserAt: new Date(),
-                EmergencyContact: {
-                  deleteMany: { profileId: sticker.EmergencyProfile.id },
-                  create: data.contacts.map((contact) => ({
-                    id: crypto.randomUUID(),
-                    ...contact,
-                    updatedAt: new Date(),
-                  })),
-                },
-              },
-            });
-          } else {
-            // Create new profile for this sticker
-            await prisma.emergencyProfile.create({
-              data: {
-                id: crypto.randomUUID(),
-                userId: user.id,
-                stickerId: sticker.id,
-                ...data,
-                updatedByUserAt: new Date(),
-                updatedAt: new Date(),
-                EmergencyContact: {
-                  create: data.contacts.map((contact) => ({
-                    id: crypto.randomUUID(),
-                    ...contact,
-                    updatedAt: new Date(),
-                  })),
-                },
-              },
-            });
-          }
-        }
-      }
-
       return NextResponse.json({ id: updated.id });
     }
 
-    // Creating new profile: if linking to a sticker, validate sticker ownership
-    if (stickerId) {
+    // MODO INDIVIDUAL: crear nuevo perfil para un sticker específico
+    if (stickerId && !profileId) {
+      console.log('Modo INDIVIDUAL - Creando nuevo perfil');
+
       const sticker = await prisma.sticker.findFirst({
         where: { id: stickerId, ownerId: user.id },
       });
@@ -144,25 +113,118 @@ export async function POST(req: Request) {
           { status: 404 }
         );
       }
+
+      const created = await prisma.emergencyProfile.create({
+        data: {
+          id: crypto.randomUUID(),
+          userId: user.id,
+          stickerId,
+          ...profileData,
+          updatedAt: new Date(),
+          EmergencyContact: {
+            create: contacts.map((contact) => ({
+              id: crypto.randomUUID(),
+              ...contact,
+              updatedAt: new Date(),
+            })),
+          },
+        },
+      });
+
+      return NextResponse.json({ id: created.id });
     }
 
-    const created = await prisma.emergencyProfile.create({
-      data: {
-        id: crypto.randomUUID(),
-        userId: user.id,
-        stickerId,
-        ...data,
-        updatedAt: new Date(),
-        EmergencyContact: {
-          create: data.contacts.map((contact) => ({
-            id: crypto.randomUUID(),
-            ...contact,
-            updatedAt: new Date(),
-          })),
+    // MODO MÚLTIPLE: crear/actualizar perfiles individuales para cada sticker seleccionado
+    if (selectedStickerIds && selectedStickerIds.length > 0) {
+      console.log(
+        'Modo MÚLTIPLE - Actualizando',
+        selectedStickerIds.length,
+        'stickers'
+      );
+
+      // Validar que todos los stickers pertenecen al usuario
+      const userStickers = await prisma.sticker.findMany({
+        where: {
+          id: { in: selectedStickerIds },
+          ownerId: user.id,
         },
+        include: {
+          EmergencyProfile: true,
+        },
+      });
+
+      if (userStickers.length !== selectedStickerIds.length) {
+        return NextResponse.json(
+          { error: 'Algunos stickers no pertenecen al usuario' },
+          { status: 403 }
+        );
+      }
+
+      const results = [];
+
+      // Crear/actualizar perfil individual para cada sticker seleccionado
+      for (const sticker of userStickers) {
+        if (sticker.EmergencyProfile) {
+          // Actualizar perfil existente para este sticker específico
+          const updated = await prisma.emergencyProfile.update({
+            where: { id: sticker.EmergencyProfile.id },
+            data: {
+              ...profileData,
+              updatedByUserAt: new Date(),
+              EmergencyContact: {
+                deleteMany: { profileId: sticker.EmergencyProfile.id },
+                create: contacts.map((contact) => ({
+                  id: crypto.randomUUID(),
+                  ...contact,
+                  updatedAt: new Date(),
+                })),
+              },
+            },
+          });
+          results.push({
+            stickerId: sticker.id,
+            profileId: updated.id,
+            action: 'updated',
+          });
+        } else {
+          // Crear nuevo perfil individual para este sticker
+          const created = await prisma.emergencyProfile.create({
+            data: {
+              id: crypto.randomUUID(),
+              userId: user.id,
+              stickerId: sticker.id,
+              ...profileData,
+              updatedAt: new Date(),
+              EmergencyContact: {
+                create: contacts.map((contact) => ({
+                  id: crypto.randomUUID(),
+                  ...contact,
+                  updatedAt: new Date(),
+                })),
+              },
+            },
+          });
+          results.push({
+            stickerId: sticker.id,
+            profileId: created.id,
+            action: 'created',
+          });
+        }
+      }
+
+      return NextResponse.json({
+        message: `Perfiles actualizados/creados para ${results.length} stickers`,
+        results,
+      });
+    }
+
+    // Si llegamos aquí, no se especificó ni stickerId ni selectedStickerIds
+    return NextResponse.json(
+      {
+        error: 'Debe especificar un sticker individual o una lista de stickers',
       },
-    });
-    return NextResponse.json({ id: created.id });
+      { status: 400 }
+    );
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Error desconocido';
     return NextResponse.json({ error: message }, { status: 400 });

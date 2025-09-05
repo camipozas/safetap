@@ -7,6 +7,7 @@ import { z } from 'zod';
 import BankAccountInfo from '@/components/BankAccountInfo';
 import DiscountCodeInput from '@/components/DiscountCodeInput';
 import { StickerCustomization } from '@/components/StickerCustomizerNew';
+import { useTemporaryPaymentRef } from '@/hooks/useTemporaryPaymentRef';
 import { getColorPresetById } from '@/lib/color-presets';
 import { PRICE_PER_STICKER_CLP, formatCLPAmount } from '@/lib/constants';
 
@@ -30,6 +31,7 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
     amount: number;
     newTotal: number;
   } | null>(null);
+  const { tempReference, markAsConfirmed } = useTemporaryPaymentRef();
   const {
     register,
     handleSubmit,
@@ -59,12 +61,38 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
       stickerColor: customization.stickerColor,
       textColor: customization.textColor,
       discountCode: appliedDiscount?.code,
+      tempReference, // Send the temporary reference
     };
 
-    const res = await fetch('/api/checkout/transfer/init', {
+    // Use different endpoint and format based on quantity
+    let requestData;
+    let endpoint;
+
+    if (data.quantity > 1) {
+      // For multiple stickers, convert to multi-sticker format
+      endpoint = '/api/checkout/multi-sticker/init';
+      requestData = {
+        email: orderData.email,
+        discountCode: orderData.discountCode,
+        tempReference: orderData.tempReference,
+        stickers: Array.from({ length: data.quantity }, () => ({
+          nameOnSticker: orderData.nameOnSticker,
+          flagCode: orderData.flagCode,
+          colorPresetId: orderData.colorPresetId,
+          stickerColor: orderData.stickerColor,
+          textColor: orderData.textColor,
+        })),
+      };
+    } else {
+      // For single sticker, use original format
+      endpoint = '/api/checkout/transfer/init';
+      requestData = orderData;
+    }
+
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(orderData),
+      body: JSON.stringify(requestData),
     });
 
     if (!res.ok) {
@@ -74,10 +102,9 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
     }
 
     const result = await res.json();
-    // Store the reference in sessionStorage before redirect
-    // This ensures we don't lose it during authentication flow
+    // Mark the temporary reference as confirmed
     if (result.reference) {
-      sessionStorage.setItem('pendingPaymentRef', result.reference);
+      markAsConfirmed(result.reference);
     }
     window.location.href = `/account?ref=${encodeURIComponent(result.reference)}`;
   }
@@ -318,7 +345,17 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
       </div>
 
       {/* Datos Bancarios */}
-      <BankAccountInfo />
+      <BankAccountInfo
+        paymentReference={
+          tempReference
+            ? {
+                reference: tempReference,
+                amount: total,
+                description: `${qty} sticker${qty > 1 ? 's' : ''} SafeTap - ${customization.name}`,
+              }
+            : null
+        }
+      />
 
       {/* Server error */}
       {serverError && (

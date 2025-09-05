@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { authOptions } from '../../../../../../lib/auth';
@@ -121,13 +122,16 @@ export async function PUT(
         // Crear un nuevo pago si no existe
         await prisma.payment.create({
           data: {
+            id: crypto.randomUUID(),
             userId: order.ownerId,
             stickerId: id,
+            quantity: 1, // Un sticker por defecto en el backoffice
             amount: 6990, // Precio estándar del sticker
             currency: 'CLP',
             reference: `STK-${id}-${Date.now()}`,
             status: PaymentStatus.VERIFIED,
-          } as any,
+            updatedAt: new Date(),
+          },
         });
       } else {
         // Actualizar el pago más reciente

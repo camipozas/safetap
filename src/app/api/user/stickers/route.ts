@@ -13,14 +13,18 @@ export async function GET() {
 
     const userStickers = await prisma.sticker.findMany({
       where: { ownerId: session.user.id },
-      select: {
-        id: true,
-        nameOnSticker: true,
-        flagCode: true,
-        colorPresetId: true,
-        stickerColor: true,
-        textColor: true,
-        createdAt: true,
+      include: {
+        EmergencyProfile: {
+          select: {
+            id: true,
+            bloodType: true,
+            allergies: true,
+            conditions: true,
+            medications: true,
+            insurance: true,
+            organDonor: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -28,12 +32,13 @@ export async function GET() {
     return NextResponse.json({
       stickers: userStickers.map((sticker) => ({
         id: sticker.id,
-        name: sticker.nameOnSticker,
+        nameOnSticker: sticker.nameOnSticker,
         flagCode: sticker.flagCode,
         colorPresetId: sticker.colorPresetId,
         stickerColor: sticker.stickerColor,
         textColor: sticker.textColor,
         createdAt: sticker.createdAt,
+        EmergencyProfile: sticker.EmergencyProfile,
       })),
     });
   } catch (error) {

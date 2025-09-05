@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 
 interface ProfileTemplate {
   id: string;
+  name?: string;
+  stickerName?: string;
+  stickerFlagCode?: string;
   bloodType?: string;
   allergies?: string[];
   conditions?: string[];
@@ -26,41 +29,62 @@ interface ProfileTemplate {
 interface ProfileTemplateManagerProps {
   onTemplateApply: (profileData: ProfileTemplate) => void;
   showTitle?: boolean;
+  excludeStickerId?: string; // Para excluir el sticker actual al editar uno específico
 }
 
 export default function ProfileTemplateManager({
   onTemplateApply,
   showTitle = true,
+  excludeStickerId,
 }: ProfileTemplateManagerProps) {
   const [templates, setTemplates] = useState<ProfileTemplate[]>([]);
   const [loading, setLoading] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
 
   useEffect(() => {
-    if (showTemplates) {
-      loadTemplates();
+    if (!showTemplates) {
+      return;
     }
-  }, [showTemplates]);
 
-  const loadTemplates = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('/api/profile/templates');
-      if (response.ok) {
-        const data = await response.json();
-        // Solo mostrar templates si existe un perfil de emergencia
-        if (data.emergencyProfile) {
-          setTemplates([data.emergencyProfile]);
-        } else {
-          setTemplates([]);
+    const loadTemplates = async () => {
+      setLoading(true);
+      try {
+        const url = excludeStickerId
+          ? `/api/profile/templates?excludeStickerId=${excludeStickerId}`
+          : '/api/profile/templates';
+
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          const availableTemplates: ProfileTemplate[] = [];
+
+          // Agregar perfil general si existe
+          if (data.emergencyProfile) {
+            availableTemplates.push({
+              ...data.emergencyProfile,
+              name: data.emergencyProfile.name || 'Perfil general',
+            });
+          }
+
+          // Agregar perfiles de otros stickers
+          if (
+            data.stickerProfileTemplates &&
+            data.stickerProfileTemplates.length > 0
+          ) {
+            availableTemplates.push(...data.stickerProfileTemplates);
+          }
+
+          setTemplates(availableTemplates);
         }
+      } catch (error) {
+        console.error('Error loading profile templates:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error loading profile templates:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    loadTemplates();
+  }, [showTemplates, excludeStickerId]);
 
   const handleApplyTemplate = (template: ProfileTemplate) => {
     onTemplateApply(template);
@@ -68,7 +92,40 @@ export default function ProfileTemplateManager({
   };
 
   if (templates.length === 0 && !showTemplates) {
-    return null;
+    return (
+      <div className="space-y-4">
+        {showTitle && (
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Copiar información de otro perfil
+            </h3>
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setShowTemplates(true)}
+            className="inline-flex items-center px-4 py-2 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors text-sm font-medium"
+          >
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+              />
+            </svg>
+            Buscar perfiles existentes
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -131,10 +188,17 @@ export default function ProfileTemplateManager({
                     >
                       <div className="flex items-center justify-between mb-2">
                         <h5 className="font-medium text-sm text-gray-900 truncate">
-                          Perfil médico actual
+                          {template.name || 'Perfil médico'}
                         </h5>
+                        {template.stickerFlagCode && (
+                          <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                            {template.stickerFlagCode}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-start">
                         <svg
-                          className="w-4 h-4 text-purple-600"
+                          className="w-4 h-4 text-purple-600 mr-2 mt-0.5 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -146,25 +210,56 @@ export default function ProfileTemplateManager({
                             d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
                           />
                         </svg>
-                      </div>
-                      <div className="space-y-1">
-                        {template.bloodType && (
-                          <p className="text-xs text-gray-600">
-                            Tipo sangre: {template.bloodType}
-                          </p>
-                        )}
-                        {template.contacts && template.contacts.length > 0 && (
-                          <p className="text-xs text-gray-600">
-                            {template.contacts.length} contacto(s) de emergencia
-                          </p>
-                        )}
-                        {(template.allergies?.length ||
-                          template.conditions?.length ||
-                          template.medications?.length) && (
-                          <p className="text-xs text-gray-600">
-                            Información médica disponible
-                          </p>
-                        )}
+                        <div className="space-y-1 flex-1">
+                          {template.bloodType && (
+                            <p className="text-xs text-gray-600">
+                              <strong>Tipo sangre:</strong> {template.bloodType}
+                            </p>
+                          )}
+                          {template.contacts &&
+                            template.contacts.length > 0 && (
+                              <p className="text-xs text-gray-600">
+                                <strong>Contactos:</strong>{' '}
+                                {template.contacts.length} contacto(s) de
+                                emergencia
+                              </p>
+                            )}
+                          {template.allergies &&
+                            template.allergies.length > 0 && (
+                              <p className="text-xs text-gray-600">
+                                <strong>Alergias:</strong>{' '}
+                                {template.allergies.slice(0, 2).join(', ')}
+                                {template.allergies.length > 2 ? '...' : ''}
+                              </p>
+                            )}
+                          {template.conditions &&
+                            template.conditions.length > 0 && (
+                              <p className="text-xs text-gray-600">
+                                <strong>Condiciones:</strong>{' '}
+                                {template.conditions.slice(0, 2).join(', ')}
+                                {template.conditions.length > 2 ? '...' : ''}
+                              </p>
+                            )}
+                          {template.medications &&
+                            template.medications.length > 0 && (
+                              <p className="text-xs text-gray-600">
+                                <strong>Medicamentos:</strong>{' '}
+                                {template.medications.slice(0, 2).join(', ')}
+                                {template.medications.length > 2 ? '...' : ''}
+                              </p>
+                            )}
+                          {template.organDonor !== undefined && (
+                            <p className="text-xs text-gray-600">
+                              <strong>Donante de órganos:</strong>{' '}
+                              {template.organDonor ? 'Sí' : 'No'}
+                            </p>
+                          )}
+                          {template.insurance && (
+                            <p className="text-xs text-gray-600">
+                              <strong>Seguro médico:</strong> Configurado
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </button>
                   ))}
@@ -172,10 +267,11 @@ export default function ProfileTemplateManager({
               ) : (
                 <div className="text-center py-8">
                   <p className="text-purple-600 text-sm">
-                    No tienes perfiles guardados aún.
+                    No hay otros perfiles disponibles para copiar.
                   </p>
                   <p className="text-purple-500 text-xs mt-1">
-                    Crea tu primer perfil y podrás copiarlo después.
+                    Completa este perfil y luego podrás copiarlo a otros
+                    stickers.
                   </p>
                 </div>
               )}

@@ -80,6 +80,7 @@ model Payment {
   id             String        @id
   userId         String
   stickerId      String?
+  quantity       Int           @default(1)
   amount         Int
   originalAmount Int?
   discountCodeId String?

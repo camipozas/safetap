@@ -95,7 +95,9 @@ describe('AccountPage - Rejected Payment Handling', () => {
 
     // Should NOT show profile buttons when payment status is REJECTED
     expect(screen.queryByText('Ver perfil público')).not.toBeInTheDocument();
-    expect(screen.queryByText('Editar información')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Editar información de emergencia')
+    ).not.toBeInTheDocument();
 
     // Should show rejection message instead
     expect(screen.getByText('Pago rechazado')).toBeInTheDocument();

@@ -134,6 +134,8 @@ describe('AccountPage - Pending Payment Visibility', () => {
 
     // Should show profile buttons when payment is PENDING (not REJECTED)
     expect(screen.getByText('Ver perfil público')).toBeInTheDocument();
-    expect(screen.getByText('Editar información')).toBeInTheDocument();
+    expect(
+      screen.getByText('Editar información de emergencia')
+    ).toBeInTheDocument();
   });
 });

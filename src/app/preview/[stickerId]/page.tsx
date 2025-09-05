@@ -250,7 +250,7 @@ export default async function PreviewPage(props: {
               </p>
               {sticker.status === 'SHIPPED' || sticker.status === 'ACTIVE' ? (
                 <a
-                  href={`/profile/new?stickerId=${sticker.id}`}
+                  href={`/sticker/${sticker.id}/profile/edit`}
                   className="btn btn-primary"
                 >
                   Configurar información
@@ -277,7 +277,7 @@ export default async function PreviewPage(props: {
         )}
         {(sticker.status === 'SHIPPED' || sticker.status === 'ACTIVE') && (
           <a
-            href={`/profile/new?stickerId=${sticker.id}`}
+            href={`/sticker/${sticker.id}/profile/edit`}
             className="btn btn-primary"
           >
             {profile ? 'Editar información' : 'Configurar información'}

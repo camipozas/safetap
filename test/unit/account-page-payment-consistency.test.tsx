@@ -147,7 +147,9 @@ describe('AccountPage - Payment Consistency', () => {
 
     // Should show profile buttons when payment status is VERIFIED (not REJECTED)
     expect(screen.getByText('Ver perfil público')).toBeInTheDocument();
-    expect(screen.getByText('Editar información')).toBeInTheDocument();
+    expect(
+      screen.getByText('Editar información de emergencia')
+    ).toBeInTheDocument();
     expect(screen.queryByText('Pago rechazado')).not.toBeInTheDocument();
   });
 });

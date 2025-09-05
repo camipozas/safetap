@@ -190,7 +190,7 @@ Monto: $${paymentReference.amount.toLocaleString('es-CL')}${paymentReference.des
           <div className="mt-3 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-green-800">
-                Referencia:
+                Código de referencia:
               </span>
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-green-900 font-mono bg-white px-2 py-1 rounded border">
@@ -240,17 +240,6 @@ Monto: $${paymentReference.amount.toLocaleString('es-CL')}${paymentReference.des
                 ${paymentReference.amount.toLocaleString('es-CL')}
               </span>
             </div>
-
-            {paymentReference.description && (
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-green-800">
-                  Descripción:
-                </span>
-                <span className="text-sm text-green-900">
-                  {paymentReference.description}
-                </span>
-              </div>
-            )}
           </div>
         </div>
       )}

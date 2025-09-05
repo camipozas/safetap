@@ -207,6 +207,7 @@ export const multiStickerCheckoutSchema = z.object({
     .min(1, 'At least one sticker required')
     .max(10, 'Maximum 10 stickers allowed'),
   discountCode: z.string().optional(),
+  tempReference: z.string().optional(), // Accept temporary reference
 });
 
 export type ProfileInput = z.infer<typeof profileSchema>;

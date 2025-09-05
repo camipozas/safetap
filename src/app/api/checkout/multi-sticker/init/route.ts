@@ -16,9 +16,13 @@ export async function POST(req: Request) {
   console.log('💳 Starting multi-sticker checkout transfer initialization');
   try {
     const json = await req.json();
+    console.log('📥 RAW REQUEST BODY:', JSON.stringify(json, null, 2));
     console.log('📥 Received multi-sticker checkout data:', {
       email: json.email,
       stickersCount: json.stickers?.length,
+      tempReference: json.tempReference,
+      discountCode: json.discountCode,
+      stickersFullArray: json.stickers, // Log full array
     });
 
     const data = multiStickerCheckoutSchema.parse(json);
@@ -90,13 +94,35 @@ export async function POST(req: Request) {
       }
     }
 
-    // Generate unique payment reference
-    const reference = await PaymentReferenceService.generateUniqueReference(
-      user.id,
-      finalAmount,
-      `${quantity} Stickers personalizados`
-    );
-    console.log('� Generated unique reference:', reference);
+    // Generate unique payment reference or use temp reference
+    let reference: string;
+    if (data.tempReference) {
+      // Validate that the temporary reference doesn't already exist in database
+      const existingPayment = await prisma.payment.findUnique({
+        where: { reference: data.tempReference },
+      });
+
+      if (existingPayment) {
+        console.log(
+          '⚠️ Temporary reference already exists, generating new one'
+        );
+        reference = await PaymentReferenceService.generateUniqueReference(
+          user.id,
+          finalAmount,
+          `${quantity} Stickers personalizados`
+        );
+      } else {
+        reference = data.tempReference;
+        console.log('🔖 Using temporary reference:', reference);
+      }
+    } else {
+      reference = await PaymentReferenceService.generateUniqueReference(
+        user.id,
+        finalAmount,
+        `${quantity} Stickers personalizados`
+      );
+      console.log('🔖 Generated unique reference:', reference);
+    }
 
     console.log('� Starting database transaction...');
     const result = await prisma.$transaction(async (tx) => {
@@ -167,6 +193,7 @@ export async function POST(req: Request) {
         reference,
         method: PAYMENT_METHOD,
         stickersCount: stickers.length,
+        quantity: stickers.length, // Add explicit quantity logging
       });
 
       const payment = await tx.payment.create({
@@ -174,6 +201,7 @@ export async function POST(req: Request) {
           id: crypto.randomUUID(),
           userId: user.id,
           stickerId: stickers[0].id, // Primary sticker for payment reference
+          quantity: stickers.length,
           amount: finalAmount,
           originalAmount: discountCodeId ? baseAmount : undefined,
           discountCodeId,
@@ -184,6 +212,13 @@ export async function POST(req: Request) {
           status: 'PENDING',
           updatedAt: new Date(),
         },
+      });
+
+      console.log('✅ Payment created successfully:', {
+        paymentId: payment.id,
+        quantity: payment.quantity,
+        amount: payment.amount,
+        reference: payment.reference,
       });
 
       return { stickers, payment };

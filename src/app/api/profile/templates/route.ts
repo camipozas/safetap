@@ -6,21 +6,42 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 // GET /api/profile/templates - Obtener templates del usuario
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Obtener el perfil de emergencia del usuario (solo uno, optimizado)
-    const emergencyProfile = await prisma.emergencyProfile.findFirst({
-      where: { userId: session.user.id },
+    // Obtener el parámetro de exclusión desde query params
+    const { searchParams } = new URL(request.url);
+    const excludeStickerId = searchParams.get('excludeStickerId');
+
+    // Obtener TODOS los perfiles de emergencia del usuario para usar como templates
+    const allUserProfiles = await prisma.emergencyProfile.findMany({
+      where: {
+        userId: session.user.id,
+      },
       include: {
         EmergencyContact: true,
+        Sticker: {
+          select: {
+            id: true,
+            nameOnSticker: true,
+            flagCode: true,
+          },
+        },
       },
       orderBy: { updatedByUserAt: 'desc' },
     });
+
+    // Separar entre perfil general y perfiles de stickers específicos
+    const emergencyProfile = allUserProfiles.find(
+      (profile) => !profile.stickerId
+    );
+    const stickerProfiles = allUserProfiles.filter(
+      (profile) => profile.stickerId && profile.stickerId !== excludeStickerId
+    );
 
     // Obtener todos los stickers del usuario para extraer diseños únicos
     const userStickers = await prisma.sticker.findMany({
@@ -54,11 +75,11 @@ export async function GET() {
       isTemplate: false,
     }));
 
-    return NextResponse.json({
-      // Datos médicos y contactos (únicos del usuario)
+    const response = {
       emergencyProfile: emergencyProfile
         ? {
             id: emergencyProfile.id,
+            name: 'Mi perfil general',
             bloodType: emergencyProfile.bloodType,
             allergies: emergencyProfile.allergies,
             conditions: emergencyProfile.conditions,
@@ -73,11 +94,35 @@ export async function GET() {
               name: contact.name,
               relation: contact.relation,
               phone: contact.phone,
-              country: contact.country,
+              country: contact.country || undefined,
               preferred: contact.preferred,
             })),
           }
         : null,
+      // Perfiles de otros stickers como templates
+      stickerProfileTemplates: stickerProfiles.map((profile) => ({
+        id: profile.id,
+        name: `Perfil de ${profile.Sticker?.nameOnSticker || 'Sticker'}`,
+        stickerName: profile.Sticker?.nameOnSticker,
+        stickerFlagCode: profile.Sticker?.flagCode,
+        bloodType: profile.bloodType,
+        allergies: profile.allergies,
+        conditions: profile.conditions,
+        medications: profile.medications,
+        notes: profile.notes,
+        language: profile.language,
+        organDonor: profile.organDonor,
+        insurance: profile.insurance,
+        consentPublic: profile.consentPublic,
+        contacts: profile.EmergencyContact.map((contact) => ({
+          id: contact.id,
+          name: contact.name,
+          relation: contact.relation,
+          phone: contact.phone,
+          country: contact.country || undefined,
+          preferred: contact.preferred,
+        })),
+      })),
       // Templates de diseño de stickers
       stickerTemplates,
       // Diseños guardados explícitamente
@@ -91,7 +136,9 @@ export async function GET() {
         textColor: design.textColor,
         isTemplate: design.isTemplate,
       })),
-    });
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error fetching templates:', error);
     return NextResponse.json(

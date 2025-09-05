@@ -17,6 +17,7 @@ interface StickerSelectorProps {
   onSelectionChange: (stickerIds: string[]) => void;
   className?: string;
   showTitle?: boolean;
+  specificStickerId?: string; // Si se proporciona, solo muestra este sticker y lo deshabilita
 }
 
 export default function StickerSelector({
@@ -24,6 +25,7 @@ export default function StickerSelector({
   onSelectionChange,
   className = '',
   showTitle = false,
+  specificStickerId,
 }: StickerSelectorProps) {
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,11 +38,21 @@ export default function StickerSelector({
         const response = await fetch('/api/user/stickers');
         if (response.ok) {
           const data = await response.json();
-          setStickers(data.stickers);
-          // Por defecto, seleccionar todos los stickers
-          if (selectedStickers.length === 0) {
-            onSelectionChange(data.stickers.map((s: Sticker) => s.id));
+
+          // Si hay un sticker específico, mostrar solo ese
+          const filteredStickers = specificStickerId
+            ? data.stickers.filter((s: Sticker) => s.id === specificStickerId)
+            : data.stickers;
+
+          setStickers(filteredStickers);
+
+          // Si hay un sticker específico, asegurar que esté seleccionado
+          if (specificStickerId) {
+            if (!selectedStickers.includes(specificStickerId)) {
+              onSelectionChange([specificStickerId]);
+            }
           }
+          // NO seleccionar automáticamente en modo múltiple - el usuario debe elegir conscientemente
         } else {
           throw new Error('Error al cargar stickers');
         }
@@ -52,7 +64,7 @@ export default function StickerSelector({
     };
 
     loadStickers();
-  }, [selectedStickers.length, onSelectionChange]);
+  }, [selectedStickers, onSelectionChange, specificStickerId]);
 
   const handleStickerToggle = (stickerId: string) => {
     const newSelection = selectedStickers.includes(stickerId)
@@ -110,42 +122,56 @@ export default function StickerSelector({
           </h3>
         </div>
       )}
-      <div className="flex gap-2 text-xs mb-3">
-        <button
-          type="button"
-          onClick={handleSelectAll}
-          className="text-blue-600 hover:text-blue-800"
-        >
-          Seleccionar todos
-        </button>
-        <span className="text-gray-400">|</span>
-        <button
-          type="button"
-          onClick={handleDeselectAll}
-          className="text-blue-600 hover:text-blue-800"
-        >
-          Deseleccionar todos
-        </button>
-      </div>
+      {!specificStickerId && (
+        <div className="flex gap-2 text-xs mb-3">
+          <button
+            type="button"
+            onClick={handleSelectAll}
+            className="text-blue-600 hover:text-blue-800"
+          >
+            Seleccionar todos
+          </button>
+          <span className="text-gray-400">|</span>
+          <button
+            type="button"
+            onClick={handleDeselectAll}
+            className="text-blue-600 hover:text-blue-800"
+          >
+            Deseleccionar todos
+          </button>
+        </div>
+      )}
 
       <div className="space-y-2 max-h-64 overflow-y-auto">
         {stickers.map((sticker) => (
           <div
             key={sticker.id}
-            className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+            className={`border rounded-lg p-3 transition-colors ${
               selectedStickers.includes(sticker.id)
                 ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:border-gray-300'
+                : 'border-gray-200'
+            } ${
+              specificStickerId
+                ? 'opacity-75'
+                : 'cursor-pointer hover:border-gray-300'
             }`}
-            onClick={() => handleStickerToggle(sticker.id)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleStickerToggle(sticker.id);
-              }
-            }}
-            role="button"
-            tabIndex={0}
+            onClick={
+              specificStickerId
+                ? undefined
+                : () => handleStickerToggle(sticker.id)
+            }
+            onKeyDown={
+              specificStickerId
+                ? undefined
+                : (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleStickerToggle(sticker.id);
+                    }
+                  }
+            }
+            role={specificStickerId ? undefined : 'button'}
+            tabIndex={specificStickerId ? undefined : 0}
           >
             <div className="flex items-center gap-3">
               <div className="flex-shrink-0">
@@ -153,8 +179,13 @@ export default function StickerSelector({
                   <input
                     type="checkbox"
                     checked={selectedStickers.includes(sticker.id)}
-                    onChange={() => handleStickerToggle(sticker.id)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    onChange={
+                      specificStickerId
+                        ? undefined
+                        : () => handleStickerToggle(sticker.id)
+                    }
+                    disabled={!!specificStickerId}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
                   />
                 </div>
               </div>
