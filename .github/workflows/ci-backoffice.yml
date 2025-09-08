@@ -105,7 +105,7 @@ jobs:
         run: npm run type-check
 
       - name: Test
-        run: npm run test:ci
+        run: NODE_ENV=test npm run test:ci
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_backoffice_test' }}
           DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_backoffice_test' }}
@@ -114,7 +114,7 @@ jobs:
           NEXTAUTH_BACKOFFICE_URL: ${{ secrets.NEXTAUTH_BACKOFFICE_URL || 'http://localhost:3001' }}
 
       - name: Build check
-        run: npm run build:vercel
+        run: NODE_ENV=production npm run build:vercel
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_backoffice_test' }}
           DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_backoffice_test' }}
