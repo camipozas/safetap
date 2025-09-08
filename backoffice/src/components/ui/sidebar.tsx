@@ -23,6 +23,7 @@ const navigation = [
   { name: 'Órdenes', href: '/dashboard/orders', icon: Package },
   { name: 'Usuarios', href: '/dashboard/users', icon: Users },
   { name: 'Descuentos', href: '/dashboard/discounts', icon: Percent },
+  { name: 'Promociones', href: '/dashboard/promotions', icon: Percent },
   { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
   { name: 'Reportes', href: '/dashboard/reports', icon: FileText },
   { name: 'Guía de Uso', href: '/dashboard/guide', icon: BookOpen },

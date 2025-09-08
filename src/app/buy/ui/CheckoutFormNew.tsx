@@ -7,6 +7,7 @@ import { z } from 'zod';
 import BankAccountInfo from '@/components/BankAccountInfo';
 import DiscountCodeInput from '@/components/DiscountCodeInput';
 import { StickerCustomization } from '@/components/StickerCustomizerNew';
+import { usePromotionsCalculator } from '@/hooks/usePromotionsCalculator';
 import { useTemporaryPaymentRef } from '@/hooks/useTemporaryPaymentRef';
 import { getColorPresetById } from '@/lib/color-presets';
 import { PRICE_PER_STICKER_CLP, formatCLPAmount } from '@/lib/constants';
@@ -16,7 +17,7 @@ const checkoutSchema = z.object({
   quantity: z
     .number()
     .min(1, 'Minimum 1 sticker')
-    .max(10, 'Maximum 10 stickers'),
+    .max(100, 'Maximum 100 stickers'),
   email: z.string().email('Invalid email').optional(),
 });
 
@@ -43,6 +44,43 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
     resolver: zodResolver(checkoutSchema),
     defaultValues: { quantity: 1 },
   });
+
+  const qty = watch('quantity') || 1;
+  const price = PRICE_PER_STICKER_CLP;
+
+  // Use promotions calculator for quantity-based discounts
+  const {
+    originalTotal,
+    finalTotal: quantityDiscountTotal,
+    discountAmount: quantityDiscountAmount,
+    hasDiscount: hasQuantityDiscount,
+    appliedPromotions,
+    isLoading: promotionsLoading,
+    error: promotionsError,
+  } = usePromotionsCalculator({
+    quantity: qty,
+    pricePerUnit: price,
+    itemName: 'Sticker personalizado',
+  });
+
+  // Debug logging for promotions
+  console.log('🔍 Checkout form promotion values:', {
+    qty,
+    price,
+    originalTotal,
+    quantityDiscountTotal,
+    quantityDiscountAmount,
+    hasQuantityDiscount,
+    appliedPromotions,
+    promotionsLoading,
+    promotionsError,
+  });
+
+  // Calculate final totals considering both quantity and code discounts
+  const subtotal = originalTotal;
+  const finalTotal = appliedDiscount
+    ? appliedDiscount.newTotal
+    : quantityDiscountTotal;
 
   async function onSubmit(data: z.infer<typeof checkoutSchema>) {
     setServerError(null);
@@ -108,12 +146,6 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
     }
     window.location.href = `/account?ref=${encodeURIComponent(result.reference)}`;
   }
-
-  const qty = watch('quantity');
-  const price = PRICE_PER_STICKER_CLP;
-  const subtotal = qty * price;
-  const total = appliedDiscount ? appliedDiscount.newTotal : subtotal;
-
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
       {/* Email */}
@@ -230,12 +262,12 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
               type="button"
               onClick={() => {
                 const currentValue = Number(watch('quantity')) || 1;
-                if (currentValue < 10) {
+                if (currentValue < 100) {
                   setValue('quantity', currentValue + 1);
                   trigger('quantity');
                 }
               }}
-              disabled={Number(watch('quantity')) >= 10}
+              disabled={Number(watch('quantity')) >= 100}
               className="w-8 h-8 rounded-r-lg bg-slate-100 hover:bg-slate-200 disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center font-bold"
             >
               +
@@ -260,6 +292,79 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
           </p>
         )}
       </div>
+
+      {/* Quantity-based Promotions Info */}
+      {promotionsLoading && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-3" />
+            <span className="text-blue-800 text-sm">
+              Calculando descuentos por cantidad...
+            </span>
+          </div>
+        </div>
+      )}
+
+      {promotionsError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg
+                className="h-5 w-5 text-red-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">
+                Error cargando descuentos
+              </h3>
+              <p className="mt-1 text-sm text-red-700">{promotionsError}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {hasQuantityDiscount &&
+        appliedPromotions.length > 0 &&
+        !promotionsLoading && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-5 w-5 text-green-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-green-800">
+                  ¡Descuento por cantidad aplicado!
+                </h3>
+                {appliedPromotions.map((promotion, index) => (
+                  <div key={index} className="mt-2 text-sm text-green-700">
+                    <p>{promotion.description}</p>
+                    <p className="font-medium">
+                      Ahorro: ${formatCLPAmount(promotion.discountAmount)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
       {/* Discount Code Input */}
       <DiscountCodeInput
@@ -294,9 +399,15 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
             </span>
             <span>${formatCLPAmount(subtotal)}</span>
           </div>
+          {hasQuantityDiscount && quantityDiscountAmount > 0 && (
+            <div className="flex justify-between text-green-600">
+              <span>Descuento por cantidad</span>
+              <span>-${formatCLPAmount(quantityDiscountAmount)}</span>
+            </div>
+          )}
           {appliedDiscount && (
             <div className="flex justify-between text-green-600">
-              <span>Descuento ({appliedDiscount.code})</span>
+              <span>Código descuento ({appliedDiscount.code})</span>
               <span>-${formatCLPAmount(appliedDiscount.amount)}</span>
             </div>
           )}
@@ -307,7 +418,7 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
           <div className="border-t border-slate-300 pt-2 mt-2">
             <div className="flex justify-between font-semibold text-slate-900 text-lg">
               <span>Total</span>
-              <span>${formatCLPAmount(total)}</span>
+              <span>${formatCLPAmount(finalTotal)}</span>
             </div>
           </div>
         </div>
@@ -350,7 +461,7 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
           tempReference
             ? {
                 reference: tempReference,
-                amount: total,
+                amount: finalTotal,
                 description: `${qty} sticker${qty > 1 ? 's' : ''} SafeTap - ${customization.name}`,
               }
             : null
@@ -382,7 +493,7 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
         className="w-full bg-brand hover:bg-brand-600 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
         type="submit"
         disabled={isSubmitting || !customization.name.trim()}
-        aria-label={`Confirmar pedido de ${qty} sticker${qty > 1 ? 's' : ''} por $${formatCLPAmount(total)}`}
+        aria-label={`Confirmar pedido de ${qty} sticker${qty > 1 ? 's' : ''} por $${formatCLPAmount(finalTotal)}`}
       >
         {isSubmitting ? (
           <>
@@ -410,7 +521,7 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
           </>
         ) : (
           <>
-            Confirmar pedido - ${formatCLPAmount(total)}
+            Confirmar pedido - ${formatCLPAmount(finalTotal)}
             <svg
               className="w-5 h-5 ml-2"
               fill="none"

@@ -7,6 +7,7 @@ import type { z } from 'zod';
 import BankAccountInfo from '@/components/BankAccountInfo';
 import { CountrySelect } from '@/components/CountrySelect';
 import DiscountCodeInput from '@/components/DiscountCodeInput';
+import { usePromotionsCalculator } from '@/hooks/usePromotionsCalculator';
 import { PRICE_PER_STICKER_CLP, formatCLPAmount } from '@/lib/constants';
 import { checkoutSchema } from '@/lib/validators';
 
@@ -63,10 +64,27 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
     window.location.href = `/account?ref=${encodeURIComponent(result.reference)}`;
   }
 
-  const qty = watch('quantity');
+  const qty = watch('quantity') || 1;
   const price = PRICE_PER_STICKER_CLP;
-  const subtotal = qty * price;
-  const total = appliedDiscount ? appliedDiscount.newTotal : subtotal;
+
+  // Use promotions calculator for quantity-based discounts
+  const {
+    originalTotal,
+    finalTotal: quantityDiscountTotal,
+    discountAmount: quantityDiscountAmount,
+    hasDiscount: hasQuantityDiscount,
+    appliedPromotions,
+  } = usePromotionsCalculator({
+    quantity: qty,
+    pricePerUnit: price,
+    itemName: 'Sticker personalizado',
+  });
+
+  // Calculate final totals considering both quantity and code discounts
+  const subtotal = originalTotal;
+  const total = appliedDiscount
+    ? appliedDiscount.newTotal
+    : quantityDiscountTotal;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
@@ -136,7 +154,7 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
             id="quantity"
             type="number"
             min={1}
-            max={10}
+            max={100}
             className="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all duration-200"
             aria-invalid={!!errors.quantity}
             aria-describedby={errors.quantity ? 'qty-error' : undefined}
@@ -166,6 +184,40 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
           </p>
         )}
       </div>
+
+      {/* Quantity-based Promotions Info */}
+      {hasQuantityDiscount && appliedPromotions.length > 0 && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg
+                className="h-5 w-5 text-green-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-green-800">
+                ¡Descuento por cantidad aplicado!
+              </h3>
+              {appliedPromotions.map((promotion, index) => (
+                <div key={index} className="mt-2 text-sm text-green-700">
+                  <p>{promotion.description}</p>
+                  <p className="font-medium">
+                    Ahorro: ${formatCLPAmount(promotion.discountAmount)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Discount Code Input */}
       <DiscountCodeInput
@@ -199,9 +251,15 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
             </span>
             <span>${formatCLPAmount(subtotal)}</span>
           </div>
+          {hasQuantityDiscount && quantityDiscountAmount > 0 && (
+            <div className="flex justify-between text-green-600">
+              <span>Descuento por cantidad</span>
+              <span>-${formatCLPAmount(quantityDiscountAmount)}</span>
+            </div>
+          )}
           {appliedDiscount && (
             <div className="flex justify-between text-green-600">
-              <span>Descuento ({appliedDiscount.code})</span>
+              <span>Código descuento ({appliedDiscount.code})</span>
               <span>-${formatCLPAmount(appliedDiscount.amount)}</span>
             </div>
           )}
