@@ -9,12 +9,16 @@ export default async function LoginPage({
   searchParams?: Promise<Record<string, string>>;
 }) {
   const session = await auth();
-  if (session?.user) {
-    redirect('/account');
-  }
-
   const resolvedSearchParams = await searchParams;
   const callbackUrl = resolvedSearchParams?.callbackUrl || '/account';
+
+  if (session?.user) {
+    console.log(
+      '🔍 LoginPage: User already authenticated, redirecting to callbackUrl:',
+      callbackUrl
+    );
+    redirect(callbackUrl);
+  }
 
   return (
     <div className="max-w-md mx-auto">

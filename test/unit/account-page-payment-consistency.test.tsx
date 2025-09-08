@@ -31,25 +31,24 @@ vi.mock('@/lib/prisma', () => ({
       findUnique: vi.fn(() => ({
         id: 'user-123',
         email: 'test@example.com',
-        Sticker: [
+        Payment: [
           {
-            id: 'sticker-123',
-            nameOnSticker: 'Test User',
-            flagCode: 'CL',
-            stickerColor: '#f1f5f9',
-            textColor: '#000000',
-            status: 'PAID',
-            slug: 'test-user',
-            serial: 'ST123',
-            Payment: [
-              {
-                id: 'payment-123',
-                status: 'VERIFIED',
-                amount: 6990,
-                currency: 'CLP',
-                createdAt: new Date('2025-08-20'),
-              },
-            ],
+            id: 'payment-123',
+            status: 'VERIFIED',
+            amount: 6990,
+            currency: 'CLP',
+            createdAt: new Date('2025-08-20'),
+            quantity: 1,
+            Sticker: {
+              id: 'sticker-123',
+              nameOnSticker: 'Test User',
+              flagCode: 'CL',
+              stickerColor: '#f1f5f9',
+              textColor: '#000000',
+              status: 'PAID',
+              slug: 'test-user',
+              serial: 'ST123',
+            },
           },
         ],
       })),

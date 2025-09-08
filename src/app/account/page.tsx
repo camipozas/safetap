@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 
 import ActivateStickerButton from '@/components/ActivateStickerButton';
 import BankAccountInfo from '@/components/BankAccountInfo';
+import EditProfileButton from '@/components/EditProfileButton';
 import PaymentReferenceHandler from '@/components/PaymentReferenceHandler';
 import { PaymentsTable } from '@/components/PaymentsTable';
 import StickerPreview from '@/components/StickerPreview';
@@ -156,9 +157,21 @@ export default async function AccountPage({
       <section>
         <h2 className="text-xl font-semibold">Mis stickers</h2>
         <ul className="mt-2 grid gap-4">
-          {user.Payment?.filter((p) => p.Sticker).map((payment) => {
+          {user.Payment?.filter(
+            (p) => p.Sticker && p.Sticker.ownerId === user.id
+          ).map((payment) => {
             const s = payment.Sticker!;
             const quantity = payment.quantity || 1;
+
+            // Log para debugging - verificar que el sticker pertenece al usuario
+            console.log('🔍 AccountPage: Showing sticker:', {
+              stickerId: s.id,
+              stickerOwnerId: s.ownerId,
+              currentUserId: user.id,
+              isOwner: s.ownerId === user.id,
+              stickerName: s.nameOnSticker,
+            });
+
             return (
               <li key={payment.id} className="rounded border bg-white p-4">
                 <div className="flex flex-col lg:flex-row gap-4">
@@ -339,12 +352,12 @@ export default async function AccountPage({
                           >
                             Ver perfil público
                           </Link>
-                          <Link
+                          <EditProfileButton
+                            stickerId={s.id}
                             className="btn btn-secondary"
-                            href={`/profile/new?stickerId=${s.id}`}
                           >
-                            Editar información
-                          </Link>
+                            Editar información de emergencia
+                          </EditProfileButton>
                         </>
                       ) : (
                         <div className="p-3 bg-red-50 border border-red-200 rounded-lg">

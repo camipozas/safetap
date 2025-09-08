@@ -58,10 +58,23 @@ export default function LoginForm({
       console.log('🌍 Environment:', process.env.NODE_ENV);
       console.log('🔗 Base URL:', window.location.origin);
 
+      console.log('🔗 About to call signIn with callbackUrl:', callbackUrl);
       const result = await signIn('google', {
         callbackUrl,
         redirect: false,
       });
+      console.log('🔗 signIn result:', result);
+
+      // If signIn returns a URL, check if it's the expected one
+      if (result?.url) {
+        console.log('🔗 signIn returned URL:', result.url);
+        if (result.url.includes('/welcome?cta=sticker')) {
+          console.log(
+            '⚠️ signIn returned welcome?cta=sticker instead of callbackUrl!'
+          );
+          console.log('⚠️ Expected callbackUrl was:', callbackUrl);
+        }
+      }
 
       console.log('📡 Google sign-in result:', result);
 

@@ -9,7 +9,7 @@ import { prisma } from '@/lib/prisma';
 export async function GET(request: Request) {
   try {
     const session = await auth();
-    if (!session?.user?.id) {
+    if (!session?.user?.id || !session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -17,10 +17,12 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const excludeStickerId = searchParams.get('excludeStickerId');
 
-    // Obtener TODOS los perfiles de emergencia del usuario para usar como templates
+    // Obtener perfiles de emergencia usando una query optimizada que busca por email
     const allUserProfiles = await prisma.emergencyProfile.findMany({
       where: {
-        userId: session.user.id,
+        User: {
+          email: session.user.email,
+        },
       },
       include: {
         EmergencyContact: true,
@@ -45,7 +47,11 @@ export async function GET(request: Request) {
 
     // Obtener todos los stickers del usuario para extraer diseños únicos
     const userStickers = await prisma.sticker.findMany({
-      where: { ownerId: session.user.id },
+      where: {
+        User: {
+          email: session.user.email,
+        },
+      },
       select: {
         id: true,
         nameOnSticker: true,
@@ -59,7 +65,11 @@ export async function GET(request: Request) {
 
     // Obtener diseños guardados explícitamente
     const stickerDesigns = await prisma.stickerDesign.findMany({
-      where: { userId: session.user.id },
+      where: {
+        User: {
+          email: session.user.email,
+        },
+      },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -137,6 +147,11 @@ export async function GET(request: Request) {
         isTemplate: design.isTemplate,
       })),
     };
+
+    console.log('🔍 API /profile/templates: Final response:', {
+      hasEmergencyProfile: !!response.emergencyProfile,
+      stickerProfileTemplatesCount: response.stickerProfileTemplates.length,
+    });
 
     return NextResponse.json(response);
   } catch (error) {

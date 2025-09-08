@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import StickerSelectorGrouped from '@/components/StickerSelectorGrouped';
 
-// Mock fetch globally
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
@@ -197,7 +196,6 @@ describe('StickerSelectorGrouped', () => {
   });
 
   it('handles specific sticker mode', async () => {
-    // Mock the simple stickers endpoint for specific sticker mode
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -219,10 +217,8 @@ describe('StickerSelectorGrouped', () => {
       expect(screen.getByText('Juan')).toBeInTheDocument();
     });
 
-    // Verificar que el sticker está preseleccionado
     expect(mockOnChange).toHaveBeenCalledWith(['1']);
 
-    // Verificar que no hay botones de selección múltiple
     expect(screen.queryByText('Seleccionar todos')).not.toBeInTheDocument();
     expect(screen.queryByText('Seleccionar grupo')).not.toBeInTheDocument();
   });

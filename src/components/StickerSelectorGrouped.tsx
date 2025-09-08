@@ -65,6 +65,7 @@ export default function StickerSelectorGrouped({
         // Si hay un sticker específico, usar el endpoint simple
         if (specificStickerId) {
           const response = await fetch('/api/user/stickers');
+
           if (response.ok) {
             const data = await response.json();
 

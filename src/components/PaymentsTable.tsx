@@ -151,7 +151,6 @@ export function PaymentsTable() {
                 </tr>
               </thead>
               <tbody>
-                {' '}
                 {payments.map((payment) => (
                   <tr key={payment.id} className="border-b border-gray-100">
                     <td className="py-3 px-3 text-sm text-gray-900">

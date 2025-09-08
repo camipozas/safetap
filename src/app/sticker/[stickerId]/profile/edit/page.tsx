@@ -13,14 +13,29 @@ export default async function EditStickerProfilePage({
 }: {
   params: Promise<{ stickerId: string }>;
 }) {
+  console.log('🚨 EditStickerProfilePage: Starting page load...');
+
   const session = await auth();
+  console.log('🔍 EditStickerProfilePage: Session check:', {
+    hasSession: !!session,
+    hasUser: !!session?.user,
+    userId: session?.user?.id,
+    userEmail: session?.user?.email,
+  });
+
   if (!session?.user) {
+    console.log('❌ EditStickerProfilePage: No session, redirecting to login');
     redirect('/login');
   }
 
   const resolvedParams = await params;
+  console.log('🔍 EditStickerProfilePage: Looking for sticker:', {
+    stickerId: resolvedParams.stickerId,
+    userId: session.user.id,
+  });
 
-  const sticker = await prisma.sticker.findFirst({
+  // First try to find sticker by direct ownership
+  let sticker = await prisma.sticker.findFirst({
     where: {
       id: resolvedParams.stickerId,
       ownerId: session.user.id,
@@ -35,28 +50,114 @@ export default async function EditStickerProfilePage({
     },
   });
 
+  // If not found by direct ownership, try to find by email (for duplicate accounts)
+  if (!sticker && session.user.email) {
+    console.log(
+      '🔍 EditStickerProfilePage: Sticker not found by ownerId, trying by email...'
+    );
+
+    const usersWithSameEmail = await prisma.user.findMany({
+      where: { email: session.user.email },
+      select: { id: true, email: true },
+    });
+
+    if (usersWithSameEmail.length > 0) {
+      const userIds = usersWithSameEmail.map((user) => user.id);
+
+      sticker = await prisma.sticker.findFirst({
+        where: {
+          id: resolvedParams.stickerId,
+          ownerId: { in: userIds },
+        },
+        include: {
+          EmergencyProfile: {
+            include: {
+              User: true,
+              EmergencyContact: true,
+            },
+          },
+        },
+      });
+
+      if (sticker) {
+        console.log(
+          '🔍 EditStickerProfilePage: Sticker found by email match:',
+          {
+            stickerId: sticker.id,
+            stickerOwnerId: sticker.ownerId,
+            sessionUserId: session.user.id,
+          }
+        );
+      }
+    }
+  }
+
+  console.log('🔍 EditStickerProfilePage: Sticker query result:', {
+    found: !!sticker,
+    stickerId: sticker?.id,
+    ownerId: sticker?.ownerId,
+    sessionUserId: session.user.id,
+    hasEmergencyProfile: !!sticker?.EmergencyProfile,
+  });
+
   if (!sticker) {
+    console.log(
+      '❌ EditStickerProfilePage: No sticker found, redirecting to account'
+    );
     redirect('/account');
   }
 
   let profile = sticker.EmergencyProfile;
 
   if (!profile) {
-    const userGeneralProfile = await prisma.emergencyProfile.findFirst({
-      where: {
-        userId: session.user.id,
-        stickerId: null,
-      },
-      include: {
-        User: true,
-        EmergencyContact: true,
-      },
-    });
+    // Try to find any emergency profile for users with the same email
+    if (session.user.email) {
+      const usersWithSameEmail = await prisma.user.findMany({
+        where: { email: session.user.email },
+        select: { id: true },
+      });
 
-    if (userGeneralProfile) {
-      profile = userGeneralProfile;
+      if (usersWithSameEmail.length > 0) {
+        const userIds = usersWithSameEmail.map((u) => u.id);
+
+        profile = await prisma.emergencyProfile.findFirst({
+          where: {
+            userId: { in: userIds },
+          },
+          include: {
+            User: true,
+            EmergencyContact: true,
+          },
+          orderBy: { updatedAt: 'desc' },
+        });
+      }
+    }
+
+    // Fallback to general profile for current user
+    if (!profile) {
+      const userGeneralProfile = await prisma.emergencyProfile.findFirst({
+        where: {
+          userId: session.user.id,
+          stickerId: null,
+        },
+        include: {
+          User: true,
+          EmergencyContact: true,
+        },
+      });
+
+      if (userGeneralProfile) {
+        profile = userGeneralProfile;
+      }
     }
   }
+
+  console.log('🔍 EditStickerProfilePage: Final profile status:', {
+    hasProfile: !!profile,
+    profileId: profile?.id,
+    profileUserId: profile?.userId,
+    contactCount: profile?.EmergencyContact?.length || 0,
+  });
 
   const transformedProfile = profile
     ? {
