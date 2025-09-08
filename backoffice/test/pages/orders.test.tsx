@@ -232,8 +232,6 @@ describe('Orders Page', () => {
             name: true,
             country: true,
             totalSpent: true,
-          },
-          include: {
             EmergencyProfile: {
               select: {
                 bloodType: true,

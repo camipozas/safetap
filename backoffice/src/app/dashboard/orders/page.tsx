@@ -14,7 +14,12 @@ async function getOrdersData() {
   const rawOrders = await prisma.sticker.findMany({
     include: {
       User: {
-        include: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          country: true,
+          totalSpent: true,
           EmergencyProfile: {
             select: {
               bloodType: true,
