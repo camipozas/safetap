@@ -171,6 +171,10 @@ jobs:
         if: needs.changes.outputs.prisma == 'true' || needs.changes.outputs.config == 'true'
         run: npx prisma generate
 
+      - name: Verify migrations sync between main and backoffice
+        if: needs.changes.outputs.prisma == 'true'
+        run: bash scripts/verify-migrations-sync.sh
+
       - name: Apply database migrations
         run: |
           while ! pg_isready -h localhost -p 5432; do
@@ -272,6 +276,9 @@ jobs:
 
       - name: Setup Prisma
         run: npx prisma generate
+
+      - name: Verify migrations sync between main and backoffice
+        run: bash scripts/verify-migrations-sync.sh
 
       - name: Apply database migrations
         run: |
