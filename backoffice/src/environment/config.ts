@@ -44,6 +44,13 @@ export const environment = {
     isProduction: process.env.NODE_ENV === 'production',
     isDevelopment: process.env.NODE_ENV === 'development',
   },
+
+  newrelic: {
+    appName: process.env.NEW_RELIC_APP_NAME,
+    licenseKey: process.env.NEW_RELIC_LICENSE_KEY,
+    agentEnabled: process.env.NEW_RELIC_AGENT_ENABLED !== 'false',
+    logLevel: process.env.NEW_RELIC_LOG_LEVEL || 'info',
+  },
 };
 
 export function validateEnvironment() {
@@ -65,6 +72,11 @@ export function validateEnvironment() {
     missingVars.push('GOOGLE_CLIENT_SECRET');
   }
 
+  // New Relic is optional, only validate if license key is provided
+  if (environment.newrelic.licenseKey && !environment.newrelic.appName) {
+    missingVars.push('NEW_RELIC_APP_NAME');
+  }
+
   if (missingVars.length > 0) {
     console.log('⚠️  Missing environment variables:');
     missingVars.forEach((varName) => console.log(`   - ${varName}`));
@@ -79,6 +91,11 @@ export function validateEnvironment() {
     console.log('   GOOGLE_CLIENT_SECRET="your_client_secret"');
     console.log('   SUPER_ADMIN_EMAIL="email@example.com"');
     console.log('   USERS_TO_DELETE="email1@example.com,email2@example.com"');
+    console.log('\n🔍 Optional New Relic monitoring:');
+    console.log('   NEW_RELIC_LICENSE_KEY="your_newrelic_license"');
+    console.log('   NEW_RELIC_APP_NAME="safetap-backoffice"');
+    console.log('   NEW_RELIC_AGENT_ENABLED="true"');
+    console.log('   NEW_RELIC_LOG_LEVEL="info"');
 
     return false;
   }
@@ -95,6 +112,7 @@ export function getConfig() {
     auth: environment.auth,
     email: environment.email,
     app: environment.app,
+    newrelic: environment.newrelic,
   };
 }
 
@@ -124,5 +142,8 @@ export function showCurrentConfig() {
   );
   console.log(
     `📧 Email SMTP: ${environment.email.smtpHost ? '✅ Configured' : '❌ Not configured'}`
+  );
+  console.log(
+    `📊 New Relic: ${environment.newrelic.licenseKey ? '✅ Configured' : '❌ Not configured'}`
   );
 }
