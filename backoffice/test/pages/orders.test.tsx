@@ -233,38 +233,44 @@ describe('Orders Page', () => {
             country: true,
             totalSpent: true,
           },
-        },
-        EmergencyProfile: {
-          select: {
-            bloodType: true,
-            allergies: true,
-            conditions: true,
-            medications: true,
-            notes: true,
-            EmergencyContact: {
-              where: {
-                preferred: true,
+          include: {
+            EmergencyProfile: {
+              select: {
+                bloodType: true,
+                allergies: true,
+                conditions: true,
+                medications: true,
+                notes: true,
+                EmergencyContact: {
+                  where: {
+                    preferred: true,
+                  },
+                  take: 1,
+                  select: {
+                    name: true,
+                    phone: true,
+                    relation: true,
+                  },
+                },
+              },
+              orderBy: {
+                updatedByUserAt: 'desc',
               },
               take: 1,
-              select: {
-                name: true,
-                phone: true,
-                relation: true,
-              },
             },
           },
         },
         Payment: {
-          orderBy: {
-            createdAt: 'desc',
-          },
           select: {
-            amount: true,
-            currency: true,
-            createdAt: true,
             id: true,
             status: true,
+            amount: true,
+            currency: true,
             reference: true,
+            createdAt: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
           },
         },
       },
