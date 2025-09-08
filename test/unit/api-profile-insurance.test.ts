@@ -14,6 +14,9 @@ vi.mock('@/lib/prisma', () => ({
     user: {
       findUnique: vi.fn(),
     },
+    sticker: {
+      findMany: vi.fn(),
+    },
     emergencyProfile: {
       findFirst: vi.fn(),
       update: vi.fn(),
@@ -79,6 +82,15 @@ describe('Profile API - Insurance with isapreCustom', () => {
     // Mock schema validation
     vi.mocked(profileSchema.parse).mockReturnValue(mockProfileData);
 
+    // Mock stickers lookup for multi-sticker operation
+    vi.mocked(prisma.sticker.findMany).mockResolvedValue([
+      {
+        id: 'sticker-123',
+        ownerId: 'user-id',
+        EmergencyProfile: null,
+      },
+    ] as any);
+
     // Mock profile creation
     vi.mocked(prisma.emergencyProfile.create).mockResolvedValue({
       id: 'profile-id',
@@ -90,6 +102,7 @@ describe('Profile API - Insurance with isapreCustom', () => {
       method: 'POST',
       body: JSON.stringify({
         values: mockProfileData,
+        selectedStickerIds: ['sticker-123'], // Add required field
       }),
     });
 
@@ -99,7 +112,9 @@ describe('Profile API - Insurance with isapreCustom', () => {
 
     // Verify
     expect(response.status).toBe(200);
-    expect(result.id).toBe('profile-id');
+    expect(result.message).toContain(
+      'Perfiles actualizados/creados para 1 stickers'
+    );
 
     // Verify prisma.emergencyProfile.create was called with correct data
     expect(prisma.emergencyProfile.create).toHaveBeenCalledWith(
@@ -155,6 +170,15 @@ describe('Profile API - Insurance with isapreCustom', () => {
     // Mock schema validation
     vi.mocked(profileSchema.parse).mockReturnValue(mockProfileData);
 
+    // Mock stickers lookup for multi-sticker operation
+    vi.mocked(prisma.sticker.findMany).mockResolvedValue([
+      {
+        id: 'sticker-456',
+        ownerId: 'user-id',
+        EmergencyProfile: null,
+      },
+    ] as any);
+
     // Mock profile creation
     vi.mocked(prisma.emergencyProfile.create).mockResolvedValue({
       id: 'profile-id',
@@ -166,6 +190,7 @@ describe('Profile API - Insurance with isapreCustom', () => {
       method: 'POST',
       body: JSON.stringify({
         values: mockProfileData,
+        selectedStickerIds: ['sticker-456'], // Add required field
       }),
     });
 
@@ -175,7 +200,9 @@ describe('Profile API - Insurance with isapreCustom', () => {
 
     // Verify
     expect(response.status).toBe(200);
-    expect(result.id).toBe('profile-id');
+    expect(result.message).toContain(
+      'Perfiles actualizados/creados para 1 stickers'
+    );
 
     // Verify prisma.emergencyProfile.create was called with correct data
     expect(prisma.emergencyProfile.create).toHaveBeenCalledWith(

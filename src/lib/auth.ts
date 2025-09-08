@@ -120,19 +120,21 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      console.log('🔀 Auth redirect:', { url, baseUrl });
-
-      // Tras login exitoso, SIEMPRE enviar a welcome con CTA sticker
-      if (url.startsWith('/') || url.startsWith(baseUrl)) {
-        const finalUrl = `${baseUrl}/welcome?cta=sticker`;
-        console.log('✅ Redirecting to welcome with CTA:', finalUrl);
+      // Handle different redirect scenarios
+      if (url.startsWith('/')) {
+        // Relative URL - prepend base URL
+        const finalUrl = `${baseUrl}${url}`;
         return finalUrl;
       }
 
-      // Default a welcome con CTA
-      const defaultUrl = `${baseUrl}/welcome?cta=sticker`;
-      console.log('✅ Redirecting to default welcome page:', defaultUrl);
-      return defaultUrl;
+      if (url.startsWith(baseUrl)) {
+        // Same origin URL - allow it
+        return url;
+      }
+
+      // For external URLs or unhandled cases, redirect to account
+      const accountUrl = `${baseUrl}/account`;
+      return accountUrl;
     },
   },
   pages: {

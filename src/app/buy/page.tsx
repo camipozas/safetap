@@ -30,7 +30,10 @@ export default function BuyPage() {
 
       {/* Customization panel */}
       <div className="bg-white rounded-2xl p-8 shadow-lg mb-8">
-        <StickerCustomizerNew onCustomizationChange={setCustomization} />
+        <StickerCustomizerNew
+          onCustomizationChange={setCustomization}
+          showTemplates={false}
+        />
       </div>
 
       {/* Checkout form */}

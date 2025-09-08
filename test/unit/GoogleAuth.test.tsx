@@ -37,7 +37,7 @@ describe('Google SSO Authentication', () => {
 
       await waitFor(() => {
         expect(mockSignIn).toHaveBeenCalledWith('google', {
-          callbackUrl: '/welcome?cta=sticker',
+          callbackUrl: '/account',
           redirect: false,
         });
       });
@@ -107,7 +107,7 @@ describe('Google SSO Authentication', () => {
 
       await waitFor(() => {
         expect(mockSignIn).toHaveBeenCalledWith('google', {
-          callbackUrl: '/welcome?cta=sticker',
+          callbackUrl: '/account',
           redirect: false,
         });
       });

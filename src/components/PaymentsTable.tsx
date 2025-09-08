@@ -2,14 +2,20 @@
 
 import { useEffect, useState } from 'react';
 
-import BankAccountInfo from './BankAccountInfo';
-
 interface Payment {
   id: string;
   fecha: string;
   producto: string;
+  descripcion: string;
   monto: string;
   estado: string;
+  cantidadStickers: number;
+  stickers: Array<{
+    id: string;
+    slug: string;
+    name: string;
+    status: string;
+  }>;
   stickerSlug?: string;
   stickerName?: string;
   stickerStatus?: string;
@@ -119,63 +125,86 @@ export function PaymentsTable() {
       {payments.length === 0 ? (
         <p className="text-gray-500 text-sm">No hay pagos registrados.</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-2 px-3 text-sm font-medium text-gray-900">
-                  Fecha
-                </th>
-                <th className="text-left py-2 px-3 text-sm font-medium text-gray-900">
-                  Producto
-                </th>
-                <th className="text-left py-2 px-3 text-sm font-medium text-gray-900">
-                  Monto
-                </th>
-                <th className="text-left py-2 px-3 text-sm font-medium text-gray-900">
-                  Estado
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {payments.map((payment) => (
-                <tr key={payment.id} className="border-b border-gray-100">
-                  <td className="py-3 px-3 text-sm text-gray-900">
-                    {payment.fecha}
-                  </td>
-                  <td className="py-3 px-3 text-sm text-gray-900">
-                    {payment.producto}
-                  </td>
-                  <td className="py-3 px-3 text-sm text-gray-900">
-                    {payment.monto}
-                  </td>
-                  <td className="py-3 px-3">
-                    {(() => {
-                      const status = getStatusText(
-                        payment.estado,
-                        payment.stickerStatus
-                      );
-                      return (
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${status.color}`}
-                        >
-                          {status.text}
-                        </span>
-                      );
-                    })()}
-                  </td>
+        <>
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-900">
+                    Fecha
+                  </th>
+                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-900">
+                    Referencia
+                  </th>
+                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-900">
+                    Descripción
+                  </th>
+                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-900">
+                    Cantidad
+                  </th>
+                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-900">
+                    Monto
+                  </th>
+                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-900">
+                    Estado
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {payments.map((payment) => (
+                  <tr key={payment.id} className="border-b border-gray-100">
+                    <td className="py-3 px-3 text-sm text-gray-900">
+                      {payment.fecha}
+                    </td>
+                    <td className="py-3 px-3 text-sm text-gray-900">
+                      <div className="font-medium">{payment.producto}</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        ID: {payment.id.slice(-8)}
+                      </div>
+                    </td>
+                    <td className="py-3 px-3 text-sm text-gray-900">
+                      {payment.descripcion}
+                    </td>
+                    <td className="py-3 px-3 text-sm text-gray-900">
+                      {payment.cantidadStickers}
+                    </td>
+                    <td className="py-3 px-3 text-sm text-gray-900">
+                      {payment.monto}
+                    </td>
+                    <td className="py-3 px-3">
+                      {(() => {
+                        // Para determinar el estado, usamos el estado del pago principal
+                        // Si hay stickers, usamos el estado del primer sticker para mostrar info adicional
+                        const primarySticker = payment.stickers?.[0];
+                        const status = getStatusText(
+                          payment.estado,
+                          primarySticker?.status
+                        );
+                        return (
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${status.color}`}
+                          >
+                            {status.text}
+                          </span>
+                        );
+                      })()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-      {/* Mostrar información bancaria si hay pagos pendientes */}
-      {payments.some((payment) => payment.estado === 'PENDING') && (
-        <div className="mt-6">
-          <BankAccountInfo />
-        </div>
+          {/* Resumen de compras */}
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">Total de pagos realizados:</span>
+              <span className="font-semibold text-gray-900">
+                {payments.length} pagos
+              </span>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

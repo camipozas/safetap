@@ -175,5 +175,40 @@ export const checkoutSchema = z.object({
   quantity: z.number().int().min(1).max(10),
 });
 
+// Schema for multiple custom stickers in one order
+export const multiStickerCheckoutSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  stickers: z
+    .array(
+      z.object({
+        nameOnSticker: z
+          .string()
+          .min(2, 'Minimum 2 characters')
+          .max(25, 'Maximum 25 characters')
+          .regex(/^[\p{L}0-9 .'-]+$/u, 'Invalid characters'),
+        flagCode: z.string().length(2, 'Invalid country code'),
+        colorPresetId: z
+          .string()
+          .refine(isValidColorPreset, 'Invalid color preset')
+          .optional()
+          .default('light-gray'),
+        stickerColor: z
+          .string()
+          .regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color format')
+          .optional()
+          .default('#f1f5f9'),
+        textColor: z
+          .string()
+          .regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color format')
+          .optional()
+          .default('#000000'),
+      })
+    )
+    .min(1, 'At least one sticker required')
+    .max(10, 'Maximum 10 stickers allowed'),
+  discountCode: z.string().optional(),
+  tempReference: z.string().optional(), // Accept temporary reference
+});
+
 export type ProfileInput = z.infer<typeof profileSchema>;
 export type ProfileFormInput = z.infer<typeof profileFormSchema>;

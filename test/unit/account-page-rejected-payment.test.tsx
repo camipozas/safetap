@@ -15,6 +15,32 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
+// Mock Next.js Link component
+vi.mock('next/link', () => ({
+  default: ({
+    children,
+    href,
+    className,
+  }: {
+    children: React.ReactNode;
+    href: string;
+    className?: string;
+  }) => (
+    <a href={href} className={className}>
+      {children}
+    </a>
+  ),
+}));
+
+// Mock Next.js Suspense
+vi.mock('react', async () => {
+  const actual = await vi.importActual('react');
+  return {
+    ...actual,
+    Suspense: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  };
+});
+
 // Mock the auth function
 vi.mock('@/lib/auth', () => ({
   auth: vi.fn(() => ({
@@ -31,25 +57,25 @@ vi.mock('@/lib/prisma', () => ({
       findUnique: vi.fn(() => ({
         id: 'user-123',
         email: 'test@example.com',
-        Sticker: [
+        Payment: [
           {
-            id: 'sticker-123',
-            nameOnSticker: 'Test User',
-            flagCode: 'CL',
-            stickerColor: '#f1f5f9',
-            textColor: '#000000',
-            status: 'ORDERED',
-            slug: 'test-user',
-            serial: 'ST123',
-            Payment: [
-              {
-                id: 'payment-123',
-                status: 'REJECTED', // This is the key difference - REJECTED payment
-                amount: 6990,
-                currency: 'CLP',
-                createdAt: new Date('2025-08-20'),
-              },
-            ],
+            id: 'payment-123',
+            status: 'REJECTED', // This is the key difference - REJECTED payment
+            amount: 6990,
+            currency: 'CLP',
+            createdAt: new Date('2025-08-20'),
+            quantity: 1,
+            Sticker: {
+              id: 'sticker-123',
+              ownerId: 'user-123', // Must match user.id for sticker to show
+              nameOnSticker: 'Test User',
+              flagCode: 'CL',
+              stickerColor: '#f1f5f9',
+              textColor: '#000000',
+              status: 'ORDERED',
+              slug: 'test-user',
+              serial: 'ST123',
+            },
           },
         ],
       })),
@@ -88,6 +114,23 @@ vi.mock('@/components/ActivateStickerButton', () => ({
   ),
 }));
 
+// Mock PaymentReferenceHandler component
+vi.mock('@/components/PaymentReferenceHandler', () => ({
+  default: () => null,
+}));
+
+// Mock BankAccountInfo component
+vi.mock('@/components/BankAccountInfo', () => ({
+  default: () => <div data-testid="bank-account-info">Bank Account Info</div>,
+}));
+
+// Mock EditProfileButton component
+vi.mock('@/components/EditProfileButton', () => ({
+  default: ({ children }: { children: React.ReactNode }) => (
+    <button data-testid="edit-profile-button">{children}</button>
+  ),
+}));
+
 describe('AccountPage - Rejected Payment Handling', () => {
   it('hides profile buttons when payment is rejected', async () => {
     const page = await AccountPage({ searchParams: Promise.resolve({}) });
@@ -95,7 +138,9 @@ describe('AccountPage - Rejected Payment Handling', () => {
 
     // Should NOT show profile buttons when payment status is REJECTED
     expect(screen.queryByText('Ver perfil público')).not.toBeInTheDocument();
-    expect(screen.queryByText('Editar información')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Editar información de emergencia')
+    ).not.toBeInTheDocument();
 
     // Should show rejection message instead
     expect(screen.getByText('Pago rechazado')).toBeInTheDocument();

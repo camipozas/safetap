@@ -15,6 +15,32 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
+// Mock Next.js Link component
+vi.mock('next/link', () => ({
+  default: ({
+    children,
+    href,
+    className,
+  }: {
+    children: React.ReactNode;
+    href: string;
+    className?: string;
+  }) => (
+    <a href={href} className={className}>
+      {children}
+    </a>
+  ),
+}));
+
+// Mock Next.js Suspense
+vi.mock('react', async () => {
+  const actual = await vi.importActual('react');
+  return {
+    ...actual,
+    Suspense: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  };
+});
+
 // Mock the auth function
 vi.mock('@/lib/auth', () => ({
   auth: vi.fn(() => ({
@@ -31,26 +57,26 @@ vi.mock('@/lib/prisma', () => ({
       findUnique: vi.fn(() => ({
         id: 'user-123',
         email: 'test@example.com',
-        Sticker: [
+        Payment: [
           {
-            id: 'sticker-123',
-            nameOnSticker: 'Test User',
-            flagCode: 'CL',
-            stickerColor: '#f1f5f9',
-            textColor: '#000000',
-            status: 'ORDERED', // This is the key - ORDERED status
-            slug: 'test-user',
-            serial: 'ST123',
-            Payment: [
-              {
-                id: 'payment-123',
-                status: 'PENDING', // NOT rejected, so should show pending payment section
-                amount: 6990,
-                currency: 'CLP',
-                reference: 'SAFETAP-TEST-123', // Add reference so "Ver datos bancarios" shows
-                createdAt: new Date('2025-08-20'),
-              },
-            ],
+            id: 'payment-123',
+            status: 'PENDING', // NOT rejected, so should show pending payment section
+            amount: 6990,
+            currency: 'CLP',
+            reference: 'SAFETAP-TEST-123', // Add reference so "Ver datos bancarios" shows
+            createdAt: new Date('2025-08-20'),
+            quantity: 1,
+            Sticker: {
+              id: 'sticker-123',
+              ownerId: 'user-123', // Must match user.id for sticker to show
+              nameOnSticker: 'Test User',
+              flagCode: 'CL',
+              stickerColor: '#f1f5f9',
+              textColor: '#000000',
+              status: 'ORDERED', // This is the key - ORDERED status
+              slug: 'test-user',
+              serial: 'ST123',
+            },
           },
         ],
       })),
@@ -86,6 +112,23 @@ vi.mock('@/components/ActivateStickerButton', () => ({
     <div data-testid="activate-button">
       Activate Button: {stickerId} - {hasValidPayment} - {status}
     </div>
+  ),
+}));
+
+// Mock PaymentReferenceHandler component
+vi.mock('@/components/PaymentReferenceHandler', () => ({
+  default: () => null,
+}));
+
+// Mock BankAccountInfo component
+vi.mock('@/components/BankAccountInfo', () => ({
+  default: () => <div data-testid="bank-account-info">Bank Account Info</div>,
+}));
+
+// Mock EditProfileButton component
+vi.mock('@/components/EditProfileButton', () => ({
+  default: ({ children }: { children: React.ReactNode }) => (
+    <button data-testid="edit-profile-button">{children}</button>
   ),
 }));
 
@@ -134,6 +177,8 @@ describe('AccountPage - Pending Payment Visibility', () => {
 
     // Should show profile buttons when payment is PENDING (not REJECTED)
     expect(screen.getByText('Ver perfil público')).toBeInTheDocument();
-    expect(screen.getByText('Editar información')).toBeInTheDocument();
+    expect(
+      screen.getByText('Editar información de emergencia')
+    ).toBeInTheDocument();
   });
 });

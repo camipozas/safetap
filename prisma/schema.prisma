@@ -77,22 +77,23 @@ model EmergencyProfile {
 }
 
 model Payment {
-  id                String        @id
-  userId            String
-  stickerId         String?
-  amount            Int
-  originalAmount    Int?
-  discountCodeId    String?
-  discountAmount    Int?
-  currency          String        @default("CLP")
-  method            String        @default("BANK_TRANSFER")
-  reference         String        @unique
-  status            PaymentStatus @default(PENDING)
-  receivedAt        DateTime?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime
-  Sticker           Sticker?      @relation(fields: [stickerId], references: [id])
-  User              User          @relation(fields: [userId], references: [id])
+  id             String        @id
+  userId         String
+  stickerId      String?
+  quantity       Int           @default(1)
+  amount         Int
+  originalAmount Int?
+  discountCodeId String?
+  discountAmount Int?
+  currency       String        @default("CLP")
+  method         String        @default("BANK_TRANSFER")
+  reference      String        @unique
+  status         PaymentStatus @default(PENDING)
+  receivedAt     DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime
+  Sticker        Sticker?      @relation(fields: [stickerId], references: [id])
+  User           User          @relation(fields: [userId], references: [id])
 
   @@index([userId, status])
   @@index([discountCodeId])
@@ -157,25 +158,25 @@ model StickerDesign {
 }
 
 model User {
-  id               String             @id
-  email            String             @unique
-  name             String?
-  image            String?
-  country          String?
-  role             Role               @default(USER)
-  emailVerified    DateTime?
-  totalSpent       Int                @default(0)
-  lastLoginAt      DateTime?
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime
-  accounts         Account[]
-  EmergencyProfile EmergencyProfile[]
-  Payment          Payment[]
-  sessions         Session[]
-  Sticker          Sticker[]
-  StickerDesign    StickerDesign[]
+  id                   String               @id
+  email                String               @unique
+  name                 String?
+  image                String?
+  country              String?
+  role                 Role                 @default(USER)
+  emailVerified        DateTime?
+  totalSpent           Int                  @default(0)
+  lastLoginAt          DateTime?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime
+  accounts             Account[]
   createdDiscountCodes DiscountCode[]
-  discountRedemptions DiscountRedemption[]
+  discountRedemptions  DiscountRedemption[]
+  EmergencyProfile     EmergencyProfile[]
+  Payment              Payment[]
+  sessions             Session[]
+  Sticker              Sticker[]
+  StickerDesign        StickerDesign[]
 }
 
 model VerificationToken {
@@ -185,6 +186,37 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model DiscountCode {
+  id              String               @id @default(cuid())
+  code            String               @unique
+  type            DiscountType
+  amount          Decimal              @db.Decimal(10, 2)
+  active          Boolean              @default(true)
+  expiresAt       DateTime?
+  maxRedemptions  Int?
+  usageCount      Int                  @default(0)
+  createdByUserId String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  createdBy       User?                @relation(fields: [createdByUserId], references: [id])
+  redemptions     DiscountRedemption[]
+
+  @@index([code, active])
+}
+
+model DiscountRedemption {
+  id             String       @id @default(cuid())
+  discountCodeId String
+  orderId        String?
+  userId         String?
+  redeemedAt     DateTime     @default(now())
+  discountCode   DiscountCode @relation(fields: [discountCodeId], references: [id])
+  user           User?        @relation(fields: [userId], references: [id])
+
+  @@index([discountCodeId])
+  @@index([userId])
 }
 
 enum AccessVia {
@@ -197,7 +229,9 @@ enum PaymentStatus {
   PENDING
   VERIFIED
   REJECTED
+  TRANSFER_PAYMENT
   PAID
+  TRANSFERRED
   CANCELLED
 }
 
@@ -214,39 +248,6 @@ enum StickerStatus {
   SHIPPED
   ACTIVE
   LOST
-}
-
-model DiscountCode {
-  id              String   @id @default(cuid())
-  code            String   @unique
-  type            DiscountType
-  amount          Decimal  @db.Decimal(10,2)
-  active          Boolean  @default(true)
-  expiresAt       DateTime?
-  maxRedemptions  Int?
-  usageCount      Int      @default(0)
-  createdByUserId String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  createdBy       User?    @relation(fields: [createdByUserId], references: [id])
-  redemptions     DiscountRedemption[]
-  
-  @@index([code, active])
-}
-
-model DiscountRedemption {
-  id              String   @id @default(cuid())
-  discountCodeId  String
-  orderId         String?
-  userId          String?
-  redeemedAt      DateTime @default(now())
-  
-  discountCode    DiscountCode @relation(fields: [discountCodeId], references: [id])
-  user           User?    @relation(fields: [userId], references: [id])
-  
-  @@index([discountCodeId])
-  @@index([userId])
 }
 
 enum DiscountType {

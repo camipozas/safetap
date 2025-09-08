@@ -14,7 +14,7 @@ vi.mock('@/lib/prisma', () => ({
 
 describe('Auth Integration', () => {
   describe('Redirect Callback', () => {
-    it('redirects to welcome with CTA after login', async () => {
+    it('handles dashboard URLs correctly', async () => {
       const mockUrl = '/dashboard';
       const mockBaseUrl = 'http://localhost:3000';
 
@@ -23,10 +23,10 @@ describe('Auth Integration', () => {
         baseUrl: mockBaseUrl,
       });
 
-      expect(redirectResult).toBe('http://localhost:3000/welcome?cta=sticker');
+      expect(redirectResult).toBe('http://localhost:3000/dashboard');
     });
 
-    it('redirects to welcome with CTA for root URLs', async () => {
+    it('handles root URLs correctly', async () => {
       const mockUrl = '/';
       const mockBaseUrl = 'http://localhost:3000';
 
@@ -35,7 +35,7 @@ describe('Auth Integration', () => {
         baseUrl: mockBaseUrl,
       });
 
-      expect(redirectResult).toBe('http://localhost:3000/welcome?cta=sticker');
+      expect(redirectResult).toBe('http://localhost:3000/');
     });
   });
 });

@@ -1,25 +1,62 @@
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 
+import ProfileTemplateManager from '@/components/ProfileTemplateManager';
+import StickerSelectorGrouped from '@/components/StickerSelectorGrouped';
 import {
   bloodTypeEnum,
   profileFormSchema,
   type ProfileFormInput,
-  type ProfileInput,
 } from '@/lib/validators';
 
 export default function ProfileForm({
   stickerId,
   profile,
+  showTemplates = false,
+  stickerInfo,
 }: {
   stickerId?: string;
-  profile?: any;
+  showTemplates?: boolean;
+  stickerInfo?: {
+    id: string;
+    nameOnSticker: string;
+    flagCode: string;
+  };
+  profile?: {
+    id?: string;
+    bloodType?: string;
+    allergies?: string | string[];
+    conditions?: string | string[];
+    medications?: string | string[];
+    notes?: string;
+    language?: string;
+    organDonor?: boolean;
+    insurance?: Record<string, unknown>;
+    consentPublic?: boolean;
+    contacts?: Array<{
+      name: string;
+      relation: string;
+      phone: string;
+      country?: string;
+      preferred: boolean;
+    }>;
+    user?: { name?: string };
+  };
 }) {
   const [serverError, setServerError] = useState<string | null>(null);
-  const [userName, setUserName] = useState(profile?.user?.name || '');
+  // En modo individual, manejar el nombre del sticker
+  const [stickerName, setStickerName] = useState(
+    stickerInfo?.nameOnSticker || ''
+  );
   const [userNameError, setUserNameError] = useState<string | null>(null);
+  const [selectedStickerIds, setSelectedStickerIds] = useState<string[]>(
+    stickerId ? [stickerId] : []
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
 
   const {
     register,
@@ -27,6 +64,7 @@ export default function ProfileForm({
     control,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<ProfileFormInput>({
     resolver: zodResolver(profileFormSchema),
@@ -62,7 +100,16 @@ export default function ProfileForm({
   useEffect(() => {
     if (profile) {
       const formValues = {
-        bloodType: profile.bloodType || undefined,
+        bloodType: profile.bloodType as
+          | 'A+'
+          | 'A-'
+          | 'B+'
+          | 'B-'
+          | 'AB+'
+          | 'AB-'
+          | 'O+'
+          | 'O-'
+          | undefined,
         allergies: Array.isArray(profile.allergies)
           ? profile.allergies.join(', ')
           : profile.allergies || '',
@@ -75,99 +122,285 @@ export default function ProfileForm({
         notes: profile.notes || '',
         language: profile.language || 'es',
         organDonor: profile.organDonor || false,
-        insurance: profile.insurance || {},
+        insurance: {
+          type: profile.insurance?.type as 'fonasa' | 'isapre' | undefined,
+          isapre: profile.insurance?.isapre as string | undefined,
+          isapreCustom: profile.insurance?.isapreCustom as string | undefined,
+          hasComplementary: profile.insurance?.hasComplementary as
+            | boolean
+            | undefined,
+          complementaryInsurance: profile.insurance?.complementaryInsurance as
+            | string
+            | undefined,
+        },
         consentPublic: profile.consentPublic !== false,
         contacts:
-          profile.contacts?.length > 0
-            ? profile.contacts
+          profile.contacts && profile.contacts.length > 0
+            ? profile.contacts.map((contact) => ({
+                name: contact.name,
+                relation: contact.relation,
+                phone: contact.phone,
+                country: contact.country || undefined,
+                preferred: contact.preferred,
+              }))
             : [{ name: '', relation: '', phone: '', preferred: true }],
       };
       reset(formValues);
+
+      // Set hasComplementary as string for radio buttons
+      if (profile.insurance?.hasComplementary === true) {
+        // @ts-expect-error - Setting string value for radio button
+        setValue('insurance.hasComplementary', 'true');
+      } else if (profile.insurance?.hasComplementary === false) {
+        // @ts-expect-error - Setting string value for radio button
+        setValue('insurance.hasComplementary', 'false');
+      }
     }
-  }, [profile, reset]);
+  }, [profile, reset, setValue]);
 
   const contacts = useFieldArray({ control, name: 'contacts' });
+
+  const handleApplyTemplate = (templateData: {
+    id: string;
+    bloodType?: string;
+    allergies?: string[];
+    conditions?: string[];
+    medications?: string[];
+    notes?: string;
+    language?: string;
+    organDonor?: boolean;
+    insurance?: Record<string, unknown>;
+    consentPublic?: boolean;
+    contacts?: Array<{
+      id: string;
+      name: string;
+      relation: string;
+      phone: string;
+      country?: string;
+      preferred: boolean;
+    }>;
+  }) => {
+    const formValues = {
+      bloodType: templateData.bloodType as
+        | 'A+'
+        | 'A-'
+        | 'B+'
+        | 'B-'
+        | 'AB+'
+        | 'AB-'
+        | 'O+'
+        | 'O-'
+        | undefined,
+      allergies: Array.isArray(templateData.allergies)
+        ? templateData.allergies.join(', ')
+        : '',
+      conditions: Array.isArray(templateData.conditions)
+        ? templateData.conditions.join(', ')
+        : '',
+      medications: Array.isArray(templateData.medications)
+        ? templateData.medications.join(', ')
+        : '',
+      notes: templateData.notes || '',
+      language: templateData.language || 'es',
+      organDonor: Boolean(templateData.organDonor),
+      insurance: {
+        type: templateData.insurance?.type as 'fonasa' | 'isapre' | undefined,
+        isapre: templateData.insurance?.isapre as string | undefined,
+        isapreCustom: templateData.insurance?.isapreCustom as
+          | string
+          | undefined,
+        hasComplementary: templateData.insurance?.hasComplementary as
+          | boolean
+          | undefined,
+        complementaryInsurance: templateData.insurance
+          ?.complementaryInsurance as string | undefined,
+      },
+      consentPublic: templateData.consentPublic !== false,
+      contacts:
+        Array.isArray(templateData.contacts) && templateData.contacts.length > 0
+          ? templateData.contacts.map((contact) => ({
+              name: contact.name,
+              relation: contact.relation,
+              phone: contact.phone,
+              country: contact.country || undefined,
+              preferred: contact.preferred,
+            }))
+          : [{ name: '', relation: '', phone: '', preferred: true }],
+    };
+    reset(formValues);
+  };
 
   async function onSubmit(formValues: ProfileFormInput) {
     setServerError(null);
     setUserNameError(null);
+    setIsSubmitting(true);
 
-    // Transform form data to API format
-    const values: ProfileInput = {
-      ...formValues,
-      allergies: formValues.allergies
-        ? formValues.allergies
-            .split(',')
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : [],
-      conditions: formValues.conditions
-        ? formValues.conditions
-            .split(',')
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : [],
-      medications: formValues.medications
-        ? formValues.medications
-            .split(',')
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : [],
-      organDonor: formValues.organDonor ?? false,
-      consentPublic: formValues.consentPublic ?? true,
-    };
-
-    // First, update user name if it has changed
-    if (userName !== (profile?.user?.name || '') && userName.trim()) {
-      const userRes = await fetch('/api/user', {
-        method: 'PUT',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ name: userName.trim() }),
-      });
-
-      if (!userRes.ok) {
-        const userError = await userRes.json().catch(() => ({}));
-        setUserNameError(userError.error ?? 'Error al actualizar el nombre');
+    try {
+      // Validate that we have at least one valid contact
+      if (!formValues.contacts || formValues.contacts.length === 0) {
+        setServerError('Debe agregar al menos un contacto de emergencia');
         return;
       }
-    }
 
-    // Then update the profile
-    const res = await fetch('/api/profile', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ stickerId, profileId: profile?.id, values }),
-    });
-    if (!res.ok) {
-      const j = await res.json().catch(() => ({}));
-      setServerError(j.error ?? 'Error al guardar');
-      return;
+      // Validate each contact has required fields
+      const invalidContacts = formValues.contacts.some(
+        (contact) =>
+          !contact.name?.trim() ||
+          !contact.relation?.trim() ||
+          !contact.phone?.trim()
+      );
+
+      if (invalidContacts) {
+        setServerError(
+          'Todos los contactos deben tener nombre, relación y teléfono'
+        );
+        return;
+      }
+
+      // En modo múltiple, validar que al menos un sticker esté seleccionado
+      if (!stickerId && selectedStickerIds.length === 0) {
+        setServerError('Debe seleccionar al menos un sticker para actualizar');
+        return;
+      }
+
+      // Send form data directly - let the backend schema handle transformations
+      const values: ProfileFormInput = {
+        ...formValues,
+        organDonor: formValues.organDonor ?? false,
+        consentPublic: formValues.consentPublic ?? true,
+      };
+
+      console.log('Submitting profile data:', JSON.stringify(values, null, 2));
+      console.log('Insurance data specifically:', values.insurance);
+
+      // Update sticker name if in individual mode and it has changed
+      if (
+        stickerId &&
+        stickerName !== (stickerInfo?.nameOnSticker || '') &&
+        stickerName.trim()
+      ) {
+        const stickerRes = await fetch(`/api/stickers/${stickerId}`, {
+          method: 'PUT',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ nameOnSticker: stickerName.trim() }),
+        });
+
+        if (!stickerRes.ok) {
+          const stickerError = await stickerRes.json().catch(() => ({}));
+          setUserNameError(
+            stickerError.error ?? 'Error al actualizar el nombre del sticker'
+          );
+          return;
+        }
+      }
+
+      // Then update the profile
+      const res = await fetch('/api/profile', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          stickerId, // Para modo individual
+          profileId: profile?.id,
+          values,
+          // Para modo múltiple: enviar los stickers seleccionados conscientemente
+          selectedStickerIds:
+            !stickerId && selectedStickerIds.length > 0
+              ? selectedStickerIds
+              : undefined,
+        }),
+      });
+
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setServerError(j.error ?? 'Error al guardar');
+        return;
+      }
+
+      // Success: redirect to account page
+      router.push('/account');
+    } catch (error) {
+      setServerError('Error inesperado al guardar');
+      console.error('Error saving profile:', error);
+    } finally {
+      setIsSubmitting(false);
     }
-    window.location.href = '/account';
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4" noValidate>
-      <div>
-        <label className="label" htmlFor="userName">
-          Nombre completo
-        </label>
-        <input
-          id="userName"
-          className="input"
-          placeholder="Tu nombre completo"
-          value={userName}
-          onChange={(e) => setUserName(e.target.value)}
-          required
-        />
-        <p className="text-xs text-gray-600 mt-1">
-          Este nombre aparecerá en tu perfil de emergencia y en tus stickers
-        </p>
-        {userNameError && (
-          <p className="error" role="alert">
-            {userNameError}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+      {stickerId && (
+        // Solo mostrar campo de nombre en modo individual
+        <div>
+          <label className="label" htmlFor="stickerName">
+            Nombre en el sticker
+          </label>
+          <input
+            id="stickerName"
+            className="input"
+            placeholder="Nombre que aparecerá en el sticker"
+            value={stickerName}
+            onChange={(e) => setStickerName(e.target.value)}
+            required
+          />
+          <p className="text-xs text-gray-600 mt-1">
+            Este nombre aparecerá específicamente en este sticker
           </p>
-        )}
+          {userNameError && (
+            <p className="error" role="alert">
+              {userNameError}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Profile Template Manager - Solo mostrar cuando es apropiado */}
+      {showTemplates && (
+        <div>
+          <ProfileTemplateManager
+            onTemplateApply={handleApplyTemplate}
+            showTitle={true}
+          />
+        </div>
+      )}
+
+      {/* Sticker Selection Section */}
+      <div className="space-y-3">
+        <div className="rounded-lg bg-blue-50 p-3 border border-blue-200">
+          <div className="flex items-start">
+            <svg
+              className="w-4 h-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <div>
+              <h4 className="text-sm font-medium text-blue-900">
+                {stickerId
+                  ? 'Editando perfil individual'
+                  : 'Selecciona los stickers a actualizar'}
+              </h4>
+              <p className="text-sm text-blue-800 mt-1">
+                {stickerId
+                  ? 'Estás editando el perfil médico de este sticker específico. Los cambios solo se aplicarán a este sticker.'
+                  : 'Selecciona conscientemente qué stickers quieres actualizar con esta información médica. Cada sticker mantiene su propio perfil individual.'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <StickerSelectorGrouped
+          selectedStickers={selectedStickerIds}
+          onSelectionChange={setSelectedStickerIds}
+          showTitle={false}
+          specificStickerId={stickerId}
+        />
       </div>
 
       <div>
@@ -245,22 +478,29 @@ export default function ProfileForm({
           <div key={f.id} className="grid md:grid-cols-2 gap-3 mb-3">
             <div>
               <label className="label" htmlFor={`cname-${i}`}>
-                Nombre
+                Nombre *
               </label>
               <input
                 id={`cname-${i}`}
                 className="input"
                 {...register(`contacts.${i}.name` as const)}
+                aria-invalid={!!errors.contacts?.[i]?.name}
               />
+              {errors.contacts?.[i]?.name && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.contacts[i]?.name?.message || 'Nombre requerido'}
+                </p>
+              )}
             </div>
             <div>
               <label className="label" htmlFor={`crel-${i}`}>
-                Relación
+                Relación *
               </label>
               <select
                 id={`crel-${i}`}
                 className="input"
                 {...register(`contacts.${i}.relation` as const)}
+                aria-invalid={!!errors.contacts?.[i]?.relation}
               >
                 <option value="">Seleccionar relación</option>
                 <option value="Padre/Madre">Padre/Madre</option>
@@ -278,16 +518,28 @@ export default function ProfileForm({
                 </option>
                 <option value="Otro">Otro</option>
               </select>
+              {errors.contacts?.[i]?.relation && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.contacts[i]?.relation?.message ||
+                    'Relación requerida'}
+                </p>
+              )}
             </div>
             <div>
               <label className="label" htmlFor={`cphone-${i}`}>
-                Teléfono
+                Teléfono *
               </label>
               <input
                 id={`cphone-${i}`}
                 className="input"
                 {...register(`contacts.${i}.phone` as const)}
+                aria-invalid={!!errors.contacts?.[i]?.phone}
               />
+              {errors.contacts?.[i]?.phone && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.contacts[i]?.phone?.message || 'Teléfono requerido'}
+                </p>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <input
@@ -324,8 +576,10 @@ export default function ProfileForm({
             </button>
           )}
         </div>
-        {errors.contacts && (
-          <p className="error">{String(errors.contacts.message)}</p>
+        {errors.contacts && typeof errors.contacts.message === 'string' && (
+          <p className="error" role="alert">
+            {errors.contacts.message}
+          </p>
         )}
       </fieldset>
 
@@ -411,9 +665,7 @@ export default function ProfileForm({
                   id="hasComplementary-yes"
                   type="radio"
                   value="true"
-                  {...register('insurance.hasComplementary', {
-                    setValueAs: (value) => value === 'true',
-                  })}
+                  {...register('insurance.hasComplementary')}
                 />
                 Sí
               </label>
@@ -462,8 +714,8 @@ export default function ProfileForm({
           {serverError}
         </p>
       )}
-      <button className="btn" type="submit">
-        Guardar
+      <button className="btn" type="submit" disabled={isSubmitting}>
+        {isSubmitting ? 'Guardando...' : 'Guardar'}
       </button>
     </form>
   );

@@ -92,89 +92,94 @@ export async function PUT(
         );
       }
 
-      // Update emergency profile if provided
+      // Update emergency profile if provided (using optimized approach)
       if (profile) {
-        const userSticker = await tx.sticker.findFirst({
-          where: { ownerId: userId },
-          include: {
-            EmergencyProfile: true,
-          },
+        // Find or create the user's emergency profile (reuse existing)
+        const emergencyProfile = await tx.emergencyProfile.findFirst({
+          where: { userId },
+          include: { EmergencyContact: true },
+          orderBy: { updatedByUserAt: 'desc' },
         });
 
-        if (userSticker) {
-          if (userSticker.EmergencyProfile) {
-            // Update existing profile
-            await tx.emergencyProfile.update({
-              where: { id: userSticker.EmergencyProfile.id },
-              data: {
-                bloodType: profile.bloodType,
-                allergies: profile.allergies,
-                conditions: profile.conditions,
-                medications: profile.medications,
-                notes: profile.notes,
-                updatedAt: new Date(),
-              },
-            });
+        if (emergencyProfile) {
+          // Update existing profile
+          await tx.emergencyProfile.update({
+            where: { id: emergencyProfile.id },
+            data: {
+              bloodType: profile.bloodType,
+              allergies: profile.allergies,
+              conditions: profile.conditions,
+              medications: profile.medications,
+              notes: profile.notes,
+              updatedByUserAt: new Date(),
+              updatedAt: new Date(),
+            },
+          });
 
-            // Delete existing contacts and create new ones
-            await tx.emergencyContact.deleteMany({
-              where: { profileId: userSticker.EmergencyProfile.id },
-            });
+          // Delete existing contacts and create new ones
+          await tx.emergencyContact.deleteMany({
+            where: { profileId: emergencyProfile.id },
+          });
 
-            if (profile.contacts?.length > 0) {
-              await tx.emergencyContact.createMany({
-                data: profile.contacts.map(
-                  (contact: {
-                    name: string;
-                    phone: string;
-                    relation: string;
-                    preferred?: boolean;
-                  }) => ({
-                    profileId: userSticker.EmergencyProfile!.id,
-                    name: contact.name,
-                    phone: contact.phone,
-                    relation: contact.relation,
-                    preferred: contact.preferred || false,
-                  })
-                ),
-              });
-            }
-          } else {
-            // Create new profile
-            const emergencyProfile = await tx.emergencyProfile.create({
-              data: {
-                id: `profile_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                userId: userId,
-                stickerId: userSticker.id,
-                bloodType: profile.bloodType,
-                allergies: profile.allergies,
-                conditions: profile.conditions,
-                medications: profile.medications,
-                notes: profile.notes,
-                updatedAt: new Date(),
-              },
+          if (profile.contacts?.length > 0) {
+            await tx.emergencyContact.createMany({
+              data: profile.contacts.map(
+                (contact: {
+                  name: string;
+                  phone: string;
+                  relation: string;
+                  preferred?: boolean;
+                }) => ({
+                  id: `contact_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                  profileId: emergencyProfile!.id,
+                  name: contact.name,
+                  phone: contact.phone,
+                  relation: contact.relation,
+                  preferred: contact.preferred || false,
+                  updatedAt: new Date(),
+                })
+              ),
             });
+          }
+        } else {
+          // Create new profile for the user
+          const newProfile = await tx.emergencyProfile.create({
+            data: {
+              id: `profile_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              userId: userId,
+              bloodType: profile.bloodType,
+              allergies: profile.allergies,
+              conditions: profile.conditions,
+              medications: profile.medications,
+              notes: profile.notes,
+              language: 'es',
+              organDonor: false,
+              consentPublic: true,
+              updatedByUserAt: new Date(),
+              updatedAt: new Date(),
+            },
+          });
 
-            if (profile.contacts?.length > 0) {
-              await tx.emergencyContact.createMany({
-                data: profile.contacts.map(
-                  (contact: {
-                    name: string;
-                    phone: string;
-                    relation: string;
-                    preferred?: boolean;
-                  }) => ({
-                    id: `contact_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                    profileId: emergencyProfile.id,
-                    name: contact.name,
-                    phone: contact.phone,
-                    relation: contact.relation,
-                    preferred: contact.preferred || false,
-                    updatedAt: new Date(),
-                  })
-                ),
-              });
-            }
+          // Create contacts for the new profile
+          if (profile.contacts?.length > 0) {
+            await tx.emergencyContact.createMany({
+              data: profile.contacts.map(
+                (contact: {
+                  name: string;
+                  phone: string;
+                  relation: string;
+                  preferred?: boolean;
+                }) => ({
+                  id: `contact_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                  profileId: newProfile.id,
+                  name: contact.name,
+                  phone: contact.phone,
+                  relation: contact.relation,
+                  preferred: contact.preferred || false,
+                  updatedAt: new Date(),
+                })
+              ),
+            });
           }
         }
       }

@@ -21,24 +21,30 @@ async function getOrdersData() {
           country: true,
           totalSpent: true,
         },
-      },
-      EmergencyProfile: {
-        select: {
-          bloodType: true,
-          allergies: true,
-          conditions: true,
-          medications: true,
-          notes: true,
-          EmergencyContact: {
-            where: {
-              preferred: true,
+        include: {
+          EmergencyProfile: {
+            select: {
+              bloodType: true,
+              allergies: true,
+              conditions: true,
+              medications: true,
+              notes: true,
+              EmergencyContact: {
+                where: {
+                  preferred: true,
+                },
+                take: 1,
+                select: {
+                  name: true,
+                  phone: true,
+                  relation: true,
+                },
+              },
+            },
+            orderBy: {
+              updatedByUserAt: 'desc',
             },
             take: 1,
-            select: {
-              name: true,
-              phone: true,
-              relation: true,
-            },
           },
         },
       },
@@ -80,10 +86,10 @@ async function getOrdersData() {
       displaySecondaryStatuses: displayStatus.secondaryStatuses,
       createdAt: order.createdAt,
       owner: order.User,
-      profile: order.EmergencyProfile
+      profile: order.User.EmergencyProfile?.[0]
         ? {
-            ...order.EmergencyProfile,
-            contacts: order.EmergencyProfile.EmergencyContact,
+            ...order.User.EmergencyProfile[0],
+            contacts: order.User.EmergencyProfile[0].EmergencyContact,
           }
         : null,
       payments: order.Payment,

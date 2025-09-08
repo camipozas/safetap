@@ -14,6 +14,7 @@ import { checkoutSchema } from '@/lib/validators';
 
 const bodySchema = checkoutSchema.extend({
   discountCode: z.string().optional(),
+  tempReference: z.string().optional(), // Accept temporary reference from frontend
 });
 
 export async function POST(req: Request) {
@@ -99,13 +100,35 @@ export async function POST(req: Request) {
       }
     }
 
-    // Generate unique payment reference
-    const reference = await PaymentReferenceService.generateUniqueReference(
-      user.id,
-      finalAmount,
-      `Sticker ${data.nameOnSticker}`
-    );
-    console.log('🔖 Generated unique reference:', reference);
+    // Generate unique payment reference or use temp reference
+    let reference: string;
+    if (data.tempReference) {
+      // Validate that the temporary reference doesn't already exist in database
+      const existingPayment = await prisma.payment.findUnique({
+        where: { reference: data.tempReference },
+      });
+
+      if (existingPayment) {
+        console.log(
+          '⚠️ Temporary reference already exists, generating new one'
+        );
+        reference = await PaymentReferenceService.generateUniqueReference(
+          user.id,
+          finalAmount,
+          `Sticker ${data.nameOnSticker}`
+        );
+      } else {
+        reference = data.tempReference;
+        console.log('🔖 Using temporary reference:', reference);
+      }
+    } else {
+      reference = await PaymentReferenceService.generateUniqueReference(
+        user.id,
+        finalAmount,
+        `Sticker ${data.nameOnSticker}`
+      );
+      console.log('🔖 Generated unique reference:', reference);
+    }
 
     console.log('💾 Starting database transaction...');
     const result = await prisma.$transaction(async (tx) => {
@@ -146,6 +169,7 @@ export async function POST(req: Request) {
           id: crypto.randomUUID(),
           userId: user.id,
           stickerId: sticker.id,
+          quantity: 1, // Single sticker purchase
           amount: finalAmount,
           originalAmount: discountCodeId ? baseAmount : undefined,
           discountCodeId,
