@@ -200,10 +200,10 @@ jobs:
 
       - name: Run tests
         if: needs.changes.outputs.tests == 'true' || needs.changes.outputs.code == 'true' || needs.changes.outputs.config == 'true'
-        run: npm run test
+        run: NODE_ENV=test npm run test
 
       - name: Build application
-        run: npm run build:vercel
+        run: NODE_ENV=production npm run build:vercel
         env:
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'fallback-secret-for-ci-testing-only' }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
@@ -292,7 +292,7 @@ jobs:
           DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_test' }}
 
       - name: Build application
-        run: npm run build:vercel
+        run: NODE_ENV=production npm run build:vercel
         env:
           PLAYWRIGHT_TEST: 'true'
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'fallback-secret-for-ci-testing-only' }}
@@ -306,7 +306,7 @@ jobs:
           NODE_OPTIONS: '--max-old-space-size=4096'
 
       - name: Run Playwright tests (skip mobile optimization)
-        run: npm run e2e:ci
+        run: NODE_ENV=test npm run e2e:ci
         env:
           PLAYWRIGHT_TEST: 'true'
           CI: 'true'

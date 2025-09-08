@@ -77,6 +77,13 @@ export const environment = {
     key: process.env.NEXT_PUBLIC_POSTHOG_KEY,
     host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
   },
+
+  newrelic: {
+    appName: process.env.NEW_RELIC_APP_NAME,
+    licenseKey: process.env.NEW_RELIC_LICENSE_KEY,
+    agentEnabled: process.env.NEW_RELIC_AGENT_ENABLED !== 'false',
+    logLevel: process.env.NEW_RELIC_LOG_LEVEL || 'info',
+  },
 };
 
 export function validateEnvironment() {
@@ -114,6 +121,11 @@ export function validateEnvironment() {
     missingVars.push('NEXT_PUBLIC_POSTHOG_HOST');
   }
 
+  // New Relic is optional, only validate if license key is provided
+  if (environment.newrelic.licenseKey && !environment.newrelic.appName) {
+    missingVars.push('NEW_RELIC_APP_NAME');
+  }
+
   if (missingVars.length > 0) {
     console.log('⚠️ Missing environment variables:');
     missingVars.forEach((varName) => console.log(`   - ${varName}`));
@@ -132,6 +144,11 @@ export function validateEnvironment() {
     );
     console.log('   NEXT_PUBLIC_POSTHOG_KEY="your_posthog_key"');
     console.log('   NEXT_PUBLIC_POSTHOG_HOST="https://your_posthog_host"');
+    console.log('\n🔍 Optional New Relic monitoring:');
+    console.log('   NEW_RELIC_LICENSE_KEY="your_newrelic_license"');
+    console.log('   NEW_RELIC_APP_NAME="SafeTap"');
+    console.log('   NEW_RELIC_AGENT_ENABLED="true"');
+    console.log('   NEW_RELIC_LOG_LEVEL="info"');
     console.log('\n🚨 Please fix these issues before running the application.');
 
     return false;
@@ -149,6 +166,7 @@ export function getConfig() {
     email: environment.email,
     app: environment.app,
     posthog: environment.posthog,
+    newrelic: environment.newrelic,
   };
 }
 
@@ -187,6 +205,9 @@ export function showCurrentConfig() {
   );
   console.log(
     `📊 PostHog Host: ${environment.posthog.host ? '✅ Configured' : '❌ Not configured'}`
+  );
+  console.log(
+    `📊 New Relic: ${environment.newrelic.licenseKey ? '✅ Configured' : '❌ Not configured'}`
   );
   console.log('===================================');
   console.log(

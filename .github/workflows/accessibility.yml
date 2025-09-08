@@ -58,7 +58,7 @@ jobs:
           DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://postgres:postgres@localhost:5432/safetap_test' }}
 
       - name: Build application
-        run: npm run build:vercel
+        run: NODE_ENV=production npm run build:vercel
         env:
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'test-secret-key' }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
