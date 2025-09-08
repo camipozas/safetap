@@ -58,8 +58,13 @@ export default function StickerSelectorGrouped({
   const [isFiltered, setIsFiltered] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     const loadStickers = async () => {
       try {
+        if (!isMounted) {
+          return;
+        }
         setLoading(true);
 
         // Si hay un sticker específico, usar el endpoint simple
@@ -135,6 +140,9 @@ export default function StickerSelectorGrouped({
               groupSummary: processedSticker.profileSummary,
             };
 
+            if (!isMounted) {
+              return;
+            }
             setGroups([group]);
 
             // Asegurar que esté seleccionado - solo si no está ya seleccionado
@@ -223,6 +231,9 @@ export default function StickerSelectorGrouped({
               }
             );
 
+            if (!isMounted) {
+              return;
+            }
             setGroups(groups);
             setIsFiltered(false);
 
@@ -232,13 +243,22 @@ export default function StickerSelectorGrouped({
           }
         }
       } catch (err) {
+        if (!isMounted) {
+          return;
+        }
         setError(err instanceof Error ? err.message : 'Error desconocido');
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     loadStickers();
+
+    return () => {
+      isMounted = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [specificStickerId, filterSimilar, excludeStickerId]);
 
