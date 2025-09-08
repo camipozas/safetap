@@ -217,6 +217,24 @@ enum StickerStatus {
   LOST
 }
 
+model Promotion {
+  id           String          @id @default(cuid())
+  name         String
+  description  String?
+  minQuantity  Int
+  discountType PromotionType
+  discountValue Decimal        @db.Decimal(10, 2)
+  active       Boolean         @default(true)
+  priority     Int             @default(0) // Higher number = higher priority
+  startDate    DateTime?
+  endDate      DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([minQuantity, active])
+  @@index([active, priority])
+}
+
 model DiscountCode {
   id              String   @id @default(cuid())
   code            String   @unique
@@ -252,5 +270,10 @@ model DiscountRedemption {
 
 enum DiscountType {
   PERCENT
+  FIXED
+}
+
+enum PromotionType {
+  PERCENTAGE
   FIXED
 }
