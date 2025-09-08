@@ -15,6 +15,32 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
+// Mock Next.js Link component
+vi.mock('next/link', () => ({
+  default: ({
+    children,
+    href,
+    className,
+  }: {
+    children: React.ReactNode;
+    href: string;
+    className?: string;
+  }) => (
+    <a href={href} className={className}>
+      {children}
+    </a>
+  ),
+}));
+
+// Mock Next.js Suspense
+vi.mock('react', async () => {
+  const actual = await vi.importActual('react');
+  return {
+    ...actual,
+    Suspense: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  };
+});
+
 // Mock the auth function
 vi.mock('@/lib/auth', () => ({
   auth: vi.fn(() => ({
@@ -34,18 +60,20 @@ vi.mock('@/lib/prisma', () => ({
         Payment: [
           {
             id: 'payment-123',
-            status: 'VERIFIED',
+            status: 'VERIFIED', // Verified payment
             amount: 6990,
             currency: 'CLP',
+            reference: 'SAFETAP-TEST-123',
             createdAt: new Date('2025-08-20'),
             quantity: 1,
             Sticker: {
               id: 'sticker-123',
+              ownerId: 'user-123', // Must match user.id for sticker to show
               nameOnSticker: 'Test User',
               flagCode: 'CL',
               stickerColor: '#f1f5f9',
               textColor: '#000000',
-              status: 'PAID',
+              status: 'PAID', // PAID status for verified payment
               slug: 'test-user',
               serial: 'ST123',
             },
@@ -59,6 +87,11 @@ vi.mock('@/lib/prisma', () => ({
 // Mock the PaymentsTable component
 vi.mock('@/components/PaymentsTable', () => ({
   PaymentsTable: () => <div data-testid="payments-table">Payments Table</div>,
+}));
+
+// Mock the PaymentReferenceHandler component
+vi.mock('@/components/PaymentReferenceHandler', () => ({
+  default: () => null,
 }));
 
 // Mock the StickerPreview component

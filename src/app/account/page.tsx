@@ -163,15 +163,6 @@ export default async function AccountPage({
             const s = payment.Sticker!;
             const quantity = payment.quantity || 1;
 
-            // Log para debugging - verificar que el sticker pertenece al usuario
-            console.log('🔍 AccountPage: Showing sticker:', {
-              stickerId: s.id,
-              stickerOwnerId: s.ownerId,
-              currentUserId: user.id,
-              isOwner: s.ownerId === user.id,
-              stickerName: s.nameOnSticker,
-            });
-
             return (
               <li key={payment.id} className="rounded border bg-white p-4">
                 <div className="flex flex-col lg:flex-row gap-4">

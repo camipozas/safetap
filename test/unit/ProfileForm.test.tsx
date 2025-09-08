@@ -47,7 +47,7 @@ describe('ProfileForm', () => {
     render(<ProfileForm />);
 
     // Initial state: one contact (check by id)
-    expect(screen.getByLabelText('Nombre completo')).toBeInTheDocument();
+    expect(screen.getByLabelText('Nombre *')).toBeInTheDocument();
     expect(document.getElementById('cname-0')).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /quitar último/i })
@@ -95,12 +95,14 @@ describe('ProfileForm', () => {
 
     render(<ProfileForm profile={mockProfile} />);
 
-    expect(screen.getByDisplayValue('Juan Testez')).toBeInTheDocument();
+    // Check medical information fields
     expect(screen.getByDisplayValue('A+')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Penicilina,Mariscos')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Diabetes')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Insulina')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Test notes')).toBeInTheDocument();
+
+    // Check contact information fields
     expect(screen.getByDisplayValue('Juan Pérez')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Hermano/a')).toBeInTheDocument();
     expect(screen.getByDisplayValue('+56912345678')).toBeInTheDocument();

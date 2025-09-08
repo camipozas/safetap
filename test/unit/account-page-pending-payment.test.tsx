@@ -15,6 +15,32 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
+// Mock Next.js Link component
+vi.mock('next/link', () => ({
+  default: ({
+    children,
+    href,
+    className,
+  }: {
+    children: React.ReactNode;
+    href: string;
+    className?: string;
+  }) => (
+    <a href={href} className={className}>
+      {children}
+    </a>
+  ),
+}));
+
+// Mock Next.js Suspense
+vi.mock('react', async () => {
+  const actual = await vi.importActual('react');
+  return {
+    ...actual,
+    Suspense: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  };
+});
+
 // Mock the auth function
 vi.mock('@/lib/auth', () => ({
   auth: vi.fn(() => ({
@@ -42,6 +68,7 @@ vi.mock('@/lib/prisma', () => ({
             quantity: 1,
             Sticker: {
               id: 'sticker-123',
+              ownerId: 'user-123', // Must match user.id for sticker to show
               nameOnSticker: 'Test User',
               flagCode: 'CL',
               stickerColor: '#f1f5f9',
@@ -85,6 +112,23 @@ vi.mock('@/components/ActivateStickerButton', () => ({
     <div data-testid="activate-button">
       Activate Button: {stickerId} - {hasValidPayment} - {status}
     </div>
+  ),
+}));
+
+// Mock PaymentReferenceHandler component
+vi.mock('@/components/PaymentReferenceHandler', () => ({
+  default: () => null,
+}));
+
+// Mock BankAccountInfo component
+vi.mock('@/components/BankAccountInfo', () => ({
+  default: () => <div data-testid="bank-account-info">Bank Account Info</div>,
+}));
+
+// Mock EditProfileButton component
+vi.mock('@/components/EditProfileButton', () => ({
+  default: ({ children }: { children: React.ReactNode }) => (
+    <button data-testid="edit-profile-button">{children}</button>
   ),
 }));
 

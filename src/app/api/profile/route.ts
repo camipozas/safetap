@@ -31,21 +31,6 @@ export async function POST(req: Request) {
     const { stickerId, profileId, values, selectedStickerIds } =
       json as RequestBody;
 
-    // Debug logs temporales
-    console.log('=== PROFILE API DEBUG ===');
-    console.log('stickerId:', stickerId);
-    console.log('profileId:', profileId);
-    console.log('selectedStickerIds:', selectedStickerIds);
-    console.log(
-      'Modo:',
-      stickerId
-        ? 'INDIVIDUAL'
-        : selectedStickerIds?.length
-          ? 'MÚLTIPLE'
-          : 'CREAR NUEVO'
-    );
-    console.log('Datos recibidos en API:', JSON.stringify(values, null, 2));
-
     const data = profileSchema.parse(values);
 
     // Separate contacts from other profile data
@@ -53,8 +38,6 @@ export async function POST(req: Request) {
 
     // MODO INDIVIDUAL: actualizar perfil específico de un sticker
     if (stickerId && profileId) {
-      console.log('Modo INDIVIDUAL - Actualizando perfil existente');
-
       // Verificar que el perfil existe y pertenece al usuario y al sticker correcto
       const existing = await prisma.emergencyProfile.findFirst({
         where: {
@@ -72,13 +55,6 @@ export async function POST(req: Request) {
           { status: 403 }
         );
       }
-
-      console.log(
-        'Actualizando perfil:',
-        profileId,
-        'para sticker:',
-        stickerId
-      );
 
       // Update the profile
       const updated = await prisma.emergencyProfile.update({
@@ -102,8 +78,6 @@ export async function POST(req: Request) {
 
     // MODO INDIVIDUAL: crear nuevo perfil para un sticker específico
     if (stickerId && !profileId) {
-      console.log('Modo INDIVIDUAL - Creando nuevo perfil');
-
       const sticker = await prisma.sticker.findFirst({
         where: { id: stickerId, ownerId: user.id },
       });
@@ -136,12 +110,6 @@ export async function POST(req: Request) {
 
     // MODO MÚLTIPLE: crear/actualizar perfiles individuales para cada sticker seleccionado
     if (selectedStickerIds && selectedStickerIds.length > 0) {
-      console.log(
-        'Modo MÚLTIPLE - Actualizando',
-        selectedStickerIds.length,
-        'stickers'
-      );
-
       // Validar que todos los stickers pertenecen al usuario
       const userStickers = await prisma.sticker.findMany({
         where: {

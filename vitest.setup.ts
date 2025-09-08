@@ -17,6 +17,31 @@ import '@testing-library/jest-dom';
 // Make React available globally for JSX
 globalThis.React = React;
 
+// Mock Next.js router and navigation
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  useSearchParams: () => ({
+    get: vi.fn(),
+    has: vi.fn(),
+    getAll: vi.fn(),
+    keys: vi.fn(),
+    values: vi.fn(),
+    entries: vi.fn(),
+    forEach: vi.fn(),
+    toString: vi.fn(),
+  }),
+  usePathname: () => '/test-path',
+  notFound: vi.fn(),
+  redirect: vi.fn(),
+}));
+
 // Hoist nodemailer mock to the top to ensure it's applied early
 vi.mock('nodemailer', async () => {
   const mockTransporter = {
