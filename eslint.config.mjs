@@ -19,6 +19,7 @@ const eslintConfig = [
       'coverage/**/*',
       'test-results/**/*',
       '.next/**/*',
+      'newrelic.js', // New Relic config uses CommonJS
     ],
   },
   ...compat.extends('next/core-web-vitals'),

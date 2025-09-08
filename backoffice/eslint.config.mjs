@@ -23,6 +23,7 @@ const eslintConfig = [
       'test-results/**/*',
       '.eslintrc.js',
       'next-env.d.ts',
+      'newrelic.js', // New Relic config uses CommonJS
     ],
   },
   {
