@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { ORDER_STATUS, PAYMENT_STATUS } from '@/lib/order-helpers';
 import { formatDate } from '@/lib/utils';
 import { Order } from '@/types/dashboard';
-import { Edit, Eye } from 'lucide-react';
-import { useState } from 'react';
+import { Edit, Eye, List, Users } from 'lucide-react';
+import React, { useState } from 'react';
 
 // Import StickerPreview from local components
 import StickerPreview from '../../../components/StickerPreview';
@@ -18,6 +18,50 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [groupByUser, setGroupByUser] = useState(false);
+
+  // Group orders by user + payment reference or purchase date
+  const groupedOrders = groupByUser
+    ? orders.reduce(
+        (acc, order) => {
+          const userEmail = order.owner.email;
+
+          // Try to get payment reference to group by transaction
+          const paymentRef = order.payments[0]?.reference;
+
+          // Create a group key based on user + payment reference (if exists) or user + date
+          let groupKey: string;
+          if (paymentRef) {
+            // Group by payment reference (same transaction)
+            groupKey = `${userEmail}__${paymentRef}`;
+          } else {
+            // Group by user + creation date (same day purchases)
+            const dateKey = order.createdAt.toDateString();
+            groupKey = `${userEmail}__${dateKey}`;
+          }
+
+          if (!acc[groupKey]) {
+            acc[groupKey] = {
+              user: order.owner,
+              orders: [],
+              paymentRef: paymentRef,
+              purchaseDate: order.createdAt,
+            };
+          }
+          acc[groupKey].orders.push(order);
+          return acc;
+        },
+        {} as Record<
+          string,
+          {
+            user: Order['owner'];
+            orders: Order[];
+            paymentRef?: string;
+            purchaseDate: Date;
+          }
+        >
+      )
+    : null;
 
   const handleStatusTransition = async (orderId: string, newStatus: string) => {
     setIsUpdating(orderId);
@@ -47,6 +91,11 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
   const handleViewOrder = (order: Order) => {
     setSelectedOrder(order);
     setShowPreview(true);
+  };
+
+  const editUser = (userId: string) => {
+    // Redirigir a la página de edición del usuario
+    window.open(`/dashboard/users?user=${userId}`, '_blank');
   };
 
   const handleEditOrder = (order: Order) => {
@@ -184,6 +233,31 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
 
   return (
     <div className="space-y-6">
+      {/* View Toggle */}
+      <div className="flex justify-between items-center">
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setGroupByUser(false)}
+            variant={!groupByUser ? 'default' : 'outline'}
+            size="sm"
+          >
+            <List className="w-4 h-4 mr-2" />
+            Vista Lista
+          </Button>
+          <Button
+            onClick={() => setGroupByUser(true)}
+            variant={groupByUser ? 'default' : 'outline'}
+            size="sm"
+          >
+            <Users className="w-4 h-4 mr-2" />
+            Agrupar por Compra
+          </Button>
+        </div>
+        <div className="text-sm text-gray-600">
+          {orders.length} órdenes totales
+        </div>
+      </div>
+
       {/* Tabla de órdenes */}
       <div className="bg-white shadow rounded-lg overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
@@ -213,291 +287,449 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {orders.map((order) => (
-              <tr key={order.id}>
-                {/* Usuario */}
-                <td className="py-4 px-6">
-                  <div className="flex items-center">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {order.owner.name || 'Sin nombre'}
+            {groupByUser && groupedOrders
+              ? Object.entries(groupedOrders).map(([groupKey, group]) => (
+                  <React.Fragment key={groupKey}>
+                    {/* Purchase/Transaction Header Row */}
+                    <tr className="bg-gray-100">
+                      <td colSpan={7} className="px-6 py-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="font-medium text-gray-900">
+                              {group.user.name || 'Sin nombre'}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {group.user.email}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {group.user.country}
+                            </div>
+                            {/* Payment reference or purchase date */}
+                            {group.paymentRef ? (
+                              <div className="text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded font-mono">
+                                🧾 {group.paymentRef}
+                              </div>
+                            ) : (
+                              <div className="text-sm text-gray-600 bg-gray-200 px-2 py-1 rounded">
+                                📅{' '}
+                                {group.purchaseDate.toLocaleDateString('es-ES')}
+                              </div>
+                            )}
+                            {/* Contact info for this user */}
+                            {group.orders[0]?.profile?.contacts &&
+                              group.orders[0].profile.contacts.length > 0 && (
+                                <div className="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded">
+                                  📞 {group.orders[0].profile.contacts[0].name}:{' '}
+                                  {group.orders[0].profile.contacts[0].phone}
+                                </div>
+                              )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                              {group.orders.length} sticker
+                              {group.orders.length !== 1 ? 's' : ''}
+                            </div>
+                            {/* Total spent for this transaction */}
+                            <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                              Total:{' '}
+                              {formatCurrency(
+                                group.orders.reduce(
+                                  (sum, order) =>
+                                    sum + (order.payments[0]?.amount || 0),
+                                  0
+                                ),
+                                group.orders[0]?.payments[0]?.currency || 'CLP'
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    {/* Orders for this user */}
+                    {group.orders.map((order) => (
+                      <tr key={order.id} className="bg-blue-50">
+                        {/* ID / Usuario - Simplified for grouped view */}
+                        <td className="py-3 px-6">
+                          <div className="text-xs font-mono text-gray-400">
+                            #{order.id.slice(-8)}
+                          </div>
+                          <div className="text-xs text-gray-600 mt-1">
+                            {order.nameOnSticker}
+                          </div>
+                        </td>
+
+                        {/* Estado */}
+                        <td className="py-3 px-6">
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.displayStatus || order.status)}`}
+                          >
+                            {getStatusLabel(
+                              order.displayStatus || order.status
+                            )}
+                          </span>
+                        </td>
+
+                        {/* País - Show flag and sticker info */}
+                        <td className="py-3 px-6">
+                          <div className="text-sm">
+                            <span className="mr-1">{order.flagCode}</span>
+                            <span className="text-gray-600">
+                              {order.stickerColor}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Contacto - Show serial */}
+                        <td className="py-3 px-6">
+                          <div className="text-xs font-mono text-purple-600 bg-purple-100 px-2 py-1 rounded">
+                            {order.serial}
+                          </div>
+                        </td>
+
+                        {/* Pago / Referencia */}
+                        <td className="py-3 px-6">
+                          <div className="text-sm">
+                            <div className="font-medium text-gray-900">
+                              {order.payments.length > 0
+                                ? formatCurrency(
+                                    order.payments[0].amount,
+                                    order.payments[0].currency
+                                  )
+                                : 'Sin pago'}
+                            </div>
+                            {order.payments.length > 0 &&
+                              order.payments[0].reference && (
+                                <div className="text-xs text-blue-600 font-mono mt-1 bg-blue-100 px-2 py-1 rounded">
+                                  {order.payments[0].reference}
+                                </div>
+                              )}
+                          </div>
+                        </td>
+
+                        {/* Fecha */}
+                        <td className="py-3 px-6">
+                          <div className="text-sm text-gray-900">
+                            {formatDate(order.createdAt)}
+                          </div>
+                        </td>
+
+                        {/* Acciones */}
+                        <td className="py-3 px-6 text-right text-sm font-medium">
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewOrder(order)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => editUser(order.owner.id)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </React.Fragment>
+                ))
+              : orders.map((order) => (
+                  <tr key={order.id}>
+                    {/* Usuario */}
+                    <td className="py-4 px-6">
+                      <div className="flex items-center">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {order.owner.name || 'Sin nombre'}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {order.owner.email}
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-500">
-                        {order.owner.email}
+                    </td>
+
+                    {/* Estado */}
+                    <td className="py-4 px-6">
+                      <div className="flex flex-col gap-1">
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.displayStatus || order.status)}`}
+                        >
+                          {getStatusLabel(order.displayStatus || order.status)}
+                        </span>
                       </div>
-                    </div>
-                  </div>
-                </td>
+                    </td>
 
-                {/* Estado */}
-                <td className="py-4 px-6">
-                  <div className="flex flex-col gap-1">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.displayStatus || order.status)}`}
-                    >
-                      {getStatusLabel(order.displayStatus || order.status)}
-                    </span>
-                  </div>
-                </td>
+                    {/* País */}
+                    <td className="py-4 px-6">
+                      <div className="text-sm text-gray-900">
+                        {order.owner.country}
+                      </div>
+                    </td>
 
-                {/* País */}
-                <td className="py-4 px-6">
-                  <div className="text-sm text-gray-900">
-                    {order.owner.country}
-                  </div>
-                </td>
+                    {/* Contacto */}
+                    <td className="py-4 px-6">
+                      <div className="text-sm text-gray-900">
+                        {order.profile?.contacts &&
+                        order.profile.contacts.length > 0 ? (
+                          <div>
+                            <div>{order.profile.contacts[0].name}</div>
+                            <div className="text-gray-500">
+                              {order.profile.contacts[0].phone}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-gray-500">Sin contacto</span>
+                        )}
+                      </div>
+                    </td>
 
-                {/* Contacto */}
-                <td className="py-4 px-6">
-                  <div className="text-sm text-gray-900">
-                    {order.profile?.contacts &&
-                    order.profile.contacts.length > 0 ? (
-                      <div>
-                        <div>{order.profile.contacts[0].name}</div>
+                    {/* Pago */}
+                    <td className="py-4 px-6">
+                      <div className="text-sm">
+                        <div className="font-medium text-gray-900">
+                          {order.payments.length > 0
+                            ? formatCurrency(
+                                order.payments[0].amount,
+                                order.payments[0].currency
+                              )
+                            : 'Sin pago'}
+                        </div>
                         <div className="text-gray-500">
-                          {order.profile.contacts[0].phone}
+                          {getPaymentStatus(order.payments)}
                         </div>
+                        {order.payments.length > 0 &&
+                          order.payments[0].reference && (
+                            <div className="text-xs text-blue-600 font-mono mt-1">
+                              Ref: {order.payments[0].reference}
+                            </div>
+                          )}
                       </div>
-                    ) : (
-                      <span className="text-gray-500">Sin contacto</span>
-                    )}
-                  </div>
-                </td>
+                    </td>
 
-                {/* Pago */}
-                <td className="py-4 px-6">
-                  <div className="text-sm">
-                    <div className="font-medium text-gray-900">
-                      {order.payments.length > 0
-                        ? formatCurrency(
-                            order.payments[0].amount,
-                            order.payments[0].currency
-                          )
-                        : 'Sin pago'}
-                    </div>
-                    <div className="text-gray-500">
-                      {getPaymentStatus(order.payments)}
-                    </div>
-                    {order.payments.length > 0 &&
-                      order.payments[0].reference && (
-                        <div className="text-xs text-blue-600 font-mono mt-1">
-                          Ref: {order.payments[0].reference}
-                        </div>
-                      )}
-                  </div>
-                </td>
+                    {/* Fecha */}
+                    <td className="py-4 px-6">
+                      <div className="text-sm text-gray-500">
+                        {formatDate(order.createdAt)}
+                      </div>
+                    </td>
 
-                {/* Fecha */}
-                <td className="py-4 px-6">
-                  <div className="text-sm text-gray-500">
-                    {formatDate(order.createdAt)}
-                  </div>
-                </td>
-
-                {/* Acciones */}
-                <td className="py-4 px-6">
-                  <div className="flex items-center gap-2">
-                    {/* Botón Ver */}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleViewOrder(order)}
-                      title="Ver detalles"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-
-                    {/* Botón Editar Perfil */}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleEditOrder(order)}
-                      title="Editar perfil del usuario"
-                      className="text-purple-600 border-purple-200 hover:bg-purple-50"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-
-                    {/* Botones de transición de estado */}
-                    {order.displayStatus === ORDER_STATUS.ORDERED && (
-                      <>
+                    {/* Acciones */}
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-2">
+                        {/* Botón Ver */}
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-green-600 border-green-200 hover:bg-green-50"
-                          onClick={() =>
-                            handleStatusTransition(order.id, ORDER_STATUS.PAID)
-                          }
-                          disabled={isUpdating === order.id}
+                          onClick={() => handleViewOrder(order)}
+                          title="Ver detalles"
                         >
-                          {isUpdating === order.id
-                            ? 'Actualizando...'
-                            : 'Marcar Pagada'}
+                          <Eye className="h-4 w-4" />
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-orange-600 border-orange-200 hover:bg-orange-50"
-                          onClick={() =>
-                            handleStatusTransition(
-                              order.id,
-                              ORDER_STATUS.REJECTED
-                            )
-                          }
-                          disabled={isUpdating === order.id}
-                        >
-                          {isUpdating === order.id
-                            ? 'Actualizando...'
-                            : 'Rechazar'}
-                        </Button>
-                      </>
-                    )}
 
-                    {order.displayStatus === ORDER_STATUS.PAID && (
-                      <>
+                        {/* Botón Editar Perfil */}
                         <Button
                           size="sm"
                           variant="outline"
+                          onClick={() => handleEditOrder(order)}
+                          title="Editar perfil del usuario"
                           className="text-purple-600 border-purple-200 hover:bg-purple-50"
-                          onClick={() =>
-                            handleStatusTransition(
-                              order.id,
-                              ORDER_STATUS.PRINTING
-                            )
-                          }
-                          disabled={isUpdating === order.id}
                         >
-                          {isUpdating === order.id
-                            ? 'Actualizando...'
-                            : 'Imprimir'}
+                          <Edit className="h-4 w-4" />
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                          onClick={() =>
-                            handleStatusTransition(
-                              order.id,
-                              ORDER_STATUS.ORDERED
-                            )
-                          }
-                          disabled={isUpdating === order.id}
-                        >
-                          {isUpdating === order.id
-                            ? 'Actualizando...'
-                            : 'Volver a Creada'}
-                        </Button>
-                      </>
-                    )}
 
-                    {order.displayStatus === ORDER_STATUS.PRINTING && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
-                          onClick={() =>
-                            handleStatusTransition(
-                              order.id,
-                              ORDER_STATUS.SHIPPED
-                            )
-                          }
-                          disabled={isUpdating === order.id}
-                        >
-                          {isUpdating === order.id
-                            ? 'Actualizando...'
-                            : 'Enviar'}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-green-600 border-green-200 hover:bg-green-50"
-                          onClick={() =>
-                            handleStatusTransition(order.id, ORDER_STATUS.PAID)
-                          }
-                          disabled={isUpdating === order.id}
-                        >
-                          {isUpdating === order.id
-                            ? 'Actualizando...'
-                            : 'Volver a Pagada'}
-                        </Button>
-                      </>
-                    )}
+                        {/* Botones de transición de estado */}
+                        {order.displayStatus === ORDER_STATUS.ORDERED && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-green-600 border-green-200 hover:bg-green-50"
+                              onClick={() =>
+                                handleStatusTransition(
+                                  order.id,
+                                  ORDER_STATUS.PAID
+                                )
+                              }
+                              disabled={isUpdating === order.id}
+                            >
+                              {isUpdating === order.id
+                                ? 'Actualizando...'
+                                : 'Marcar Pagada'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-orange-600 border-orange-200 hover:bg-orange-50"
+                              onClick={() =>
+                                handleStatusTransition(
+                                  order.id,
+                                  ORDER_STATUS.REJECTED
+                                )
+                              }
+                              disabled={isUpdating === order.id}
+                            >
+                              {isUpdating === order.id
+                                ? 'Actualizando...'
+                                : 'Rechazar'}
+                            </Button>
+                          </>
+                        )}
 
-                    {order.displayStatus === ORDER_STATUS.SHIPPED && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-green-600 border-green-200 hover:bg-green-50"
-                          onClick={() =>
-                            handleStatusTransition(
-                              order.id,
-                              ORDER_STATUS.ACTIVE
-                            )
-                          }
-                          disabled={isUpdating === order.id}
-                        >
-                          {isUpdating === order.id
-                            ? 'Actualizando...'
-                            : 'Activar'}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                          onClick={() =>
-                            handleStatusTransition(
-                              order.id,
-                              ORDER_STATUS.PRINTING
-                            )
-                          }
-                          disabled={isUpdating === order.id}
-                        >
-                          {isUpdating === order.id
-                            ? 'Actualizando...'
-                            : 'Volver a Imprimiendo'}
-                        </Button>
-                      </>
-                    )}
+                        {order.displayStatus === ORDER_STATUS.PAID && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                              onClick={() =>
+                                handleStatusTransition(
+                                  order.id,
+                                  ORDER_STATUS.PRINTING
+                                )
+                              }
+                              disabled={isUpdating === order.id}
+                            >
+                              {isUpdating === order.id
+                                ? 'Actualizando...'
+                                : 'Imprimir'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                              onClick={() =>
+                                handleStatusTransition(
+                                  order.id,
+                                  ORDER_STATUS.ORDERED
+                                )
+                              }
+                              disabled={isUpdating === order.id}
+                            >
+                              {isUpdating === order.id
+                                ? 'Actualizando...'
+                                : 'Volver a Creada'}
+                            </Button>
+                          </>
+                        )}
 
-                    {order.displayStatus === ORDER_STATUS.ACTIVE && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-red-600 border-red-200 hover:bg-red-50"
-                          onClick={() =>
-                            handleStatusTransition(order.id, ORDER_STATUS.LOST)
-                          }
-                          disabled={isUpdating === order.id}
-                        >
-                          {isUpdating === order.id
-                            ? 'Actualizando...'
-                            : 'Marcar Perdida'}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                          onClick={() =>
-                            handleStatusTransition(
-                              order.id,
-                              ORDER_STATUS.SHIPPED
-                            )
-                          }
-                          disabled={isUpdating === order.id}
-                        >
-                          {isUpdating === order.id
-                            ? 'Actualizando...'
-                            : 'Volver a Enviada'}
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
+                        {order.displayStatus === ORDER_STATUS.PRINTING && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                              onClick={() =>
+                                handleStatusTransition(
+                                  order.id,
+                                  ORDER_STATUS.SHIPPED
+                                )
+                              }
+                              disabled={isUpdating === order.id}
+                            >
+                              {isUpdating === order.id
+                                ? 'Actualizando...'
+                                : 'Enviar'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-green-600 border-green-200 hover:bg-green-50"
+                              onClick={() =>
+                                handleStatusTransition(
+                                  order.id,
+                                  ORDER_STATUS.PAID
+                                )
+                              }
+                              disabled={isUpdating === order.id}
+                            >
+                              {isUpdating === order.id
+                                ? 'Actualizando...'
+                                : 'Volver a Pagada'}
+                            </Button>
+                          </>
+                        )}
+
+                        {order.displayStatus === ORDER_STATUS.SHIPPED && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-green-600 border-green-200 hover:bg-green-50"
+                              onClick={() =>
+                                handleStatusTransition(
+                                  order.id,
+                                  ORDER_STATUS.ACTIVE
+                                )
+                              }
+                              disabled={isUpdating === order.id}
+                            >
+                              {isUpdating === order.id
+                                ? 'Actualizando...'
+                                : 'Activar'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                              onClick={() =>
+                                handleStatusTransition(
+                                  order.id,
+                                  ORDER_STATUS.PRINTING
+                                )
+                              }
+                              disabled={isUpdating === order.id}
+                            >
+                              {isUpdating === order.id
+                                ? 'Actualizando...'
+                                : 'Volver a Imprimiendo'}
+                            </Button>
+                          </>
+                        )}
+
+                        {order.displayStatus === ORDER_STATUS.ACTIVE && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600 border-red-200 hover:bg-red-50"
+                              onClick={() =>
+                                handleStatusTransition(
+                                  order.id,
+                                  ORDER_STATUS.LOST
+                                )
+                              }
+                              disabled={isUpdating === order.id}
+                            >
+                              {isUpdating === order.id
+                                ? 'Actualizando...'
+                                : 'Marcar Perdida'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                              onClick={() =>
+                                handleStatusTransition(
+                                  order.id,
+                                  ORDER_STATUS.SHIPPED
+                                )
+                              }
+                              disabled={isUpdating === order.id}
+                            >
+                              {isUpdating === order.id
+                                ? 'Actualizando...'
+                                : 'Volver a Enviada'}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
           </tbody>
         </table>
       </div>

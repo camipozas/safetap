@@ -17,6 +17,7 @@ vi.mock('@/lib/prisma', () => ({
     },
     sticker: {
       findMany: vi.fn(),
+      count: vi.fn(),
     },
   },
 }));
@@ -176,20 +177,25 @@ describe('Orders Page', () => {
 
     // Mock Prisma query with proper type casting
     vi.mocked(prisma.sticker.findMany).mockResolvedValue(mockOrders as never);
+    vi.mocked(prisma.sticker.count).mockResolvedValue(3);
   });
 
   it('renders page title and description', async () => {
-    const page = await OrdersPage();
+    const page = await OrdersPage({
+      searchParams: Promise.resolve({ page: '1' }),
+    });
     render(page);
 
     expect(screen.getByText('Gestión de Órdenes')).toBeInTheDocument();
     expect(
-      screen.getByText('Administra y supervisa todas las órdenes del sistema')
+      screen.getByText(/Administra y supervisa todas las órdenes del sistema/)
     ).toBeInTheDocument();
   });
 
   it('displays orders table with correct data', async () => {
-    const page = await OrdersPage();
+    const page = await OrdersPage({
+      searchParams: Promise.resolve({ page: '1' }),
+    });
     render(page);
 
     // Check table headers
@@ -221,9 +227,13 @@ describe('Orders Page', () => {
   });
 
   it('calls prisma with correct parameters', async () => {
-    await OrdersPage();
+    await OrdersPage({
+      searchParams: Promise.resolve({ page: '1' }),
+    });
 
     expect(prisma.sticker.findMany).toHaveBeenCalledWith({
+      skip: 0,
+      take: 20,
       include: {
         User: {
           select: {
@@ -272,9 +282,7 @@ describe('Orders Page', () => {
           },
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     });
   });
 });

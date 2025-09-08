@@ -10,60 +10,65 @@ import OrdersManagement from './orders-management';
 // Revalidate this page every time it's accessed
 export const revalidate = 0;
 
-async function getOrdersData() {
-  const rawOrders = await prisma.sticker.findMany({
-    include: {
-      User: {
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          country: true,
-          totalSpent: true,
-          EmergencyProfile: {
-            select: {
-              bloodType: true,
-              allergies: true,
-              conditions: true,
-              medications: true,
-              notes: true,
-              EmergencyContact: {
-                where: {
-                  preferred: true,
-                },
-                take: 1,
-                select: {
-                  name: true,
-                  phone: true,
-                  relation: true,
+async function getOrdersData(page: number = 1, limit: number = 20) {
+  const offset = (page - 1) * limit;
+
+  const [rawOrders, totalCount] = await Promise.all([
+    prisma.sticker.findMany({
+      skip: offset,
+      take: limit,
+      include: {
+        User: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            country: true,
+            totalSpent: true,
+            EmergencyProfile: {
+              select: {
+                bloodType: true,
+                allergies: true,
+                conditions: true,
+                medications: true,
+                notes: true,
+                EmergencyContact: {
+                  where: {
+                    preferred: true,
+                  },
+                  take: 1,
+                  select: {
+                    name: true,
+                    phone: true,
+                    relation: true,
+                  },
                 },
               },
+              orderBy: {
+                updatedByUserAt: 'desc',
+              },
+              take: 1,
             },
-            orderBy: {
-              updatedByUserAt: 'desc',
-            },
-            take: 1,
+          },
+        },
+        Payment: {
+          select: {
+            id: true,
+            status: true,
+            amount: true,
+            currency: true,
+            reference: true,
+            createdAt: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
           },
         },
       },
-      Payment: {
-        select: {
-          id: true,
-          status: true,
-          amount: true,
-          currency: true,
-          reference: true,
-          createdAt: true,
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      },
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    }),
+    prisma.sticker.count(),
+  ]);
 
   // Process orders with display status
   const processedOrders = rawOrders.map((order) => {
@@ -95,10 +100,14 @@ async function getOrdersData() {
     };
   });
 
-  return processedOrders;
+  return { orders: processedOrders, totalCount };
 }
 
-export default async function OrdersPage() {
+export default async function OrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.email) {
@@ -118,7 +127,9 @@ export default async function OrdersPage() {
     redirect('/dashboard');
   }
 
-  const orders = await getOrdersData();
+  const resolvedSearchParams = await searchParams;
+  const currentPage = Number(resolvedSearchParams.page) || 1;
+  const { orders, totalCount } = await getOrdersData(currentPage);
 
   // Calculate payment statistics from all orders
   const allPayments = orders.flatMap((order) => order.payments);
@@ -131,19 +142,22 @@ export default async function OrdersPage() {
     cancelled: allPayments.filter((p) => p.status === 'CANCELLED').length,
   };
 
+  const totalPages = Math.ceil(totalCount / 20);
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Gestión de Órdenes</h1>
         <p className="text-gray-600 mt-2">
-          Administra y supervisa todas las órdenes del sistema
+          Administra y supervisa todas las órdenes del sistema ({totalCount}{' '}
+          órdenes totales)
         </p>
       </div>
 
       {/* Payment Statistics */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
-          Resumen de Pagos
+          Resumen de Pagos (Página {currentPage} de {totalPages})
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           <div className="bg-white rounded-lg border p-4 text-center">
@@ -182,6 +196,31 @@ export default async function OrdersPage() {
             </div>
             <div className="text-sm text-gray-600">Cancelados</div>
           </div>
+        </div>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="mb-6 flex justify-between items-center">
+        <div className="flex gap-2">
+          {currentPage > 1 && (
+            <a
+              href={`?page=${currentPage - 1}`}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              ← Anterior
+            </a>
+          )}
+          {currentPage < totalPages && (
+            <a
+              href={`?page=${currentPage + 1}`}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Siguiente →
+            </a>
+          )}
+        </div>
+        <div className="text-sm text-gray-600">
+          Mostrando {orders.length} de {totalCount} órdenes
         </div>
       </div>
 
