@@ -26,6 +26,7 @@ const mockOrders = [
     stickerColor: '#ffffff',
     textColor: '#000000',
     status: 'ORDERED' as OrderStatus,
+    groupId: null,
     createdAt: new Date('2024-01-01'),
     owner: {
       id: 'user-1',
@@ -67,6 +68,7 @@ const mockOrders = [
     stickerColor: '#f0f0f0',
     textColor: '#333333',
     status: 'PAID' as OrderStatus,
+    groupId: null,
     createdAt: new Date('2024-01-02'),
     owner: {
       id: 'user-2',
