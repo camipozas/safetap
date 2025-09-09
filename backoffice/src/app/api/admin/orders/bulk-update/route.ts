@@ -204,8 +204,84 @@ export async function PUT(request: NextRequest) {
       },
     });
 
+    // Also update payment status if transitioning to/from PAID status
+    let paymentUpdateResult = null;
+    if (status === 'PAID') {
+      // When marking as PAID, update payment status to PAID
+      // For batch orders, we need to update payments based on groupId since only the primary sticker has a payment
+      if (groupIds.length > 0) {
+        // Update payments for batch orders using groupId
+        paymentUpdateResult = await prisma.payment.updateMany({
+          where: {
+            Sticker: {
+              groupId: {
+                in: groupIds,
+              },
+            },
+          },
+          data: {
+            status: 'PAID',
+            updatedAt: new Date(),
+          },
+        });
+      } else {
+        // Update payments for individual orders using stickerId
+        paymentUpdateResult = await prisma.payment.updateMany({
+          where: {
+            stickerId: {
+              in: finalOrderIds,
+            },
+          },
+          data: {
+            status: 'PAID',
+            updatedAt: new Date(),
+          },
+        });
+      }
+      console.error('Payment status updated to PAID:', {
+        count: paymentUpdateResult.count,
+        method: groupIds.length > 0 ? 'groupId' : 'stickerId',
+      });
+    } else if (status === 'ORDERED') {
+      // When reverting to ORDERED, update payment status back to PENDING
+      if (groupIds.length > 0) {
+        // Update payments for batch orders using groupId
+        paymentUpdateResult = await prisma.payment.updateMany({
+          where: {
+            Sticker: {
+              groupId: {
+                in: groupIds,
+              },
+            },
+          },
+          data: {
+            status: 'PENDING',
+            updatedAt: new Date(),
+          },
+        });
+      } else {
+        // Update payments for individual orders using stickerId
+        paymentUpdateResult = await prisma.payment.updateMany({
+          where: {
+            stickerId: {
+              in: finalOrderIds,
+            },
+          },
+          data: {
+            status: 'PENDING',
+            updatedAt: new Date(),
+          },
+        });
+      }
+      console.error('Payment status updated to PENDING:', {
+        count: paymentUpdateResult.count,
+        method: groupIds.length > 0 ? 'groupId' : 'stickerId',
+      });
+    }
+
     console.error('Update result:', {
       count: updateResult.count,
+      paymentUpdates: paymentUpdateResult?.count || 0,
       modifiedIds: finalOrderIds
         .slice(0, 5)
         .map((id: string) => id.slice(0, 8) + '...'),
@@ -216,10 +292,15 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({
       success: true,
       updatedCount: updateResult.count,
+      paymentUpdates: paymentUpdateResult?.count || 0,
       originalRequestCount: orderIds.length,
       finalUpdateCount: finalOrderIds.length,
       groupsAffected: groupIds.length,
-      message: `${updateResult.count} stickers actualizados exitosamente a estado ${status}${groupIds.length > 0 ? ` (incluyendo ${groupIds.length} grupo(s))` : ''}`,
+      message: `${updateResult.count} stickers actualizados exitosamente a estado ${status}${
+        paymentUpdateResult?.count
+          ? ` (${paymentUpdateResult.count} pagos actualizados)`
+          : ''
+      }${groupIds.length > 0 ? ` (incluyendo ${groupIds.length} grupo(s))` : ''}`,
     });
   } catch (error) {
     console.error('Error en bulk update:', error);
