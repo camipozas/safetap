@@ -31,43 +31,127 @@ export async function PUT(
         return NextResponse.json({ error: 'Invalid state' }, { status: 400 });
       }
 
+      // Check if this is a batch order (has groupId) or single order
+      const currentSticker = await prisma.sticker.findUnique({
+        where: { id: orderId },
+        select: { id: true, groupId: true, status: true },
+      });
+
+      if (!currentSticker) {
+        return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      }
+
+      const isBatchOrder = !!currentSticker.groupId;
+
+      console.error('🔍 Order type analysis:', {
+        orderId: orderId.slice(0, 8) + '...',
+        groupId: currentSticker.groupId?.slice(0, 8) + '...' || 'none',
+        isBatchOrder,
+        currentStatus: currentSticker.status,
+        newStatus: status,
+      });
+
       // Get the target payment status for this order status
       const targetPaymentStatus = getPaymentStatusForOrderStatus(status);
 
-      // Update the sticker status
-      const updatedSticker = await prisma.sticker.update({
-        where: { id: orderId },
-        data: { status },
-        include: {
-          User: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-      });
+      if (isBatchOrder) {
+        // For batch orders, update ALL stickers in the group
+        console.error(
+          '📦 Updating batch order - all stickers in group will be updated'
+        );
 
-      // If we have a target payment status, update all related payments
-      if (targetPaymentStatus) {
-        await prisma.payment.updateMany({
-          where: {
-            Sticker: {
-              id: orderId,
-            },
-          },
+        const updateResult = await prisma.sticker.updateMany({
+          where: { groupId: currentSticker.groupId },
           data: {
-            status: targetPaymentStatus,
+            status,
+            updatedAt: new Date(),
           },
         });
-      }
 
-      return NextResponse.json({
-        success: true,
-        sticker: updatedSticker,
-        devBypass: true,
-      });
+        console.error(`✅ Updated ${updateResult.count} stickers in batch`);
+
+        // Update payments for all stickers in the group
+        if (targetPaymentStatus) {
+          await prisma.payment.updateMany({
+            where: {
+              Sticker: {
+                groupId: currentSticker.groupId,
+              },
+            },
+            data: {
+              status: targetPaymentStatus,
+              updatedAt: new Date(),
+            },
+          });
+        }
+
+        // Return the updated original sticker for response
+        const updatedSticker = await prisma.sticker.findUnique({
+          where: { id: orderId },
+          include: {
+            User: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        });
+
+        return NextResponse.json({
+          success: true,
+          sticker: updatedSticker,
+          isBatchUpdate: true,
+          updatedCount: updateResult.count,
+          devBypass: true,
+        });
+      } else {
+        // For single orders, update only this sticker
+        console.error(
+          '🎯 Updating single order - only this sticker will be updated'
+        );
+
+        const updatedSticker = await prisma.sticker.update({
+          where: { id: orderId },
+          data: {
+            status,
+            updatedAt: new Date(),
+          },
+          include: {
+            User: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        });
+
+        // Update payments for this specific sticker
+        if (targetPaymentStatus) {
+          await prisma.payment.updateMany({
+            where: {
+              Sticker: {
+                id: orderId,
+              },
+            },
+            data: {
+              status: targetPaymentStatus,
+              updatedAt: new Date(),
+            },
+          });
+        }
+
+        return NextResponse.json({
+          success: true,
+          sticker: updatedSticker,
+          isBatchUpdate: false,
+          updatedCount: 1,
+          devBypass: true,
+        });
+      }
     }
 
     // Normal authentication flow
@@ -125,42 +209,127 @@ export async function PUT(
       return NextResponse.json({ error: 'Invalid state' }, { status: 400 });
     }
 
+    // Check if this is a batch order (has groupId) or single order
+    const currentSticker = await prisma.sticker.findUnique({
+      where: { id: orderId },
+      select: { id: true, groupId: true, status: true },
+    });
+
+    if (!currentSticker) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    const isBatchOrder = !!currentSticker.groupId;
+
+    console.error('🔍 Order type analysis (authenticated):', {
+      orderId: orderId.slice(0, 8) + '...',
+      groupId: currentSticker.groupId?.slice(0, 8) + '...' || 'none',
+      isBatchOrder,
+      currentStatus: currentSticker.status,
+      newStatus: status,
+    });
+
     // Get the target payment status for this order status
     const targetPaymentStatus = getPaymentStatusForOrderStatus(status);
 
-    // Update the sticker status
-    const updatedSticker = await prisma.sticker.update({
-      where: { id: orderId },
-      data: { status },
-      include: {
-        User: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-    });
+    if (isBatchOrder) {
+      // For batch orders, update ALL stickers in the group
+      console.error(
+        '📦 Updating batch order (authenticated) - all stickers in group will be updated'
+      );
 
-    // If we have a target payment status, update all related payments
-    if (targetPaymentStatus) {
-      await prisma.payment.updateMany({
-        where: {
-          Sticker: {
-            id: orderId,
-          },
-        },
+      const updateResult = await prisma.sticker.updateMany({
+        where: { groupId: currentSticker.groupId },
         data: {
-          status: targetPaymentStatus,
+          status,
+          updatedAt: new Date(),
         },
       });
-    }
 
-    return NextResponse.json({
-      success: true,
-      sticker: updatedSticker,
-    });
+      console.error(
+        `✅ Updated ${updateResult.count} stickers in batch (authenticated)`
+      );
+
+      // Update payments for all stickers in the group
+      if (targetPaymentStatus) {
+        await prisma.payment.updateMany({
+          where: {
+            Sticker: {
+              groupId: currentSticker.groupId,
+            },
+          },
+          data: {
+            status: targetPaymentStatus,
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      // Return the updated original sticker for response
+      const updatedSticker = await prisma.sticker.findUnique({
+        where: { id: orderId },
+        include: {
+          User: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        sticker: updatedSticker,
+        isBatchUpdate: true,
+        updatedCount: updateResult.count,
+      });
+    } else {
+      // For single orders, update only this sticker
+      console.error(
+        '🎯 Updating single order (authenticated) - only this sticker will be updated'
+      );
+
+      const updatedSticker = await prisma.sticker.update({
+        where: { id: orderId },
+        data: {
+          status,
+          updatedAt: new Date(),
+        },
+        include: {
+          User: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      // Update payments for this specific sticker
+      if (targetPaymentStatus) {
+        await prisma.payment.updateMany({
+          where: {
+            Sticker: {
+              id: orderId,
+            },
+          },
+          data: {
+            status: targetPaymentStatus,
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        sticker: updatedSticker,
+        isBatchUpdate: false,
+        updatedCount: 1,
+      });
+    }
   } catch (error) {
     // Si es un error de Prisma, proporcionar más detalles
     if (error instanceof Error) {
@@ -226,6 +395,7 @@ export async function GET(
 
     return NextResponse.json({ sticker });
   } catch (error) {
+    console.error('Error in GET order endpoint:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

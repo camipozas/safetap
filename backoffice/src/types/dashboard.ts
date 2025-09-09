@@ -47,6 +47,7 @@ export interface Order {
   stickerColor: string;
   textColor: string;
   status: OrderStatus;
+  groupId: string | null;
   createdAt: Date;
   owner: {
     id: string;
@@ -70,9 +71,19 @@ export interface Order {
     id: string;
     status: PaymentStatus;
     amount: number;
+    originalAmount?: number | null;
+    discountAmount?: number | null;
     currency: string;
     reference?: string;
     createdAt: Date;
+    promotionId?: string | null;
+    promotion?: {
+      id: string;
+      name: string;
+      description?: string | null;
+      discountType: 'PERCENTAGE' | 'FIXED';
+      discountValue: number;
+    } | null;
   }[];
   // Display status fields for processed status
   displayStatus?: string;

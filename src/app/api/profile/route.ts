@@ -1,3 +1,5 @@
+import { randomUUID } from 'crypto';
+
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -36,44 +38,73 @@ export async function POST(req: Request) {
     // Separate contacts from other profile data
     const { contacts, ...profileData } = data;
 
-    // MODO INDIVIDUAL: actualizar perfil específico de un sticker
+    // MODO INDIVIDUAL: actualizar o crear perfil para un sticker específico
     if (stickerId && profileId) {
-      // Verificar que el perfil existe y pertenece al usuario y al sticker correcto
+      // Verificar que el perfil existe y pertenece al usuario
       const existing = await prisma.emergencyProfile.findFirst({
         where: {
           id: profileId,
           userId: user.id,
-          stickerId, // Asegurar que es el perfil del sticker correcto
+        },
+        include: {
+          EmergencyContact: true,
         },
       });
 
       if (!existing) {
         return NextResponse.json(
           {
-            error: 'Perfil no encontrado o no autorizado para este sticker',
+            error: 'Perfil no encontrado o no autorizado',
           },
           { status: 403 }
         );
       }
 
-      // Update the profile
-      const updated = await prisma.emergencyProfile.update({
-        where: { id: profileId },
-        data: {
-          ...profileData,
-          updatedByUserAt: new Date(),
-          EmergencyContact: {
-            deleteMany: { profileId },
-            create: contacts.map((contact) => ({
-              id: crypto.randomUUID(),
-              ...contact,
-              updatedAt: new Date(),
-            })),
+      // Si el perfil pertenece al mismo sticker, actualizarlo
+      if (existing.stickerId === stickerId) {
+        const updated = await prisma.emergencyProfile.update({
+          where: { id: profileId },
+          data: {
+            ...profileData,
+            updatedByUserAt: new Date(),
+            EmergencyContact: {
+              deleteMany: { profileId },
+              create: contacts.map((contact) => ({
+                id: randomUUID(),
+                ...contact,
+                updatedAt: new Date(),
+              })),
+            },
           },
-        },
-      });
+        });
 
-      return NextResponse.json({ id: updated.id });
+        return NextResponse.json({ id: updated.id });
+      } else {
+        // Si el perfil pertenece a otro sticker o es general, usar como template para crear uno nuevo
+        console.log(
+          `🔄 Using profile ${profileId} as template for new sticker ${stickerId}`
+        );
+
+        const newProfile = await prisma.emergencyProfile.create({
+          data: {
+            id: randomUUID(),
+            userId: user.id,
+            stickerId, // Asociar al nuevo sticker
+            ...profileData,
+            updatedAt: new Date(),
+            updatedByUserAt: new Date(),
+            EmergencyContact: {
+              create: contacts.map((contact) => ({
+                id: randomUUID(),
+                ...contact,
+                updatedAt: new Date(),
+              })),
+            },
+          },
+        });
+
+        return NextResponse.json({ id: newProfile.id });
+      }
     }
 
     // MODO INDIVIDUAL: crear nuevo perfil para un sticker específico

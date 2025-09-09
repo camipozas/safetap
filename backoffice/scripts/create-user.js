@@ -5,6 +5,7 @@ process.env.NODE_ENV = 'production';
 require('dotenv').config({ path: '.env', override: true });
 
 const { PrismaClient } = require('@prisma/client');
+const crypto = require('crypto');
 
 const prisma = new PrismaClient({
   datasources: {
@@ -61,10 +62,12 @@ async function createUser() {
 
     const newUser = await prisma.user.create({
       data: {
+        id: crypto.randomUUID(),
         email,
         name: email.split('@')[0], // Use email prefix as name
         role,
         emailVerified: new Date(), // Set as verified since it's an admin
+        updatedAt: new Date(),
       },
     });
 

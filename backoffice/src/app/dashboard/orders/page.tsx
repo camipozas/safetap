@@ -3,7 +3,11 @@ import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { authOptions } from '../../../lib/auth';
-import { analyzePayments, getDisplayStatus } from '../../../lib/order-helpers';
+import {
+  analyzePayments,
+  getDisplayStatus,
+  PaymentStatus,
+} from '../../../lib/order-helpers';
 import { prisma } from '../../../lib/prisma';
 import OrdersManagement from './orders-management';
 
@@ -56,9 +60,21 @@ async function getOrdersData(page: number = 1, limit: number = 20) {
             id: true,
             status: true,
             amount: true,
+            originalAmount: true,
+            discountAmount: true,
             currency: true,
             reference: true,
             createdAt: true,
+            promotionId: true,
+            Promotion: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                discountType: true,
+                discountValue: true,
+              },
+            },
           },
           orderBy: {
             createdAt: 'desc',
@@ -70,9 +86,107 @@ async function getOrdersData(page: number = 1, limit: number = 20) {
     prisma.sticker.count(),
   ]);
 
+  // For stickers that are part of a batch but don't have payments,
+  // we need to find the payment from the primary sticker in their group
+  const batchGroupIds = rawOrders
+    .filter((order) => order.groupId && order.Payment.length === 0)
+    .map((order) => order.groupId)
+    .filter((groupId): groupId is string => groupId !== null);
+
+  const batchPayments =
+    batchGroupIds.length > 0
+      ? await prisma.payment.findMany({
+          where: {
+            stickerId: {
+              in: await prisma.sticker
+                .findMany({
+                  where: {
+                    groupId: {
+                      in: batchGroupIds,
+                    },
+                  },
+                  select: {
+                    id: true,
+                  },
+                })
+                .then((stickers) => stickers.map((s) => s.id)),
+            },
+          },
+          include: {
+            Sticker: {
+              select: {
+                groupId: true,
+              },
+            },
+            Promotion: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                discountType: true,
+                discountValue: true,
+              },
+            },
+          },
+        })
+      : [];
+
+  // Create a map of groupId -> payment for easy lookup
+  const groupPaymentMap = new Map();
+  batchPayments.forEach((payment) => {
+    if (payment.Sticker?.groupId) {
+      groupPaymentMap.set(payment.Sticker.groupId, payment);
+    }
+  });
+
   // Process orders with display status
   const processedOrders = rawOrders.map((order) => {
-    const paymentInfo = analyzePayments(order.Payment);
+    // For batch orders without payments, use the group payment
+    let paymentsToUse = order.Payment;
+    if (order.groupId && order.Payment.length === 0) {
+      const groupPayment = groupPaymentMap.get(order.groupId);
+      if (groupPayment) {
+        // Create a payment object that matches the expected structure
+        paymentsToUse = [
+          {
+            id: groupPayment.id,
+            status: groupPayment.status,
+            amount: groupPayment.amount,
+            originalAmount: groupPayment.originalAmount,
+            discountAmount: groupPayment.discountAmount,
+            currency: groupPayment.currency,
+            reference: groupPayment.reference,
+            createdAt: groupPayment.createdAt,
+            promotionId: groupPayment.promotionId,
+            Promotion: groupPayment.Promotion,
+          },
+        ];
+      }
+    }
+
+    // Normalize payments for analyzePayments function
+    const normalizedPayments = paymentsToUse.map((payment) => ({
+      id: payment.id,
+      status: payment.status as PaymentStatus,
+      amount: payment.amount,
+      originalAmount: payment.originalAmount,
+      discountAmount: payment.discountAmount,
+      currency: payment.currency,
+      reference: payment.reference,
+      createdAt: payment.createdAt,
+      promotionId: payment.promotionId,
+      promotion: payment.Promotion
+        ? {
+            id: payment.Promotion.id,
+            name: payment.Promotion.name,
+            description: payment.Promotion.description,
+            discountType: payment.Promotion.discountType,
+            discountValue: Number(payment.Promotion.discountValue),
+          }
+        : null,
+    }));
+
+    const paymentInfo = analyzePayments(normalizedPayments);
     const displayStatus = getDisplayStatus(order.status, paymentInfo);
 
     return {
@@ -84,6 +198,7 @@ async function getOrdersData(page: number = 1, limit: number = 20) {
       stickerColor: order.stickerColor,
       textColor: order.textColor,
       status: order.status,
+      groupId: order.groupId,
       displayStatus: displayStatus.primaryStatus,
       displayDescription: displayStatus.description,
       displaySecondaryStatuses: displayStatus.secondaryStatuses,
@@ -95,7 +210,7 @@ async function getOrdersData(page: number = 1, limit: number = 20) {
             contacts: order.User.EmergencyProfile[0].EmergencyContact,
           }
         : null,
-      payments: order.Payment,
+      payments: normalizedPayments,
       paymentInfo,
     };
   });
