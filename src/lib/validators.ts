@@ -172,7 +172,7 @@ export const checkoutSchema = z.object({
     .regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color format')
     .optional()
     .default('#000000'),
-  quantity: z.number().int().min(1).max(10),
+  quantity: z.number().int().min(1).max(100), // Allow up to 100 stickers for bulk orders
 });
 
 // Schema for multiple custom stickers in one order
@@ -205,7 +205,7 @@ export const multiStickerCheckoutSchema = z.object({
       })
     )
     .min(1, 'At least one sticker required')
-    .max(10, 'Maximum 10 stickers allowed'),
+    .max(100, 'Maximum 100 stickers allowed'),
   discountCode: z.string().optional(),
   tempReference: z.string().optional(), // Accept temporary reference
 });

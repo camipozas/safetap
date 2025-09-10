@@ -11,6 +11,7 @@ import { PaymentReferenceService } from '@/lib/payment-reference-service';
 import { prisma } from '@/lib/prisma';
 import { generateSlug } from '@/lib/slug';
 import { multiStickerCheckoutSchema } from '@/lib/validators';
+import { calculateDiscount } from '@/utils/promotions';
 
 export async function POST(req: Request) {
   console.log('💳 Starting multi-sticker checkout transfer initialization');
@@ -59,30 +60,97 @@ export async function POST(req: Request) {
 
     console.log('👤 User resolved:', { id: user.id, name: user.name });
 
-    // Calculate pricing
+    // Calculate pricing with automatic quantity discounts
     const quantity = data.stickers.length;
     const baseAmount = quantity * PRICE_PER_STICKER_CLP;
     let finalAmount = baseAmount;
     let discountCodeId: string | undefined;
     let discountAmount = 0;
 
-    // Apply discount if provided
+    // First, apply automatic quantity-based promotions
+    console.log(
+      '🛒 Calculating automatic quantity discounts for',
+      quantity,
+      'stickers'
+    );
+
+    // Fetch active promotions from database
+    const dbPromotions = await prisma.promotion.findMany({
+      where: {
+        active: true,
+        OR: [{ startDate: null }, { startDate: { lte: new Date() } }],
+        AND: [
+          {
+            OR: [{ endDate: null }, { endDate: { gte: new Date() } }],
+          },
+        ],
+      },
+      orderBy: [{ priority: 'desc' }, { minQuantity: 'desc' }],
+    });
+
+    // Convert database promotions to our PromotionRule format and calculate discount
+    let appliedPromotionId: string | undefined;
+    if (dbPromotions.length > 0) {
+      const promotionRules = dbPromotions.map((promo) => ({
+        id: promo.id,
+        minQuantity: promo.minQuantity,
+        discountType:
+          promo.discountType === 'PERCENTAGE'
+            ? ('percentage' as const)
+            : ('fixed' as const),
+        discountValue: Number(promo.discountValue),
+        description: promo.description || promo.name,
+        active: promo.active,
+      }));
+
+      // Create a cart item for discount calculation
+      const cartItems = [
+        {
+          id: 'sticker',
+          name: 'Sticker personalizado',
+          price: PRICE_PER_STICKER_CLP,
+          quantity,
+        },
+      ];
+
+      const quantityDiscountResult = calculateDiscount(
+        cartItems,
+        promotionRules
+      );
+
+      if (quantityDiscountResult.totalDiscount > 0) {
+        finalAmount = quantityDiscountResult.finalTotal;
+        discountAmount = quantityDiscountResult.totalDiscount;
+        appliedPromotionId = quantityDiscountResult.appliedPromotions[0]?.id;
+        console.log('✅ Automatic quantity discount applied:', {
+          originalAmount: baseAmount,
+          discountAmount,
+          finalAmount,
+          promotionId: appliedPromotionId,
+          promotion: quantityDiscountResult.appliedPromotions[0]?.description,
+        });
+      }
+    }
+
+    // Then, apply manual discount code if provided (this can stack or override)
     if (data.discountCode) {
-      console.log('🎫 Applying discount code:', data.discountCode);
+      console.log('🎫 Applying additional discount code:', data.discountCode);
       const discountResult = await applyDiscount({
         code: data.discountCode,
-        cartTotal: baseAmount,
+        cartTotal: finalAmount, // Apply discount code to already discounted amount
         userId: user.id,
         preview: false, // This will increment usage count and create redemption
       });
 
       if (discountResult.valid && discountResult.newTotal !== undefined) {
+        // Add the manual discount to the existing automatic discount
+        const additionalDiscount = finalAmount - discountResult.newTotal;
         finalAmount = discountResult.newTotal;
+        discountAmount += additionalDiscount;
         discountCodeId = discountResult.discountCodeId;
-        discountAmount = discountResult.appliedDiscount || 0;
-        console.log('✅ Discount applied:', {
-          code: data.discountCode,
-          discountAmount,
+        console.log('✅ Manual discount code applied:', {
+          additionalDiscount,
+          totalDiscountAmount: discountAmount,
           finalAmount,
         });
       } else {
@@ -124,9 +192,19 @@ export async function POST(req: Request) {
       console.log('🔖 Generated unique reference:', reference);
     }
 
-    console.log('� Starting database transaction...');
+    console.log('📊 Starting database transaction...');
     const result = await prisma.$transaction(async (tx) => {
       // Create all stickers
+      // Generate a single groupId only for batch purchases (2+ stickers)
+      const isBatchPurchase = quantity >= 2;
+      const purchaseGroupId = isBatchPurchase ? crypto.randomUUID() : null;
+
+      console.log('🛒 Purchase type:', {
+        quantity,
+        isBatchPurchase,
+        groupId: purchaseGroupId,
+      });
+
       const stickers = await Promise.all(
         data.stickers.map(async (stickerData) => {
           const stickerSlug = generateSlug(7);
@@ -136,6 +214,8 @@ export async function POST(req: Request) {
             name: stickerData.nameOnSticker,
             slug: stickerSlug,
             serial: stickerSerial,
+            groupId: purchaseGroupId,
+            isBatch: isBatchPurchase,
           });
 
           return await tx.sticker.create({
@@ -150,6 +230,7 @@ export async function POST(req: Request) {
               stickerColor: stickerData.stickerColor || '#f1f5f9',
               textColor: stickerData.textColor || '#000000',
               status: 'ORDERED',
+              groupId: purchaseGroupId, // Only batch purchases (2+ stickers) get a groupId
               updatedAt: new Date(),
             },
           });
@@ -187,8 +268,8 @@ export async function POST(req: Request) {
 
       console.log('💰 Creating payment for multiple stickers:', {
         amount: finalAmount,
-        originalAmount: discountCodeId ? baseAmount : undefined,
-        discountAmount: discountCodeId ? discountAmount : undefined,
+        originalAmount: discountAmount > 0 ? baseAmount : undefined,
+        discountAmount: discountAmount > 0 ? discountAmount : undefined,
         currency: DEFAULT_CURRENCY,
         reference,
         method: PAYMENT_METHOD,
@@ -196,30 +277,59 @@ export async function POST(req: Request) {
         quantity: stickers.length, // Add explicit quantity logging
       });
 
+      // Create ONE payment for the entire purchase
+      // For batch orders, the payment represents the TOTAL amount, not per-sticker
       const payment = await tx.payment.create({
         data: {
           id: crypto.randomUUID(),
           userId: user.id,
           stickerId: stickers[0].id, // Primary sticker for payment reference
-          quantity: stickers.length,
-          amount: finalAmount,
-          originalAmount: discountCodeId ? baseAmount : undefined,
+          quantity: stickers.length, // Total quantity in this payment
+          amount: finalAmount, // TOTAL amount for entire batch
+          originalAmount: discountAmount > 0 ? baseAmount : undefined, // TOTAL original amount (only if discount applied)
           discountCodeId,
-          discountAmount: discountCodeId ? discountAmount : undefined,
+          promotionId: appliedPromotionId, // Store which promotion was applied
+          discountAmount: discountAmount > 0 ? discountAmount : undefined, // TOTAL discount amount (includes both automatic and manual)
           currency: DEFAULT_CURRENCY,
           method: PAYMENT_METHOD,
-          reference,
+          reference, // Single reference for the entire batch
           status: 'PENDING',
           updatedAt: new Date(),
         },
       });
+
+      // Create PromotionRedemption record if an automatic promotion was applied
+      if (appliedPromotionId) {
+        await tx.promotionRedemption.create({
+          data: {
+            id: crypto.randomUUID(),
+            userId: user.id,
+            promotionId: appliedPromotionId,
+            appliedAt: new Date(),
+          },
+        });
+        console.log(
+          '📝 Created PromotionRedemption record for automatic promotion:',
+          appliedPromotionId
+        );
+      }
 
       console.log('✅ Payment created successfully:', {
         paymentId: payment.id,
         quantity: payment.quantity,
         amount: payment.amount,
         reference: payment.reference,
+        isBatch: stickers.length > 1,
+        totalAmount: finalAmount,
+        originalAmount: discountAmount > 0 ? baseAmount : undefined,
+        discountAmount: discountAmount > 0 ? discountAmount : undefined,
+        hasAutomaticDiscount: discountAmount > 0 && !discountCodeId,
+        hasManualDiscountCode: !!discountCodeId,
       });
+
+      // NOTE: For batch orders, only the first sticker has a payment record.
+      // The other stickers in the batch are linked by groupId and don't have individual payments.
+      // This avoids confusion and ensures the total amount is counted only once.
 
       return { stickers, payment };
     });

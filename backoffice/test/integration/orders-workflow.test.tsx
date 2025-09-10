@@ -16,6 +16,7 @@ const mockOrder = {
   stickerColor: '#ffffff',
   textColor: '#000000',
   status: 'ORDERED' as OrderStatus,
+  groupId: null,
   createdAt: new Date('2024-01-01'),
   owner: {
     id: 'user-workflow',

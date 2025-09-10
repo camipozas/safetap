@@ -151,6 +151,7 @@ export async function POST(req: Request) {
           stickerColor: data.stickerColor || '#f1f5f9',
           textColor: data.textColor || '#000000',
           status: 'ORDERED',
+          groupId: null, // Single sticker purchases do NOT get a groupId
           updatedAt: new Date(),
         },
       });

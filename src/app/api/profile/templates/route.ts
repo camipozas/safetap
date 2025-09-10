@@ -41,6 +41,13 @@ export async function GET(request: Request) {
     const emergencyProfile = allUserProfiles.find(
       (profile) => !profile.stickerId
     );
+
+    // Si no hay perfil general pero sí hay perfiles de stickers, usar el más reciente como base
+    const fallbackEmergencyProfile =
+      !emergencyProfile && allUserProfiles.length > 0
+        ? allUserProfiles[0] // El más reciente por el orderBy
+        : null;
+
     const stickerProfiles = allUserProfiles.filter(
       (profile) => profile.stickerId && profile.stickerId !== excludeStickerId
     );
@@ -86,29 +93,41 @@ export async function GET(request: Request) {
     }));
 
     const response = {
-      emergencyProfile: emergencyProfile
-        ? {
-            id: emergencyProfile.id,
-            name: 'Mi perfil general',
-            bloodType: emergencyProfile.bloodType,
-            allergies: emergencyProfile.allergies,
-            conditions: emergencyProfile.conditions,
-            medications: emergencyProfile.medications,
-            notes: emergencyProfile.notes,
-            language: emergencyProfile.language,
-            organDonor: emergencyProfile.organDonor,
-            insurance: emergencyProfile.insurance,
-            consentPublic: emergencyProfile.consentPublic,
-            contacts: emergencyProfile.EmergencyContact.map((contact) => ({
-              id: contact.id,
-              name: contact.name,
-              relation: contact.relation,
-              phone: contact.phone,
-              country: contact.country || undefined,
-              preferred: contact.preferred,
-            })),
-          }
-        : null,
+      emergencyProfile:
+        emergencyProfile || fallbackEmergencyProfile
+          ? {
+              id: (emergencyProfile || fallbackEmergencyProfile)!.id,
+              name: emergencyProfile
+                ? 'Mi perfil general'
+                : `Perfil de ${fallbackEmergencyProfile!.Sticker?.nameOnSticker || 'Sticker'}`,
+              bloodType: (emergencyProfile || fallbackEmergencyProfile)!
+                .bloodType,
+              allergies: (emergencyProfile || fallbackEmergencyProfile)!
+                .allergies,
+              conditions: (emergencyProfile || fallbackEmergencyProfile)!
+                .conditions,
+              medications: (emergencyProfile || fallbackEmergencyProfile)!
+                .medications,
+              notes: (emergencyProfile || fallbackEmergencyProfile)!.notes,
+              language: (emergencyProfile || fallbackEmergencyProfile)!
+                .language,
+              organDonor: (emergencyProfile || fallbackEmergencyProfile)!
+                .organDonor,
+              insurance: (emergencyProfile || fallbackEmergencyProfile)!
+                .insurance,
+              consentPublic: (emergencyProfile || fallbackEmergencyProfile)!
+                .consentPublic,
+              contacts: (emergencyProfile ||
+                fallbackEmergencyProfile)!.EmergencyContact.map((contact) => ({
+                id: contact.id,
+                name: contact.name,
+                relation: contact.relation,
+                phone: contact.phone,
+                country: contact.country || undefined,
+                preferred: contact.preferred,
+              })),
+            }
+          : null,
       // Perfiles de otros stickers como templates
       stickerProfileTemplates: stickerProfiles.map((profile) => ({
         id: profile.id,
@@ -151,6 +170,12 @@ export async function GET(request: Request) {
     console.log('🔍 API /profile/templates: Final response:', {
       hasEmergencyProfile: !!response.emergencyProfile,
       stickerProfileTemplatesCount: response.stickerProfileTemplates.length,
+      profileSource: emergencyProfile
+        ? 'general'
+        : fallbackEmergencyProfile
+          ? 'sticker-based'
+          : 'none',
+      totalUserProfiles: allUserProfiles.length,
     });
 
     return NextResponse.json(response);

@@ -4,8 +4,17 @@ import React from 'react';
 import { vi } from 'vitest';
 
 vi.stubEnv('NODE_ENV', 'test');
-vi.stubEnv('DATABASE_URL', 'file:./test.db');
-vi.stubEnv('DIRECT_URL', 'file:./test.db');
+// Use PostgreSQL test database URL or fallback to in-memory SQLite for unit tests
+vi.stubEnv(
+  'DATABASE_URL',
+  process.env.TEST_DATABASE_URL ||
+    'postgresql://test:test@localhost:5432/safetap_test'
+);
+vi.stubEnv(
+  'DIRECT_URL',
+  process.env.TEST_DATABASE_URL ||
+    'postgresql://test:test@localhost:5432/safetap_test'
+);
 vi.stubEnv('EMAIL_SERVER_HOST', 'mock-smtp.test.localhost');
 vi.stubEnv('EMAIL_SERVER_USER', 'test@mock.localhost');
 vi.stubEnv('EMAIL_SERVER_PASSWORD', 'mock-password-123');

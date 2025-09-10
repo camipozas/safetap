@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-// Force production environment first
-process.env.NODE_ENV = 'production';
+// Force development environment for local testing
+process.env.NODE_ENV = 'development';
 
-// Load production .env file explicitly (try .env.production first)
-require('dotenv').config({ path: '.env.production', override: true });
+// Load local .env.local file
+require('dotenv').config({ path: '../.env.local', override: true });
 
 console.log('🔍 Verificando configuración de base de datos...');
 console.log(
@@ -26,7 +26,7 @@ const prisma = new PrismaClient({
 });
 
 async function inviteSuperAdmin() {
-  console.log('👑 Invitando como SUPER_ADMIN en producción...\n');
+  console.log('👑 Invitando como SUPER_ADMIN en entorno LOCAL...\n');
 
   try {
     // Get email from command-line argument or environment variable
@@ -59,8 +59,9 @@ async function inviteSuperAdmin() {
       );
 
       if (existingUser.role === config.roles.SUPER_ADMIN) {
-        console.log('⚠️  El usuario ya es SUPER_ADMIN');
-        return;
+        console.log(
+          '⚠️  El usuario ya es SUPER_ADMIN, creando nueva invitación...'
+        );
       } else {
         // Update user role to SUPER_ADMIN
         console.log(`🔄 Actualizando rol de ${existingUser.role} a ${role}...`);
@@ -73,13 +74,18 @@ async function inviteSuperAdmin() {
     } else {
       console.log('❌ Usuario no existe, creándolo primero...');
 
+      // Generate a unique ID for the user
+      const userId = require('crypto').randomBytes(12).toString('hex');
+
       // Create the user first
       const newUser = await prisma.user.create({
         data: {
+          id: userId,
           email,
           name: email.split('@')[0], // Use email prefix as name
           role,
           emailVerified: new Date(), // Set as verified since it's an admin
+          updatedAt: new Date(),
         },
       });
 
@@ -106,14 +112,17 @@ async function inviteSuperAdmin() {
 
     // Crear nueva invitación
     const token = require('crypto').randomBytes(32).toString('hex');
+    const invitationId = require('crypto').randomBytes(12).toString('hex');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     const invitation = await prisma.adminInvitation.create({
       data: {
+        id: invitationId,
         email,
         role,
         token,
         expiresAt,
+        updatedAt: new Date(),
       },
     });
 

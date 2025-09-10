@@ -38,6 +38,7 @@ interface MockOrder {
   stickerColor: string;
   textColor: string;
   status: OrderStatus;
+  groupId: string | null;
   createdAt: Date;
   updatedAt: Date;
   owner: {
@@ -76,6 +77,7 @@ const mockOrder: MockOrder = {
   stickerColor: '#ffffff',
   textColor: '#000000',
   status: 'ORDERED',
+  groupId: null,
   createdAt: new Date('2023-01-01'),
   updatedAt: new Date('2023-01-01'),
   owner: {

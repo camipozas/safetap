@@ -1,5 +1,5 @@
-// Force production environment to use .env (not .env.local)
-process.env.NODE_ENV = 'production';
+// Use development environment for local testing
+process.env.NODE_ENV = 'development';
 require('dotenv').config();
 
 const config = {

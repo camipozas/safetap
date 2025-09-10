@@ -1,4 +1,6 @@
 // Script para generar datos de prueba para el backoffice
+import crypto from 'crypto';
+
 import {
   AccessVia,
   PaymentStatus,
@@ -94,6 +96,7 @@ async function seedTestData() {
           StickerStatus.SHIPPED,
           StickerStatus.ACTIVE,
         ][Math.floor(Math.random() * 5)],
+        groupId: crypto.randomUUID(), // Each test sticker gets its own group for simplicity
         updatedAt: new Date(),
       },
     });

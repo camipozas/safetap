@@ -3,73 +3,190 @@ import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { authOptions } from '../../../lib/auth';
-import { analyzePayments, getDisplayStatus } from '../../../lib/order-helpers';
+import {
+  analyzePayments,
+  getDisplayStatus,
+  PaymentStatus,
+} from '../../../lib/order-helpers';
 import { prisma } from '../../../lib/prisma';
 import OrdersManagement from './orders-management';
 
 // Revalidate this page every time it's accessed
 export const revalidate = 0;
 
-async function getOrdersData() {
-  const rawOrders = await prisma.sticker.findMany({
-    include: {
-      User: {
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          country: true,
-          totalSpent: true,
-        },
-        include: {
-          EmergencyProfile: {
-            select: {
-              bloodType: true,
-              allergies: true,
-              conditions: true,
-              medications: true,
-              notes: true,
-              EmergencyContact: {
-                where: {
-                  preferred: true,
-                },
-                take: 1,
-                select: {
-                  name: true,
-                  phone: true,
-                  relation: true,
+async function getOrdersData(page: number = 1, limit: number = 20) {
+  const offset = (page - 1) * limit;
+
+  const [rawOrders, totalCount] = await Promise.all([
+    prisma.sticker.findMany({
+      skip: offset,
+      take: limit,
+      include: {
+        User: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            country: true,
+            totalSpent: true,
+            EmergencyProfile: {
+              select: {
+                bloodType: true,
+                allergies: true,
+                conditions: true,
+                medications: true,
+                notes: true,
+                EmergencyContact: {
+                  where: {
+                    preferred: true,
+                  },
+                  take: 1,
+                  select: {
+                    name: true,
+                    phone: true,
+                    relation: true,
+                  },
                 },
               },
+              orderBy: {
+                updatedByUserAt: 'desc',
+              },
+              take: 1,
             },
-            orderBy: {
-              updatedByUserAt: 'desc',
+          },
+        },
+        Payment: {
+          select: {
+            id: true,
+            status: true,
+            amount: true,
+            originalAmount: true,
+            discountAmount: true,
+            currency: true,
+            reference: true,
+            createdAt: true,
+            promotionId: true,
+            Promotion: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                discountType: true,
+                discountValue: true,
+              },
             },
-            take: 1,
+          },
+          orderBy: {
+            createdAt: 'desc',
           },
         },
       },
-      Payment: {
-        select: {
-          id: true,
-          status: true,
-          amount: true,
-          currency: true,
-          reference: true,
-          createdAt: true,
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      },
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    }),
+    prisma.sticker.count(),
+  ]);
+
+  // For stickers that are part of a batch but don't have payments,
+  // we need to find the payment from the primary sticker in their group
+  const batchGroupIds = rawOrders
+    .filter((order) => order.groupId && order.Payment.length === 0)
+    .map((order) => order.groupId)
+    .filter((groupId): groupId is string => groupId !== null);
+
+  const batchPayments =
+    batchGroupIds.length > 0
+      ? await prisma.payment.findMany({
+          where: {
+            stickerId: {
+              in: await prisma.sticker
+                .findMany({
+                  where: {
+                    groupId: {
+                      in: batchGroupIds,
+                    },
+                  },
+                  select: {
+                    id: true,
+                  },
+                })
+                .then((stickers) => stickers.map((s) => s.id)),
+            },
+          },
+          include: {
+            Sticker: {
+              select: {
+                groupId: true,
+              },
+            },
+            Promotion: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                discountType: true,
+                discountValue: true,
+              },
+            },
+          },
+        })
+      : [];
+
+  // Create a map of groupId -> payment for easy lookup
+  const groupPaymentMap = new Map();
+  batchPayments.forEach((payment) => {
+    if (payment.Sticker?.groupId) {
+      groupPaymentMap.set(payment.Sticker.groupId, payment);
+    }
   });
 
   // Process orders with display status
   const processedOrders = rawOrders.map((order) => {
-    const paymentInfo = analyzePayments(order.Payment);
+    // For batch orders without payments, use the group payment
+    let paymentsToUse = order.Payment;
+    if (order.groupId && order.Payment.length === 0) {
+      const groupPayment = groupPaymentMap.get(order.groupId);
+      if (groupPayment) {
+        // Create a payment object that matches the expected structure
+        paymentsToUse = [
+          {
+            id: groupPayment.id,
+            status: groupPayment.status,
+            amount: groupPayment.amount,
+            originalAmount: groupPayment.originalAmount,
+            discountAmount: groupPayment.discountAmount,
+            currency: groupPayment.currency,
+            reference: groupPayment.reference,
+            createdAt: groupPayment.createdAt,
+            promotionId: groupPayment.promotionId,
+            Promotion: groupPayment.Promotion,
+          },
+        ];
+      }
+    }
+
+    // Normalize payments for analyzePayments function
+    const normalizedPayments = paymentsToUse.map((payment) => ({
+      id: payment.id,
+      status: payment.status as PaymentStatus,
+      amount: payment.amount,
+      originalAmount: payment.originalAmount,
+      discountAmount: payment.discountAmount,
+      currency: payment.currency,
+      reference: payment.reference,
+      createdAt: payment.createdAt,
+      promotionId: payment.promotionId,
+      promotion: payment.Promotion
+        ? {
+            id: payment.Promotion.id,
+            name: payment.Promotion.name,
+            description: payment.Promotion.description,
+            discountType: payment.Promotion.discountType,
+            discountValue: Number(payment.Promotion.discountValue),
+          }
+        : null,
+    }));
+
+    const paymentInfo = analyzePayments(normalizedPayments);
     const displayStatus = getDisplayStatus(order.status, paymentInfo);
 
     return {
@@ -81,6 +198,7 @@ async function getOrdersData() {
       stickerColor: order.stickerColor,
       textColor: order.textColor,
       status: order.status,
+      groupId: order.groupId,
       displayStatus: displayStatus.primaryStatus,
       displayDescription: displayStatus.description,
       displaySecondaryStatuses: displayStatus.secondaryStatuses,
@@ -92,15 +210,19 @@ async function getOrdersData() {
             contacts: order.User.EmergencyProfile[0].EmergencyContact,
           }
         : null,
-      payments: order.Payment,
+      payments: normalizedPayments,
       paymentInfo,
     };
   });
 
-  return processedOrders;
+  return { orders: processedOrders, totalCount };
 }
 
-export default async function OrdersPage() {
+export default async function OrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.email) {
@@ -120,7 +242,9 @@ export default async function OrdersPage() {
     redirect('/dashboard');
   }
 
-  const orders = await getOrdersData();
+  const resolvedSearchParams = await searchParams;
+  const currentPage = Number(resolvedSearchParams.page) || 1;
+  const { orders, totalCount } = await getOrdersData(currentPage);
 
   // Calculate payment statistics from all orders
   const allPayments = orders.flatMap((order) => order.payments);
@@ -133,19 +257,22 @@ export default async function OrdersPage() {
     cancelled: allPayments.filter((p) => p.status === 'CANCELLED').length,
   };
 
+  const totalPages = Math.ceil(totalCount / 20);
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Gestión de Órdenes</h1>
         <p className="text-gray-600 mt-2">
-          Administra y supervisa todas las órdenes del sistema
+          Administra y supervisa todas las órdenes del sistema ({totalCount}{' '}
+          órdenes totales)
         </p>
       </div>
 
       {/* Payment Statistics */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
-          Resumen de Pagos
+          Resumen de Pagos (Página {currentPage} de {totalPages})
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           <div className="bg-white rounded-lg border p-4 text-center">
@@ -184,6 +311,31 @@ export default async function OrdersPage() {
             </div>
             <div className="text-sm text-gray-600">Cancelados</div>
           </div>
+        </div>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="mb-6 flex justify-between items-center">
+        <div className="flex gap-2">
+          {currentPage > 1 && (
+            <a
+              href={`?page=${currentPage - 1}`}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              ← Anterior
+            </a>
+          )}
+          {currentPage < totalPages && (
+            <a
+              href={`?page=${currentPage + 1}`}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Siguiente →
+            </a>
+          )}
+        </div>
+        <div className="text-sm text-gray-600">
+          Mostrando {orders.length} de {totalCount} órdenes
         </div>
       </div>
 
