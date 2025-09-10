@@ -8,7 +8,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     sticker: {
+      findUnique: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
     payment: {
       updateMany: vi.fn(),
@@ -35,6 +37,12 @@ describe('/api/admin/orders/[id] PUT', () => {
   });
 
   it('updates order status successfully in development mode without session', async () => {
+    const mockCurrentSticker = {
+      id: 'test-id',
+      groupId: null,
+      status: 'ORDERED',
+    };
+
     const mockUpdatedSticker = {
       id: 'test-id',
       status: 'PAID',
@@ -45,6 +53,7 @@ describe('/api/admin/orders/[id] PUT', () => {
       },
     };
 
+    (prisma.sticker.findUnique as any).mockResolvedValue(mockCurrentSticker);
     (prisma.sticker.update as any).mockResolvedValue(mockUpdatedSticker);
     (prisma.payment.updateMany as any).mockResolvedValue({ count: 1 });
 
@@ -69,7 +78,10 @@ describe('/api/admin/orders/[id] PUT', () => {
 
     expect(prisma.sticker.update).toHaveBeenCalledWith({
       where: { id: 'test-id' },
-      data: { status: 'PAID' },
+      data: {
+        status: 'PAID',
+        updatedAt: expect.any(Date),
+      },
       include: {
         User: {
           select: {
@@ -90,11 +102,18 @@ describe('/api/admin/orders/[id] PUT', () => {
       },
       data: {
         status: 'VERIFIED',
+        updatedAt: expect.any(Date),
       },
     });
   });
 
   it('synchronizes payment status when order status changes to PRINTING', async () => {
+    const mockCurrentSticker = {
+      id: 'test-id',
+      groupId: null,
+      status: 'ORDERED',
+    };
+
     const mockUpdatedSticker = {
       id: 'test-id',
       status: 'PRINTING',
@@ -105,6 +124,7 @@ describe('/api/admin/orders/[id] PUT', () => {
       },
     };
 
+    (prisma.sticker.findUnique as any).mockResolvedValue(mockCurrentSticker);
     (prisma.sticker.update as any).mockResolvedValue(mockUpdatedSticker);
     (prisma.payment.updateMany as any).mockResolvedValue({ count: 2 });
 
@@ -134,11 +154,18 @@ describe('/api/admin/orders/[id] PUT', () => {
       },
       data: {
         status: 'PAID',
+        updatedAt: expect.any(Date),
       },
     });
   });
 
   it('synchronizes payment status when order status changes to REJECTED', async () => {
+    const mockCurrentSticker = {
+      id: 'test-id',
+      groupId: null,
+      status: 'ORDERED',
+    };
+
     const mockUpdatedSticker = {
       id: 'test-id',
       status: 'REJECTED',
@@ -149,6 +176,7 @@ describe('/api/admin/orders/[id] PUT', () => {
       },
     };
 
+    (prisma.sticker.findUnique as any).mockResolvedValue(mockCurrentSticker);
     (prisma.sticker.update as any).mockResolvedValue(mockUpdatedSticker);
     (prisma.payment.updateMany as any).mockResolvedValue({ count: 1 });
 
@@ -178,11 +206,18 @@ describe('/api/admin/orders/[id] PUT', () => {
       },
       data: {
         status: 'REJECTED',
+        updatedAt: expect.any(Date),
       },
     });
   });
 
   it('synchronizes payment status when order status changes to CANCELLED', async () => {
+    const mockCurrentSticker = {
+      id: 'test-id',
+      groupId: null,
+      status: 'ORDERED',
+    };
+
     const mockUpdatedSticker = {
       id: 'test-id',
       status: 'CANCELLED',
@@ -193,6 +228,7 @@ describe('/api/admin/orders/[id] PUT', () => {
       },
     };
 
+    (prisma.sticker.findUnique as any).mockResolvedValue(mockCurrentSticker);
     (prisma.sticker.update as any).mockResolvedValue(mockUpdatedSticker);
     (prisma.payment.updateMany as any).mockResolvedValue({ count: 1 });
 
@@ -222,11 +258,18 @@ describe('/api/admin/orders/[id] PUT', () => {
       },
       data: {
         status: 'CANCELLED',
+        updatedAt: expect.any(Date),
       },
     });
   });
 
   it('does not update payments when order status has no corresponding payment status', async () => {
+    const mockCurrentSticker = {
+      id: 'test-id',
+      groupId: null,
+      status: 'ORDERED',
+    };
+
     const mockUpdatedSticker = {
       id: 'test-id',
       status: 'LOST',
@@ -237,6 +280,7 @@ describe('/api/admin/orders/[id] PUT', () => {
       },
     };
 
+    (prisma.sticker.findUnique as any).mockResolvedValue(mockCurrentSticker);
     (prisma.sticker.update as any).mockResolvedValue(mockUpdatedSticker);
     (prisma.payment.updateMany as any).mockResolvedValue({ count: 0 });
 
@@ -266,6 +310,7 @@ describe('/api/admin/orders/[id] PUT', () => {
       },
       data: {
         status: 'PAID',
+        updatedAt: expect.any(Date),
       },
     });
   });
@@ -290,7 +335,7 @@ describe('/api/admin/orders/[id] PUT', () => {
   });
 
   it('handles database errors', async () => {
-    (prisma.sticker.update as any).mockRejectedValue(
+    (prisma.sticker.findUnique as any).mockRejectedValue(
       new Error('Database error')
     );
 
@@ -314,9 +359,7 @@ describe('/api/admin/orders/[id] PUT', () => {
   });
 
   it('handles record not found error', async () => {
-    (prisma.sticker.update as any).mockRejectedValue(
-      new Error('Record to update not found')
-    );
+    (prisma.sticker.findUnique as any).mockResolvedValue(null);
 
     const request = new NextRequest(
       'http://localhost:3001/api/admin/orders/test-id',
@@ -349,6 +392,12 @@ describe('/api/admin/orders/[id] PUT', () => {
     for (const status of validStatuses) {
       vi.clearAllMocks();
 
+      const mockCurrentSticker = {
+        id: 'test-id',
+        groupId: null,
+        status: 'ORDERED',
+      };
+
       const mockUpdatedSticker = {
         id: 'test-id',
         status,
@@ -359,6 +408,7 @@ describe('/api/admin/orders/[id] PUT', () => {
         },
       };
 
+      (prisma.sticker.findUnique as any).mockResolvedValue(mockCurrentSticker);
       (prisma.sticker.update as any).mockResolvedValue(mockUpdatedSticker);
 
       const request = new NextRequest(
