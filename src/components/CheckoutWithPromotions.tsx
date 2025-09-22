@@ -26,7 +26,6 @@ export default function CheckoutWithPromotions({
     applyDiscount,
   } = usePromotions();
 
-  // Update cart when quantity changes
   useEffect(() => {
     const newCart: CartItem[] = [
       {
@@ -39,14 +38,12 @@ export default function CheckoutWithPromotions({
     setCart(newCart);
   }, [stickerQuantity]);
 
-  // Apply promotions when cart changes
   useEffect(() => {
     if (cart.length > 0) {
       applyDiscount(cart);
     }
   }, [cart, applyDiscount]);
 
-  // Update totals when discount result changes
   useEffect(() => {
     if (discountResult) {
       setDiscountAmount(discountResult.totalDiscount);
@@ -83,8 +80,6 @@ export default function CheckoutWithPromotions({
       appliedPromotions: discountResult?.appliedPromotions || [],
     });
 
-    // Here you would integrate with your actual checkout flow
-    // The discount information is ready to be sent to your payment API
     console.log(
       `✅ Checkout initiated with total: ${formatCurrency(finalTotal)}`
     );
@@ -97,7 +92,6 @@ export default function CheckoutWithPromotions({
           Checkout - SafeTap Emergency Stickers
         </h2>
 
-        {/* Product Selection */}
         <div className="mb-8">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Select Quantity
@@ -147,7 +141,6 @@ export default function CheckoutWithPromotions({
           </div>
         </div>
 
-        {/* Promotions Calculator */}
         <div className="mb-8">
           <PromotionsCalculator
             onDiscountChange={(discount, total) => {
@@ -157,7 +150,6 @@ export default function CheckoutWithPromotions({
           />
         </div>
 
-        {/* Order Summary */}
         <div className="bg-gray-50 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Order Summary
@@ -228,7 +220,6 @@ export default function CheckoutWithPromotions({
           </button>
         </div>
 
-        {/* Benefits Section */}
         <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h4 className="font-semibold text-blue-900 mb-2">
             💡 Smart Quantity Pricing

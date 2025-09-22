@@ -5,7 +5,6 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
-    // Obtener todas las referencias existentes
     const payments = await prisma.payment.findMany({
       select: {
         id: true,
@@ -32,7 +31,6 @@ export async function GET() {
       take: 10,
     });
 
-    // Generar una referencia de prueba
     const testReference = await PaymentReferenceService.generateUniqueReference(
       'test-user-id',
       15000,
@@ -40,7 +38,7 @@ export async function GET() {
     );
 
     return NextResponse.json({
-      message: 'Test de referencias',
+      message: 'Payment references test',
       existingPayments: payments,
       testReference,
       totalPayments: await prisma.payment.count(),

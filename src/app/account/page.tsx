@@ -177,6 +177,7 @@ export default async function AccountPage({
                         s.status === 'SHIPPED' || s.status === 'ACTIVE'
                       }
                       stickerId={s.id}
+                      slug={s.slug}
                       serial={s.serial}
                       className="mx-auto lg:mx-0"
                     />

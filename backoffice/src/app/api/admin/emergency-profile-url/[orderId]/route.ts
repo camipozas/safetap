@@ -12,7 +12,6 @@ export async function GET(req: Request, { params }: ProfileUrlParams) {
   const { orderId } = await params;
 
   try {
-    // Find the sticker associated with this order
     const sticker = await prisma.sticker.findFirst({
       where: {
         id: orderId,
@@ -32,14 +31,11 @@ export async function GET(req: Request, { params }: ProfileUrlParams) {
       );
     }
 
-    // Get the base URL for the main application (not backoffice)
-    // Use NEXT_PUBLIC_MAIN_APP_URL or fallback to production URL
     const baseUrl =
       process.env.NEXT_PUBLIC_MAIN_APP_URL ||
       process.env.NEXT_PUBLIC_BASE_URL ||
       'https://safetap.cl';
 
-    // Get emergency profile URL
     const emergencyUrl = await getEmergencyProfileUrlForSticker(
       sticker.id,
       baseUrl
@@ -70,7 +66,7 @@ export async function GET(req: Request, { params }: ProfileUrlParams) {
     console.error('❌ Emergency profile URL generation failed:', e);
     return NextResponse.json(
       {
-        error: 'Error interno del servidor',
+        error: 'Internal server error',
         details: e instanceof Error ? e.message : 'Unknown error',
       },
       { status: 500 }

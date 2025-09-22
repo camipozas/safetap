@@ -44,7 +44,7 @@ const mockPendingInvitations = [
 describe('SettingsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (useSession as any).mockReturnValue({
+    (useSession as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
       data: {
         user: {
           email: 'superadmin@example.com',
@@ -55,24 +55,27 @@ describe('SettingsPage', () => {
     });
 
     // Mock successful API responses by default
-    (fetch as any).mockImplementation((url: string) => {
-      if (url.includes('/api/admin/admin-users')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(mockAdminUsers), // Devolver array directamente
-        });
-      } else if (url.includes('/api/admin/invitations')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ invitations: mockPendingInvitations }),
-        });
-      } else {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ success: true }),
-        });
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (url: string) => {
+        if (url.includes('/api/admin/admin-users')) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(mockAdminUsers), // Devolver array directamente
+          });
+        } else if (url.includes('/api/admin/invitations')) {
+          return Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve({ invitations: mockPendingInvitations }),
+          });
+        } else {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ success: true }),
+          });
+        }
       }
-    });
+    );
   });
 
   it('renders settings page with admin management section', async () => {
@@ -130,7 +133,7 @@ describe('SettingsPage', () => {
 
   it('allows super admin to create new invitation', async () => {
     // Override the default mock for this specific test
-    (fetch as any)
+    (fetch as unknown as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ users: mockAdminUsers }),
@@ -219,7 +222,7 @@ describe('SettingsPage', () => {
   });
 
   it('shows super admin role option for regular admins in development', async () => {
-    (useSession as any).mockReturnValue({
+    (useSession as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
       data: {
         user: {
           email: 'admin@example.com',
@@ -291,7 +294,7 @@ describe('SettingsPage', () => {
   });
 
   it('handles API errors gracefully', async () => {
-    (fetch as any)
+    (fetch as unknown as ReturnType<typeof vi.fn>)
       .mockRejectedValueOnce(new Error('Network error'))
       .mockResolvedValue({
         ok: true,
@@ -325,7 +328,7 @@ describe('SettingsPage', () => {
   });
 
   it('handles invitation creation errors', async () => {
-    (fetch as any)
+    (fetch as unknown as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockAdminUsers), // Consistent with other mocks

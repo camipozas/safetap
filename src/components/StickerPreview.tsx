@@ -10,9 +10,10 @@ interface StickerPreviewProps {
   flagCode: string;
   stickerColor?: string;
   textColor?: string;
-  showRealQR?: boolean; // To distinct between preview and real sticker
-  stickerId?: string; // For real stickers
-  serial?: string; // For real stickers
+  showRealQR?: boolean;
+  stickerId?: string;
+  serial?: string;
+  slug?: string;
   className?: string;
 }
 
@@ -24,6 +25,7 @@ const StickerPreviewComponent = ({
   showRealQR = false,
   stickerId,
   serial,
+  slug,
   className = '',
 }: StickerPreviewProps) => {
   const flag = getCountryFlag(flagCode);
@@ -63,6 +65,7 @@ const StickerPreviewComponent = ({
           <div className="flex-1">
             <StickerQrCode
               stickerId={stickerId}
+              slug={slug}
               serial={serial}
               size={64}
               isPreview={!showRealQR}

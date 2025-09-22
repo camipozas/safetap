@@ -8,13 +8,14 @@ import {
   profileSchema,
   type ProfileInput,
 } from '@/lib/validators';
+import { EmergencyProfileDisplayData } from '@/types/database';
 
 export default function ProfileForm({
   stickerId,
   profile,
 }: {
   stickerId?: string;
-  profile?: any;
+  profile?: EmergencyProfileDisplayData;
 }) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [userName, setUserName] = useState(profile?.user?.name || '');
@@ -30,7 +31,17 @@ export default function ProfileForm({
     resolver: zodResolver(profileSchema),
     defaultValues: profile
       ? {
-          bloodType: profile.bloodType ?? undefined,
+          bloodType:
+            (profile.bloodType as
+              | 'A+'
+              | 'A-'
+              | 'B+'
+              | 'B-'
+              | 'AB+'
+              | 'AB-'
+              | 'O+'
+              | 'O-'
+              | undefined) ?? undefined,
           allergies: profile.allergies ?? [],
           conditions: profile.conditions ?? [],
           medications: profile.medications ?? [],
@@ -41,7 +52,13 @@ export default function ProfileForm({
           consentPublic: profile.consentPublic ?? true,
           contacts:
             profile.contacts?.length > 0
-              ? profile.contacts
+              ? profile.contacts.map((contact) => ({
+                  name: contact.name,
+                  relation: contact.relation,
+                  phone: contact.phone,
+                  preferred: contact.preferred,
+                  country: contact.country,
+                }))
               : [{ name: '', relation: '', phone: '', preferred: true }],
         }
       : {
@@ -304,7 +321,7 @@ export default function ProfileForm({
           )}
         </div>
         {errors.contacts && (
-          <p className="error">{errors.contacts.message as any}</p>
+          <p className="error">{errors.contacts.message as string}</p>
         )}
       </fieldset>
 

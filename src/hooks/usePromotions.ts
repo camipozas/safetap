@@ -12,13 +12,10 @@ interface Promotion {
 }
 
 interface UsePromotionsReturn {
-  // State
   isLoading: boolean;
   error: string | null;
   discountResult: DiscountResult | null;
   availablePromotions: Promotion[];
-
-  // Actions
   applyDiscount: (cart: CartItem[]) => Promise<void>;
   clearDiscount: () => void;
   refreshPromotions: () => Promise<void>;
@@ -38,7 +35,6 @@ export function usePromotions(): UsePromotionsReturn {
     []
   );
 
-  // Fetch available promotions
   const refreshPromotions = useCallback(async () => {
     try {
       const response = await fetch('/api/promotions/apply-discount');

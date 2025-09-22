@@ -23,14 +23,27 @@ const mockRouter = {
 
 const mockSearchParams = {
   get: vi.fn(),
+  has: vi.fn(),
+  getAll: vi.fn(),
+  keys: vi.fn(),
+  values: vi.fn(),
+  entries: vi.fn(),
+  forEach: vi.fn(),
+  append: vi.fn(),
+  delete: vi.fn(),
+  set: vi.fn(),
+  sort: vi.fn(),
+  toString: vi.fn(),
+  size: 0,
+  [Symbol.iterator]: vi.fn(),
 };
 
 describe('AcceptInvitationPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (useRouter as any).mockReturnValue(mockRouter);
-    (useSearchParams as any).mockReturnValue(mockSearchParams);
-    (fetch as any).mockResolvedValue({
+    vi.mocked(useRouter).mockReturnValue(mockRouter);
+    vi.mocked(useSearchParams).mockReturnValue(mockSearchParams as never);
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({}),
     });
@@ -59,7 +72,7 @@ describe('AcceptInvitationPage', () => {
 
   it('shows invitation details when token is valid', async () => {
     mockSearchParams.get.mockReturnValue('valid-token');
-    (fetch as any).mockResolvedValue({
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       json: () =>
         Promise.resolve({
@@ -86,7 +99,7 @@ describe('AcceptInvitationPage', () => {
 
   it('shows Super Admin role correctly', async () => {
     mockSearchParams.get.mockReturnValue('valid-token');
-    (fetch as any).mockResolvedValue({
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       json: () =>
         Promise.resolve({
@@ -108,7 +121,7 @@ describe('AcceptInvitationPage', () => {
 
   it('shows error when invitation is invalid', async () => {
     mockSearchParams.get.mockReturnValue('invalid-token');
-    (fetch as any).mockResolvedValue({
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: false,
       json: () =>
         Promise.resolve({
@@ -130,7 +143,7 @@ describe('AcceptInvitationPage', () => {
     mockSearchParams.get.mockReturnValue('valid-token');
 
     // First call for validation
-    (fetch as any)
+    (fetch as unknown as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce({
         ok: true,
         json: () =>
@@ -194,7 +207,7 @@ describe('AcceptInvitationPage', () => {
     mockSearchParams.get.mockReturnValue('valid-token');
 
     // First call for validation
-    (fetch as any)
+    (fetch as unknown as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce({
         ok: true,
         json: () =>
@@ -235,7 +248,7 @@ describe('AcceptInvitationPage', () => {
 
   it('allows user to cancel and go to signin', async () => {
     mockSearchParams.get.mockReturnValue('valid-token');
-    (fetch as any).mockResolvedValue({
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       json: () =>
         Promise.resolve({
@@ -262,7 +275,7 @@ describe('AcceptInvitationPage', () => {
 
   it('redirects to signin from error state', async () => {
     mockSearchParams.get.mockReturnValue('invalid-token');
-    (fetch as any).mockResolvedValue({
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: false,
       json: () =>
         Promise.resolve({
@@ -288,7 +301,9 @@ describe('AcceptInvitationPage', () => {
     // Mock the console.error to suppress error output in tests
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    (fetch as any).mockRejectedValue(new Error('Network error'));
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error('Network error')
+    );
 
     render(<AcceptInvitationPage />);
 

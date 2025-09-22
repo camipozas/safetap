@@ -36,13 +36,12 @@ export type AppliedPromotion = {
   appliedToQuantity: number;
 };
 
-// Default promotion rules - based on quantity tiers
 const DEFAULT_PROMOTION_RULES: PromotionRule[] = [
   {
     id: 'bulk-2-plus',
     minQuantity: 2,
     discountType: 'percentage',
-    discountValue: 10, // 10% off for 2+ items
+    discountValue: 10,
     description: '10% de descuento por 2 o más stickers',
     active: true,
   },
@@ -50,7 +49,7 @@ const DEFAULT_PROMOTION_RULES: PromotionRule[] = [
     id: 'bulk-5-plus',
     minQuantity: 5,
     discountType: 'percentage',
-    discountValue: 15, // 15% off for 5+ items
+    discountValue: 15,
     description: '15% de descuento por 5 o más stickers',
     active: true,
   },
@@ -58,7 +57,7 @@ const DEFAULT_PROMOTION_RULES: PromotionRule[] = [
     id: 'bulk-10-plus',
     minQuantity: 10,
     discountType: 'percentage',
-    discountValue: 20, // 20% off for 10+ items
+    discountValue: 20,
     description: '20% de descuento por 10 o más stickers',
     active: true,
   },
@@ -66,6 +65,9 @@ const DEFAULT_PROMOTION_RULES: PromotionRule[] = [
 
 /**
  * Calculate total quantity in cart
+ *
+ * @param cart - Array of cart items
+ * @returns Total quantity of all items in cart
  */
 function getTotalQuantity(cart: CartItem[]): number {
   return cart.reduce((total, item) => total + item.quantity, 0);
@@ -73,6 +75,9 @@ function getTotalQuantity(cart: CartItem[]): number {
 
 /**
  * Calculate cart subtotal before discounts
+ *
+ * @param cart - Array of cart items
+ * @returns Total amount before any discounts
  */
 function getCartSubtotal(cart: CartItem[]): number {
   return cart.reduce((total, item) => total + item.price * item.quantity, 0);
@@ -80,7 +85,10 @@ function getCartSubtotal(cart: CartItem[]): number {
 
 /**
  * Find the best applicable promotion rule based on quantity
- * Returns the rule with highest discount value for given quantity
+ *
+ * @param totalQuantity - Total quantity of items in cart
+ * @param rules - Array of promotion rules to evaluate
+ * @returns The best applicable promotion rule or null if none apply
  */
 function findBestPromotionRule(
   totalQuantity: number,
@@ -89,11 +97,9 @@ function findBestPromotionRule(
   const applicableRules = rules
     .filter((rule) => rule.active && totalQuantity >= rule.minQuantity)
     .sort((a, b) => {
-      // Sort by minQuantity descending to get the highest tier first
       if (b.minQuantity !== a.minQuantity) {
         return b.minQuantity - a.minQuantity;
       }
-      // If same minQuantity, prefer higher discount value
       return b.discountValue - a.discountValue;
     });
 
@@ -102,6 +108,10 @@ function findBestPromotionRule(
 
 /**
  * Calculate discount amount based on promotion rule
+ *
+ * @param subtotal - Cart subtotal before discount
+ * @param rule - Promotion rule to apply
+ * @returns Calculated discount amount
  */
 function calculateDiscountAmount(
   subtotal: number,
@@ -110,14 +120,16 @@ function calculateDiscountAmount(
   if (rule.discountType === 'percentage') {
     return Math.round(subtotal * (rule.discountValue / 100));
   } else {
-    // Fixed discount
     return Math.min(rule.discountValue, subtotal);
   }
 }
 
 /**
- * Main function to calculate discounts for a cart
- * This function implements the core business logic for quantity-based discounts
+ * Calculate discounts for a cart based on quantity-based promotion rules
+ *
+ * @param cart - Array of cart items
+ * @param customRules - Optional custom promotion rules to use instead of defaults
+ * @returns Discount calculation result with totals and applied promotions
  */
 export function calculateDiscount(
   cart: CartItem[],
@@ -157,11 +169,9 @@ export function calculateDiscount(
   const totalQuantity = getTotalQuantity(validCart);
   const originalTotal = getCartSubtotal(validCart);
 
-  // Find applicable promotion
   const applicableRule = findBestPromotionRule(totalQuantity, rules);
 
   if (!applicableRule) {
-    // No promotion applies
     return {
       totalDiscount: 0,
       updatedCart: validCart,
@@ -171,7 +181,6 @@ export function calculateDiscount(
     };
   }
 
-  // Calculate discount
   const discountAmount = calculateDiscountAmount(originalTotal, applicableRule);
   const finalTotal = Math.max(0, originalTotal - discountAmount);
 
@@ -195,6 +204,9 @@ export function calculateDiscount(
 
 /**
  * Format discount for display in UI
+ *
+ * @param discount - Applied promotion object
+ * @returns Formatted discount string for display
  */
 export function formatDiscountDisplay(discount: AppliedPromotion): string {
   if (discount.discountType === 'percentage') {
@@ -206,6 +218,9 @@ export function formatDiscountDisplay(discount: AppliedPromotion): string {
 
 /**
  * Get available promotion tiers for display
+ *
+ * @param customRules - Optional custom promotion rules
+ * @returns Array of active promotion rules sorted by minimum quantity
  */
 export function getPromotionTiers(
   customRules?: PromotionRule[]
@@ -218,6 +233,11 @@ export function getPromotionTiers(
 
 /**
  * Preview what discount would apply for a given quantity
+ *
+ * @param basePrice - Base price per item
+ * @param quantity - Quantity of items
+ * @param customRules - Optional custom promotion rules
+ * @returns Preview of discount calculation with totals and applied rule
  */
 export function previewDiscountForQuantity(
   basePrice: number,

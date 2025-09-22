@@ -7,7 +7,7 @@ import { StickerQrCode } from '@/components/ui/sticker-qr-code';
 // Mock QRCode library
 vi.mock('qrcode', () => ({
   default: {
-    toDataURL: vi.fn(),
+    toDataURL: vi.fn().mockResolvedValue('data:image/png;base64,mock-qr-code'),
   },
 }));
 
@@ -26,7 +26,7 @@ Object.defineProperty(window, 'location', {
 describe('StickerQrCode (Backoffice)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (QRCode.toDataURL as any).mockResolvedValue(
+    (vi.mocked(QRCode.toDataURL) as ReturnType<typeof vi.fn>).mockResolvedValue(
       'data:image/png;base64,mock-qr-code'
     );
   });
@@ -39,7 +39,9 @@ describe('StickerQrCode (Backoffice)', () => {
 
   it('generates QR code for valid slug', async () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
-    (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
+    (vi.mocked(QRCode.toDataURL) as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockDataUrl
+    );
 
     render(<StickerQrCode slug="test-slug" size={64} />);
 
@@ -52,7 +54,9 @@ describe('StickerQrCode (Backoffice)', () => {
 
   it('prioritizes stickerId over slug when both are provided', async () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
-    (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
+    (vi.mocked(QRCode.toDataURL) as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockDataUrl
+    );
 
     render(
       <StickerQrCode stickerId="sticker-123" slug="test-slug" size={64} />
@@ -67,7 +71,9 @@ describe('StickerQrCode (Backoffice)', () => {
 
   it('optimizes quality for small QR codes', async () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
-    (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
+    (vi.mocked(QRCode.toDataURL) as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockDataUrl
+    );
 
     // Mock fetch to fail so it falls back to slug URL
     global.fetch = vi
@@ -94,7 +100,9 @@ describe('StickerQrCode (Backoffice)', () => {
 
   it('uses standard quality for large QR codes', async () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
-    (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
+    (vi.mocked(QRCode.toDataURL) as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockDataUrl
+    );
 
     // Mock fetch to fail so it falls back to slug URL
     global.fetch = vi
@@ -139,7 +147,9 @@ describe('StickerQrCode (Backoffice)', () => {
 
   it('generates correct URL for QR code with fallback', async () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
-    (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
+    (vi.mocked(QRCode.toDataURL) as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockDataUrl
+    );
 
     // Mock fetch for emergency profile URL (should fail and fallback)
     global.fetch = vi
@@ -163,7 +173,9 @@ describe('StickerQrCode (Backoffice)', () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
     const mockEmergencyUrl = 'https://safetap.cl/qr/emergency-profile-123';
 
-    (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
+    (vi.mocked(QRCode.toDataURL) as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockDataUrl
+    );
 
     // Mock successful fetch for emergency profile URL
     global.fetch = vi.fn().mockResolvedValue({
@@ -197,7 +209,9 @@ describe('StickerQrCode (Backoffice)', () => {
 
   it('applies priority loading to generated images', async () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
-    (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
+    (vi.mocked(QRCode.toDataURL) as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockDataUrl
+    );
 
     render(<StickerQrCode slug="test-slug" size={120} />);
 
@@ -209,7 +223,9 @@ describe('StickerQrCode (Backoffice)', () => {
 
   it('applies correct size styles', async () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
-    (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
+    (vi.mocked(QRCode.toDataURL) as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockDataUrl
+    );
 
     render(<StickerQrCode slug="test-slug" size={100} />);
 
@@ -222,7 +238,9 @@ describe('StickerQrCode (Backoffice)', () => {
 
   it('uses fixed scaling for small QRs', async () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
-    (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
+    (vi.mocked(QRCode.toDataURL) as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockDataUrl
+    );
 
     render(<StickerQrCode slug="test-slug" size={32} />);
 
@@ -241,7 +259,9 @@ describe('StickerQrCode (Backoffice)', () => {
 
   it('uses fixed scaling for large QRs', async () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
-    (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
+    (vi.mocked(QRCode.toDataURL) as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockDataUrl
+    );
 
     render(<StickerQrCode slug="test-slug" size={128} />);
 

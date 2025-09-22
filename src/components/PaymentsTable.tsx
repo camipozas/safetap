@@ -21,8 +21,13 @@ interface Payment {
   stickerStatus?: string;
 }
 
+/**
+ * Get the status text for a payment or sticker
+ * @param paymentStatus - The status of the payment
+ * @param stickerStatus - The status of the sticker
+ * @returns - The status text and color
+ */
 const getStatusText = (paymentStatus: string, stickerStatus?: string) => {
-  // Los estados de pago críticos (rechazado, cancelado, pendiente) tienen prioridad sobre el sticker
   switch (paymentStatus) {
     case 'REJECTED':
       return { text: '❌ Rechazado', color: 'bg-red-100 text-red-800' };
@@ -32,7 +37,7 @@ const getStatusText = (paymentStatus: string, stickerStatus?: string) => {
       return { text: '⏳ Pendiente', color: 'bg-yellow-100 text-yellow-800' };
   }
 
-  // Si hay un sticker y el pago no está en estado crítico, mostrar el estado del sticker
+  // If there is a sticker and the payment is not in a critical state, show the sticker status
   if (stickerStatus) {
     switch (stickerStatus) {
       case 'ORDERED':
@@ -55,7 +60,7 @@ const getStatusText = (paymentStatus: string, stickerStatus?: string) => {
     }
   }
 
-  // Estados de pago restantes cuando no hay sticker
+  // Remaining payment states when there is no sticker
   switch (paymentStatus) {
     case 'PAID':
       return { text: '💰 Pagado', color: 'bg-green-100 text-green-800' };
@@ -173,8 +178,8 @@ export function PaymentsTable() {
                     </td>
                     <td className="py-3 px-3">
                       {(() => {
-                        // Para determinar el estado, usamos el estado del pago principal
-                        // Si hay stickers, usamos el estado del primer sticker para mostrar info adicional
+                        // To determine the status, we use the primary payment status
+                        // If there are stickers, we use the status of the first sticker to show additional info
                         const primarySticker = payment.stickers?.[0];
                         const status = getStatusText(
                           payment.estado,
@@ -195,7 +200,7 @@ export function PaymentsTable() {
             </table>
           </div>
 
-          {/* Resumen de compras */}
+          {/* Summary of purchases */}
           <div className="mt-4 pt-4 border-t border-gray-200">
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-600">Total de pagos realizados:</span>

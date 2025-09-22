@@ -78,10 +78,12 @@ export async function POST(request: NextRequest) {
     const result = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
         data: {
+          id: `user-${Date.now()}`,
           email: invitation.email,
           role: invitation.role,
           name: invitation.email.split('@')[0],
-        } as any,
+          updatedAt: new Date(),
+        },
       });
 
       await tx.adminInvitation.update({

@@ -22,13 +22,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Wrap profile creation, preferred update, and contact creation in a transaction
     const result = await prisma.$transaction(async (tx) => {
       let finalProfileId = profileId;
 
       if (!finalProfileId) {
         const profile = await tx.emergencyProfile.create({
           data: {
+            id: `profile-${Date.now()}`,
             userId,
             consentPublic: true,
             bloodType: null,
@@ -37,7 +37,8 @@ export async function POST(request: NextRequest) {
             medications: [],
             language: 'es',
             organDonor: false,
-          } as any,
+            updatedAt: new Date(),
+          },
         });
         finalProfileId = profile.id;
       }
@@ -55,13 +56,15 @@ export async function POST(request: NextRequest) {
 
       const contact = await tx.emergencyContact.create({
         data: {
+          id: `contact-${Date.now()}-${Math.random()}`,
           profileId: finalProfileId,
           name,
           relation,
           phone,
           country,
           preferred,
-        } as any,
+          updatedAt: new Date(),
+        },
       });
 
       return contact;

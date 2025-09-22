@@ -16,9 +16,10 @@ const mockSignIn = vi.mocked(signIn);
 describe('Google SSO Authentication', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (useSession as any).mockReturnValue({
+    vi.mocked(useSession).mockReturnValue({
       data: null,
       status: 'unauthenticated',
+      update: vi.fn(),
     });
   });
 
@@ -137,15 +138,19 @@ describe('Google SSO Authentication', () => {
 
   describe('Session Management', () => {
     test('shows user info when authenticated with Google', () => {
-      (useSession as any).mockReturnValue({
+      vi.mocked(useSession).mockReturnValue({
         data: {
           user: {
+            id: 'user-123',
             name: 'Test User',
             email: 'test@example.com',
             role: 'USER',
+            totalSpent: 0,
           },
+          expires: '2025-12-31T23:59:59.999Z',
         },
         status: 'authenticated',
+        update: vi.fn(),
       });
 
       render(<LoginForm />);
@@ -154,15 +159,19 @@ describe('Google SSO Authentication', () => {
     });
 
     test('handles user creation for new Google accounts', () => {
-      (useSession as any).mockReturnValue({
+      vi.mocked(useSession).mockReturnValue({
         data: {
           user: {
+            id: 'user-789',
             name: 'New User',
             email: 'new@example.com',
             role: 'USER',
+            totalSpent: 0,
           },
+          expires: '2025-12-31T23:59:59.999Z',
         },
         status: 'authenticated',
+        update: vi.fn(),
       });
 
       render(<LoginForm />);

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { hasPermission } from '@/types/shared';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { NextAuthOptions } from 'next-auth';

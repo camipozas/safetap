@@ -9,6 +9,12 @@ const accelerateClient = new PrismaClient({
   datasourceUrl: process.env.DATABASE_URL, // This ensures we use the Accelerate URL
 });
 
+/**
+ * PUT - Update user in Accelerate
+ * @param request - The request object
+ * @param props - The properties object
+ * @returns - The response object
+ */
 export async function PUT(
   request: NextRequest,
   props: { params: Promise<{ id: string }> }
@@ -16,7 +22,6 @@ export async function PUT(
   const params = await props.params;
 
   try {
-    // Authentication check
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -33,7 +38,6 @@ export async function PUT(
     const { name, role, country } = await request.json();
     const userId = params.id;
 
-    // Find the user to update using Accelerate directly
     const userToUpdate = await accelerateClient.user.findUnique({
       where: { id: userId },
     });
@@ -51,7 +55,6 @@ export async function PUT(
 
     // Use a transaction with Accelerate to ensure data consistency
     const updatedUser = await accelerateClient.$transaction(async (tx) => {
-      // Update user data
       const user = await tx.user.update({
         where: { id: userId },
         data: {
@@ -71,7 +74,6 @@ export async function PUT(
         },
       });
 
-      // If name is being updated and user has stickers, update sticker nameOnSticker too
       if (name !== undefined) {
         await tx.sticker.updateMany({
           where: { ownerId: userId },
@@ -82,7 +84,6 @@ export async function PUT(
         });
       }
 
-      // If country is being updated and user has stickers, update sticker flagCode too
       if (country !== undefined) {
         await tx.sticker.updateMany({
           where: { ownerId: userId },
@@ -96,7 +97,6 @@ export async function PUT(
       return user;
     });
 
-    // Force cache invalidation for Accelerate is not needed with direct connection
     // await accelerateClient.$executeRaw`SELECT 1`;
 
     console.error('✅ User updated via Accelerate:', updatedUser);
@@ -115,6 +115,12 @@ export async function PUT(
   }
 }
 
+/**
+ * GET - Get user
+ * @param request - The request object
+ * @param props - The properties object
+ * @returns - The response object
+ */
 export async function GET(
   request: NextRequest,
   props: { params: Promise<{ id: string }> }

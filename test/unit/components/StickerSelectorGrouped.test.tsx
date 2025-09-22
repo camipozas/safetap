@@ -64,7 +64,7 @@ describe('StickerSelectorGrouped', () => {
 
   it('renders loading state initially', () => {
     // Mock a delayed response
-    (global.fetch as unknown as any).mockImplementation(
+    vi.mocked(global.fetch).mockImplementation(
       () => new Promise((resolve) => setTimeout(resolve, 100))
     );
 
@@ -81,10 +81,10 @@ describe('StickerSelectorGrouped', () => {
   });
 
   it('renders grouped stickers correctly', async () => {
-    (global.fetch as unknown as any).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => mockStickerData,
-    });
+    } as Response);
 
     render(
       <StickerSelectorGrouped
@@ -99,12 +99,12 @@ describe('StickerSelectorGrouped', () => {
   });
 
   it('handles specific sticker mode', async () => {
-    (global.fetch as unknown as any).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         stickers: [mockStickerData.stickers[0]],
       }),
-    });
+    } as Response);
 
     render(
       <StickerSelectorGrouped
@@ -120,10 +120,10 @@ describe('StickerSelectorGrouped', () => {
   });
 
   it('handles empty state', async () => {
-    (global.fetch as unknown as any).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ stickers: [] }),
-    });
+    } as Response);
 
     render(
       <StickerSelectorGrouped
@@ -138,9 +138,7 @@ describe('StickerSelectorGrouped', () => {
   });
 
   it('handles network error', async () => {
-    (global.fetch as unknown as any).mockRejectedValueOnce(
-      new Error('Network error')
-    );
+    vi.mocked(global.fetch).mockRejectedValueOnce(new Error('Network error'));
 
     render(
       <StickerSelectorGrouped

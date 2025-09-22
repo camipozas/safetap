@@ -3,28 +3,27 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 
+/**
+ * PUT - Bulk update orders
+ * @param request - The request object
+ * @returns - The response object
+ */
 export async function PUT(request: NextRequest) {
   try {
-    // Check authentication
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if user has admin permissions
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       select: { role: true },
     });
 
     if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) {
-      return NextResponse.json(
-        { error: 'Permisos insuficientes' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    // Parse request body
     const body = await request.json();
     const { orderIds, status } = body;
 
@@ -50,7 +49,6 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // First, get the orders to find their groupIds
     const initialOrders = await prisma.sticker.findMany({
       where: {
         id: {
@@ -68,14 +66,12 @@ export async function PUT(request: NextRequest) {
 
     console.error('Initial orders found:', initialOrders.length);
 
-    // Collect all groupIds from the initial orders (exclude null values)
     const groupIds = initialOrders
       .map((order) => order.groupId)
       .filter((groupId): groupId is string => groupId !== null);
 
     console.error('Group IDs found:', groupIds);
 
-    // Find ALL orders that belong to these groups
     let allRelatedOrderIds = [...initialOrders];
 
     if (groupIds.length > 0) {
@@ -96,13 +92,10 @@ export async function PUT(request: NextRequest) {
 
       console.error('Group-related orders found:', groupRelatedOrders.length);
 
-      // Combine initial orders with group-related orders, removing duplicates
       const allOrdersMap = new Map();
 
-      // Add initial orders
       initialOrders.forEach((order) => allOrdersMap.set(order.id, order));
 
-      // Add group-related orders
       groupRelatedOrders.forEach((order) => allOrdersMap.set(order.id, order));
 
       allRelatedOrderIds = Array.from(allOrdersMap.values());
@@ -119,7 +112,6 @@ export async function PUT(request: NextRequest) {
       affectedGroups: groupIds.length,
     });
 
-    // Validate that all final orderIds exist and get their current payment info
     const existingOrders = await prisma.sticker.findMany({
       where: {
         id: {
@@ -160,7 +152,6 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // For certain transitions, validate payment status (but be more lenient now that we regularized)
     const requiresPaymentValidation = [
       'PAID',
       'PRINTING',
@@ -184,14 +175,12 @@ export async function PUT(request: NextRequest) {
           'Orders without valid payments:',
           ordersWithoutValidPayments.map((o) => o.id)
         );
-        // Instead of rejecting, let's be more informative
         console.error(
           `Warning: ${ordersWithoutValidPayments.length} orders don't have valid payments, but proceeding with update...`
         );
       }
     }
 
-    // Perform bulk update - update ALL related stickers (including those from groups)
     const updateResult = await prisma.sticker.updateMany({
       where: {
         id: {
@@ -204,13 +193,9 @@ export async function PUT(request: NextRequest) {
       },
     });
 
-    // Also update payment status if transitioning to/from PAID status
     let paymentUpdateResult = null;
     if (status === 'PAID') {
-      // When marking as PAID, update payment status to PAID
-      // For batch orders, we need to update payments based on groupId since only the primary sticker has a payment
       if (groupIds.length > 0) {
-        // Update payments for batch orders using groupId
         paymentUpdateResult = await prisma.payment.updateMany({
           where: {
             Sticker: {
@@ -225,7 +210,6 @@ export async function PUT(request: NextRequest) {
           },
         });
       } else {
-        // Update payments for individual orders using stickerId
         paymentUpdateResult = await prisma.payment.updateMany({
           where: {
             stickerId: {
@@ -243,9 +227,7 @@ export async function PUT(request: NextRequest) {
         method: groupIds.length > 0 ? 'groupId' : 'stickerId',
       });
     } else if (status === 'ORDERED') {
-      // When reverting to ORDERED, update payment status back to PENDING
       if (groupIds.length > 0) {
-        // Update payments for batch orders using groupId
         paymentUpdateResult = await prisma.payment.updateMany({
           where: {
             Sticker: {
@@ -260,7 +242,6 @@ export async function PUT(request: NextRequest) {
           },
         });
       } else {
-        // Update payments for individual orders using stickerId
         paymentUpdateResult = await prisma.payment.updateMany({
           where: {
             stickerId: {
@@ -303,11 +284,11 @@ export async function PUT(request: NextRequest) {
       }${groupIds.length > 0 ? ` (incluyendo ${groupIds.length} grupo(s))` : ''}`,
     });
   } catch (error) {
-    console.error('Error en bulk update:', error);
+    console.error('Error in bulk update:', error);
     const errorMessage =
-      error instanceof Error ? error.message : 'Error desconocido';
+      error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Error interno del servidor', details: errorMessage },
+      { error: 'Internal server error', details: errorMessage },
       { status: 500 }
     );
   }

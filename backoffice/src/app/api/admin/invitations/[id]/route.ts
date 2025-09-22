@@ -4,7 +4,9 @@ import { hasPermission } from '@/types/shared';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 
-// DELETE - Revocar invitación
+/**
+ * DELETE - Revoke invitation
+ */
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -25,7 +27,7 @@ export async function DELETE(
       const session = await getServerSession(authOptions);
 
       if (!session?.user?.email) {
-        return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
       const user = await prisma.user.findUnique({
@@ -33,11 +35,10 @@ export async function DELETE(
       });
 
       if (!user || !hasPermission(user.role, 'canManageAdmins')) {
-        return NextResponse.json({ error: 'Sin permisos' }, { status: 403 });
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
     }
 
-    // Verificar que la invitación existe
     const invitation = await prisma.adminInvitation.findUnique({
       where: { id: invitationId },
     });
@@ -49,7 +50,6 @@ export async function DELETE(
       );
     }
 
-    // Eliminar la invitación
     await prisma.adminInvitation.delete({
       where: { id: invitationId },
     });
@@ -63,7 +63,7 @@ export async function DELETE(
   } catch (error) {
     console.error('Error revoking invitation:', error);
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

@@ -8,7 +8,6 @@
  */
 export function getMainAppUrl(): string {
   if (typeof window === 'undefined') {
-    // Server-side: Use environment variables with fallbacks
     return (
       process.env.NEXT_PUBLIC_MAIN_APP_URL ||
       process.env.NEXT_PUBLIC_BASE_URL ||
@@ -16,28 +15,22 @@ export function getMainAppUrl(): string {
     );
   }
 
-  // Client-side: Check if we have a dedicated main app URL set
   if (process.env.NEXT_PUBLIC_MAIN_APP_URL) {
     return process.env.NEXT_PUBLIC_MAIN_APP_URL;
   }
 
-  // Use environment variables for ports, fallback to defaults if not set
   const BACKOFFICE_PORT = process.env.NEXT_PUBLIC_BACKOFFICE_PORT || '3001';
   const MAINAPP_PORT = process.env.NEXT_PUBLIC_MAINAPP_PORT || '3000';
   const { protocol, hostname } = window.location;
 
-  // Handle localhost/development environments
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     const currentOrigin = window.location.origin;
-    // If current URL contains the backoffice port, replace with main app port
     if (currentOrigin.includes(`:${BACKOFFICE_PORT}`)) {
       return currentOrigin.replace(`:${BACKOFFICE_PORT}`, `:${MAINAPP_PORT}`);
     }
-    // Otherwise construct the main app URL
     return `${protocol}//${hostname}:${MAINAPP_PORT}`;
   }
 
-  // Production environment: assume same hostname without port
   return `${protocol}//${hostname}`;
 }
 
@@ -54,7 +47,6 @@ export async function getQrUrlForSticker(
   fallbackSlug?: string
 ): Promise<string> {
   try {
-    // Try to get emergency profile URL first
     const response = await fetch(
       `/api/admin/emergency-profile-url/${stickerId}`
     );
@@ -71,8 +63,7 @@ export async function getQrUrlForSticker(
     );
   }
 
-  // Fallback to slug-based URL if emergency profile not available
   const mainAppUrl = getMainAppUrl();
-  const slug = fallbackSlug || stickerId; // Use stickerId as fallback if no slug provided
+  const slug = fallbackSlug || stickerId;
   return `${mainAppUrl}/s/${slug}`;
 }

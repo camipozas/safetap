@@ -4,6 +4,12 @@ import { hasPermission, PaymentStatus } from '@/types/shared';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 
+/**
+ * PUT - Update payment status
+ * @param request - The request object
+ * @param props - The properties object
+ * @returns - The response object
+ */
 export async function PUT(
   request: NextRequest,
   props: { params: Promise<{ id: string }> }
@@ -17,7 +23,6 @@ export async function PUT(
       // eslint-disable-next-line no-console
       console.log('🚀 Development mode: Bypassing authentication for testing');
 
-      // Continue with the operation without authentication check
       const { status } = await request.json();
       const paymentId = params.id;
 
@@ -58,7 +63,6 @@ export async function PUT(
       });
     }
 
-    // Normal authentication flow
     if (!session) {
       return NextResponse.json({ error: 'No authenticated' }, { status: 401 });
     }
@@ -70,7 +74,6 @@ export async function PUT(
       );
     }
 
-    // Get user and check permissions
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       select: { id: true, role: true },
@@ -80,12 +83,8 @@ export async function PUT(
       return NextResponse.json({ error: 'User not found' }, { status: 401 });
     }
 
-    // Check if user has permission to manage orders (which includes payments)
     if (!hasPermission(user.role, 'canManageOrders')) {
-      return NextResponse.json(
-        { error: 'Insufficient permissions' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const { status } = await request.json();
@@ -121,7 +120,6 @@ export async function PUT(
       },
     });
 
-    // Log the action for audit purposes
     // eslint-disable-next-line no-console
     console.log(
       `Payment ${paymentId} status updated to ${status} by ${session.user.email}`
@@ -134,7 +132,6 @@ export async function PUT(
   } catch (error) {
     console.error('Error updating payment status:', error);
 
-    // Handle specific Prisma errors
     if (error instanceof Error) {
       if (error.message.includes('Record to update not found')) {
         return NextResponse.json(
@@ -151,6 +148,12 @@ export async function PUT(
   }
 }
 
+/**
+ * GET - Get payment
+ * @param request - The request object
+ * @param props - The properties object
+ * @returns - The response object
+ */
 export async function GET(
   request: NextRequest,
   props: { params: Promise<{ id: string }> }
@@ -159,7 +162,6 @@ export async function GET(
   try {
     const session = await getServerSession(authOptions);
 
-    // Development bypass - allow operations without session for testing
     if (process.env.NODE_ENV === 'development' && !session) {
       // eslint-disable-next-line no-console
       console.log('🚀 Development mode: Bypassing authentication for testing');
@@ -197,7 +199,6 @@ export async function GET(
       });
     }
 
-    // Normal authentication flow
     if (!session) {
       return NextResponse.json({ error: 'No authenticated' }, { status: 401 });
     }
@@ -209,7 +210,6 @@ export async function GET(
       );
     }
 
-    // Get user and check permissions
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       select: { id: true, role: true },
@@ -219,12 +219,8 @@ export async function GET(
       return NextResponse.json({ error: 'User not found' }, { status: 401 });
     }
 
-    // Check if user has permission to view orders (which includes payments)
     if (!hasPermission(user.role, 'canManageOrders')) {
-      return NextResponse.json(
-        { error: 'Insufficient permissions' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const paymentId = params.id;

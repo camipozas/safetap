@@ -7,7 +7,7 @@ import { QrCanvas } from '@/components/QrCanvas';
 // Mock QRCode library
 vi.mock('qrcode', () => ({
   default: {
-    toDataURL: vi.fn(),
+    toDataURL: vi.fn().mockResolvedValue('data:image/png;base64,mock-qr-code'),
   },
 }));
 
@@ -30,13 +30,15 @@ vi.mock('next/image', () => ({
 describe('QrCanvas', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (QRCode.toDataURL as any).mockResolvedValue(
+    (vi.mocked(QRCode.toDataURL) as ReturnType<typeof vi.fn>).mockResolvedValue(
       'data:image/png;base64,mock-qr-code'
     );
   });
 
   it('renders loading state initially', () => {
-    (QRCode.toDataURL as any).mockImplementation(() => new Promise(() => {})); // Never resolves
+    (
+      vi.mocked(QRCode.toDataURL) as ReturnType<typeof vi.fn>
+    ).mockImplementation(() => new Promise(() => {})); // Never resolves
 
     render(<QrCanvas url="https://example.com" />);
 
@@ -45,7 +47,9 @@ describe('QrCanvas', () => {
 
   it('generates QR code successfully', async () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
-    (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
+    (vi.mocked(QRCode.toDataURL) as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockDataUrl
+    );
 
     render(<QrCanvas url="https://example.com" alt="Test QR" />);
 
@@ -60,7 +64,9 @@ describe('QrCanvas', () => {
 
   it('optimizes quality for small QR codes', async () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
-    (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
+    (vi.mocked(QRCode.toDataURL) as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockDataUrl
+    );
 
     render(<QrCanvas url="https://example.com" size={48} />);
 
@@ -82,7 +88,9 @@ describe('QrCanvas', () => {
 
   it('uses standard quality for large QR codes', async () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
-    (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
+    (vi.mocked(QRCode.toDataURL) as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockDataUrl
+    );
 
     render(<QrCanvas url="https://example.com" size={200} />);
 
@@ -104,7 +112,9 @@ describe('QrCanvas', () => {
 
   it('optimizes rendering for different sizes', async () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
-    (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
+    (vi.mocked(QRCode.toDataURL) as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockDataUrl
+    );
 
     // Test large image
     const { rerender } = render(

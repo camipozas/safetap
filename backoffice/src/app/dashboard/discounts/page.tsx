@@ -23,7 +23,6 @@ export default async function DiscountsPage() {
     redirect('/');
   }
 
-  // Fetch initial discount codes
   const discounts = await prisma.discountCode.findMany({
     take: 10,
     orderBy: { createdAt: 'desc' },
@@ -39,7 +38,6 @@ export default async function DiscountsPage() {
 
   const total = await prisma.discountCode.count();
 
-  // Convert Prisma Decimal to number for the UI
   const serializedDiscounts = discounts.map((discount) => ({
     ...discount,
     amount: Number(discount.amount),

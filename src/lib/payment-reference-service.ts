@@ -3,12 +3,17 @@ import { prisma } from '@/lib/prisma';
 import { generateSequentialReference } from './payment-reference';
 
 /**
- * Servicio para gestionar referencias de pago únicas
+ * Service for managing unique payment references
  */
 export class PaymentReferenceService {
   /**
-   * Genera una referencia única para un pago
-   * Verifica que no exista en la base de datos antes de retornarla
+   * Generates a unique payment reference by attempting sequential references first,
+   * falling back to timestamp-based references if collisions occur
+   *
+   * @param _userId - User ID (currently unused, kept for interface compatibility)
+   * @param _amount - Payment amount (currently unused, kept for interface compatibility)
+   * @param _description - Optional payment description (currently unused)
+   * @returns Promise<string> A unique payment reference
    */
   static async generateUniqueReference(
     _userId: string,
@@ -19,26 +24,22 @@ export class PaymentReferenceService {
     const maxAttempts = 10;
 
     while (attempts < maxAttempts) {
-      // Generar referencia con fecha actual + secuencial
       const date = new Date();
       const orderNumber = await this.getNextOrderNumber(date);
       const reference = generateSequentialReference(date, orderNumber);
 
-      // Verificar que no exista en la base de datos
       const existingPayment = await prisma.payment.findUnique({
         where: { reference },
         select: { id: true },
       });
 
       if (!existingPayment) {
-        // La referencia es única, la retornamos
         return reference;
       }
 
       attempts++;
     }
 
-    // Si llegamos aquí, generamos una referencia con timestamp único
     const timestamp = Date.now();
     const randomSuffix = Math.random()
       .toString(36)
@@ -48,7 +49,10 @@ export class PaymentReferenceService {
   }
 
   /**
-   * Obtiene el siguiente número de orden para una fecha específica
+   * Gets the next order number for a specific date
+   *
+   * @param date - The date to get the next order number for
+   * @returns Promise<number> The next sequential order number for the given date
    */
   private static async getNextOrderNumber(date: Date): Promise<number> {
     const startOfDay = new Date(date);
@@ -57,7 +61,6 @@ export class PaymentReferenceService {
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
-    // Contar pagos creados en este día
     const paymentsToday = await prisma.payment.count({
       where: {
         createdAt: {
@@ -71,7 +74,10 @@ export class PaymentReferenceService {
   }
 
   /**
-   * Busca un pago por su referencia
+   * Finds a payment by its reference
+   *
+   * @param reference - The payment reference to search for
+   * @returns Promise with payment data including related sticker and user information
    */
   static async findByReference(reference: string) {
     return await prisma.payment.findUnique({
@@ -102,7 +108,10 @@ export class PaymentReferenceService {
   }
 
   /**
-   * Busca pagos por usuario
+   * Finds payments by user ID
+   *
+   * @param userId - The user ID to search payments for
+   * @returns Promise with array of payments including related sticker information
    */
   static async findByUserId(userId: string) {
     return await prisma.payment.findMany({
@@ -122,7 +131,10 @@ export class PaymentReferenceService {
   }
 
   /**
-   * Valida si una referencia existe
+   * Validates if a payment reference exists
+   *
+   * @param reference - The payment reference to validate
+   * @returns Promise<boolean> True if the reference exists, false otherwise
    */
   static async referenceExists(reference: string): Promise<boolean> {
     const payment = await prisma.payment.findUnique({
@@ -133,7 +145,11 @@ export class PaymentReferenceService {
   }
 
   /**
-   * Obtiene estadísticas de referencias por fecha
+   * Gets payment reference statistics by date range
+   *
+   * @param startDate - Start date for the statistics range
+   * @param endDate - End date for the statistics range
+   * @returns Promise with array of daily statistics including payments count and total amounts
    */
   static async getReferenceStats(startDate: Date, endDate: Date) {
     const payments = await prisma.payment.findMany({
@@ -152,7 +168,6 @@ export class PaymentReferenceService {
       orderBy: { createdAt: 'asc' },
     });
 
-    // Agrupar por fecha
     const statsByDate = payments.reduce(
       (acc, payment) => {
         const date = payment.createdAt.toISOString().split('T')[0];
@@ -171,7 +186,15 @@ export class PaymentReferenceService {
 
         return acc;
       },
-      {} as Record<string, any>
+      {} as Record<
+        string,
+        {
+          date: string;
+          totalPayments: number;
+          totalAmount: number;
+          references: string[];
+        }
+      >
     );
 
     return Object.values(statsByDate);
@@ -179,7 +202,12 @@ export class PaymentReferenceService {
 }
 
 /**
- * Helper para generar referencias legibles para el usuario
+ * Helper function to generate user-friendly payment references
+ *
+ * @param baseReference - The base payment reference
+ * @param userName - Optional user name to include in the reference
+ * @param productName - Optional product name to include in the reference
+ * @returns Formatted user-friendly reference string
  */
 export function generateUserFriendlyReference(
   baseReference: string,
@@ -198,10 +226,13 @@ export function generateUserFriendlyReference(
 }
 
 /**
- * Helper para mostrar la referencia en formato legible
+ * Helper function to format payment reference for display
+ * Formats SAFETAP-2024-12-19-001 -> SAFETAP 2024-12-19 #001
+ *
+ * @param reference - The payment reference to format
+ * @returns Formatted reference string for display
  */
 export function formatReferenceForDisplay(reference: string): string {
-  // SAFETAP-2024-12-19-001 -> SAFETAP 2024-12-19 #001
   const parts = reference.split('-');
   if (parts.length === 5 && parts[0] === 'SAFETAP') {
     const [, year, month, day, identifier] = parts;

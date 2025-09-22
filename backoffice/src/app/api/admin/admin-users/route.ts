@@ -65,7 +65,7 @@ export async function GET(_request: NextRequest) {
     return NextResponse.json(adminUsers);
   } catch (error) {
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
-      return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user || !canManageAdmins(user.role)) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const { email, role } = await request.json();
@@ -97,13 +97,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user exists
     const targetUser = await prisma.user.findUnique({
       where: { email },
     });
 
     if (targetUser) {
-      // Update existing user's role
       const updatedUser = await prisma.user.update({
         where: { email },
         data: { role },
@@ -117,12 +115,11 @@ export async function POST(request: NextRequest) {
       });
       return NextResponse.json(updatedUser);
     } else {
-      // Create new user with admin role
       const newUser = await prisma.user.create({
         data: {
           email,
           role,
-          name: null, // Will be filled when they first login
+          name: null,
           id: `user-${email}-id`,
           updatedAt: new Date(),
         },
@@ -138,7 +135,7 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

@@ -5,6 +5,10 @@ import { getServerSession } from 'next-auth';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
+/**
+ * Create discount code schema
+ * @returns - The schema object
+ */
 const createDiscountSchema = z.object({
   code: z.string().min(1, 'Código requerido').max(50, 'Código muy largo'),
   type: z.enum(['PERCENT', 'FIXED'], {
@@ -16,7 +20,6 @@ const createDiscountSchema = z.object({
     .optional()
     .transform((val) => {
       if (!val) return undefined;
-      // Convert datetime-local format to ISO string
       const date = new Date(val);
       return isNaN(date.getTime()) ? undefined : date.toISOString();
     }),
@@ -24,16 +27,24 @@ const createDiscountSchema = z.object({
   active: z.boolean().default(true),
 });
 
-// Custom validation for amount based on type
+/**
+ * Validate discount amount based on type
+ * @param data - The data object
+ * @returns - The validated data object
+ */
 const validateDiscountAmount = (data: z.infer<typeof createDiscountSchema>) => {
   if (data.type === 'PERCENT' && data.amount > 100) {
-    throw new Error('El porcentaje no puede ser mayor a 100');
+    throw new Error('Percentage cannot be greater than 100');
   }
   if (data.amount <= 0) {
-    throw new Error('El monto debe ser mayor a 0');
+    throw new Error('Amount must be greater than 0');
   }
 };
 
+/**
+ * Check admin authentication
+ * @returns - The response object
+ */
 async function checkAdminAuth() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
@@ -52,7 +63,11 @@ async function checkAdminAuth() {
   return { user };
 }
 
-// GET /api/discounts - List discount codes with pagination
+/**
+ * GET - List discount codes with pagination
+ * @param req - The request object
+ * @returns - The response object
+ */
 export async function GET(req: Request) {
   const authResult = await checkAdminAuth();
   if ('error' in authResult) {
@@ -97,13 +112,17 @@ export async function GET(req: Request) {
   } catch (error) {
     console.error('Error fetching discounts:', error);
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
 
-// POST /api/discounts - Create new discount code
+/**
+ * POST - Create new discount code
+ * @param req - The request object
+ * @returns - The response object
+ */
 export async function POST(req: Request) {
   const authResult = await checkAdminAuth();
   if ('error' in authResult) {
@@ -117,13 +136,10 @@ export async function POST(req: Request) {
     const json = await req.json();
     const data = createDiscountSchema.parse(json);
 
-    // Validate amount based on type
     validateDiscountAmount(data);
 
-    // Normalize code to uppercase and trim
     const normalizedCode = data.code.trim().toUpperCase();
 
-    // Check if code already exists
     const existingCode = await prisma.discountCode.findUnique({
       where: { code: normalizedCode },
     });
@@ -168,7 +184,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

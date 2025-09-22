@@ -43,7 +43,7 @@ describe('getPaymentStatusForOrderStatus', () => {
   });
 
   test('returns null for invalid status', () => {
-    const result = getPaymentStatusForOrderStatus('INVALID_STATUS' as any);
+    const result = getPaymentStatusForOrderStatus('INVALID_STATUS' as never);
     expect(result).toBe(null);
   });
 });

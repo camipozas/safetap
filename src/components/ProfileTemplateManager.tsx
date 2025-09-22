@@ -29,7 +29,7 @@ interface ProfileTemplate {
 interface ProfileTemplateManagerProps {
   onTemplateApply: (profileData: ProfileTemplate) => void;
   showTitle?: boolean;
-  excludeStickerId?: string; // Para excluir el sticker actual al editar uno específico
+  excludeStickerId?: string;
 }
 
 export default function ProfileTemplateManager({
@@ -58,7 +58,6 @@ export default function ProfileTemplateManager({
           const data = await response.json();
           const availableTemplates: ProfileTemplate[] = [];
 
-          // Agregar perfil general si existe
           if (data.emergencyProfile) {
             availableTemplates.push({
               ...data.emergencyProfile,
@@ -66,7 +65,6 @@ export default function ProfileTemplateManager({
             });
           }
 
-          // Agregar perfiles de otros stickers
           if (
             data.stickerProfileTemplates &&
             data.stickerProfileTemplates.length > 0

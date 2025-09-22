@@ -3,7 +3,10 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-// GET /api/user/stickers - Obtener stickers del usuario
+/**
+ * Get stickers for the user
+ * @returns - The response body
+ */
 export async function GET() {
   try {
     console.log('🔍 API /user/stickers: Starting request...');
@@ -23,7 +26,6 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Buscar stickers por email del usuario (maneja cuentas duplicadas)
     const userStickers = await prisma.sticker.findMany({
       where: {
         User: {

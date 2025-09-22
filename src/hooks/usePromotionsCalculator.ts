@@ -26,14 +26,11 @@ export function usePromotionsCalculator({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Skip if invalid params
     if (quantity <= 0 || pricePerUnit <= 0) {
       return;
     }
 
-    // Skip if running on server side
     if (typeof window === 'undefined') {
-      console.log('⏭️ Skipping calculation - running on server');
       return;
     }
 
@@ -45,7 +42,6 @@ export function usePromotionsCalculator({
     setIsLoading(true);
     setError(null);
 
-    // Create cart item for calculation
     const cart: CartItem[] = [
       {
         id: 'sticker-order',
@@ -55,12 +51,10 @@ export function usePromotionsCalculator({
       },
     ];
 
-    // Start with local calculation as immediate fallback
     const localResult = calculateDiscount(cart);
     console.log('📱 Local discount result:', localResult);
     setDiscountResult(localResult);
 
-    // Fetch server result to get latest promotion rules
     console.log('🌐 Fetching server discount result...');
     fetch('/api/promotions/preview', {
       method: 'POST',

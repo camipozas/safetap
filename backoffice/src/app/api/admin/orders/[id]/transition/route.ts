@@ -9,18 +9,22 @@ import {
 import { prisma } from '../../../../../../lib/prisma';
 import { PaymentStatus, USER_ROLES } from '../../../../../../types/shared';
 
+/**
+ * PUT - Transition order status
+ * @param request - The request object
+ * @param params - The parameters object
+ * @returns - The response object
+ */
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Verificar autenticación
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Verificar permisos de admin
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       select: { role: true },
@@ -30,13 +34,12 @@ export async function PUT(
       !user ||
       (user.role !== USER_ROLES.ADMIN && user.role !== USER_ROLES.SUPER_ADMIN)
     ) {
-      return NextResponse.json({ error: 'Acceso denegado' }, { status: 403 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const { id } = await params;
     const { newStatus, updatePayment = false } = await request.json();
 
-    // Validar que la orden existe
     const order = await prisma.sticker.findUnique({
       where: { id },
       include: {
@@ -53,7 +56,6 @@ export async function PUT(
       );
     }
 
-    // Validar la transición de estado
     if (
       !isValidStatusTransition(order.status, newStatus, {
         hasConfirmedPayment: order.Payment.some(
@@ -69,7 +71,7 @@ export async function PUT(
         ),
         totalAmount: order.Payment.reduce((sum, p) => sum + p.amount, 0),
         currency: order.Payment[0]?.currency || 'EUR',
-        latestStatus: (order.Payment[0]?.status as any) || null,
+        latestStatus: order.Payment[0]?.status || null,
         paymentCount: order.Payment.length,
       })
     ) {
@@ -79,12 +81,8 @@ export async function PUT(
       );
     }
 
-    // Manejar caso especial de rechazo
     if (newStatus === ORDER_STATUS.REJECTED) {
-      // Para rechazar, actualizamos el pago pero NO el sticker
-      // (el sticker mantiene su estado actual, típicamente ORDERED)
       if (order.Payment.length > 0) {
-        // Get the latest payment (already ordered by createdAt desc)
         const latestPayment = order.Payment[0];
         await prisma.payment.update({
           where: { id: latestPayment.id },
@@ -92,7 +90,6 @@ export async function PUT(
         });
       }
 
-      // Devolver la orden sin cambiar el estado del sticker
       const orderWithRejectedPayment = await prisma.sticker.findUnique({
         where: { id },
         include: {
@@ -107,7 +104,6 @@ export async function PUT(
       });
     }
 
-    // Para otros estados, actualizar el estado del sticker normalmente
     const updatedOrder = await prisma.sticker.update({
       where: { id },
       data: { status: newStatus },
@@ -116,17 +112,15 @@ export async function PUT(
       },
     });
 
-    // Manejar pagos según el estado
     if (newStatus === ORDER_STATUS.PAID) {
       if (order.Payment.length === 0) {
-        // Crear un nuevo pago si no existe
         await prisma.payment.create({
           data: {
             id: crypto.randomUUID(),
             userId: order.ownerId,
             stickerId: id,
-            quantity: 1, // Un sticker por defecto en el backoffice
-            amount: 6990, // Precio estándar del sticker
+            quantity: 1,
+            amount: 6990,
             currency: 'CLP',
             reference: `STK-${id}-${Date.now()}`,
             status: PaymentStatus.VERIFIED,
@@ -134,7 +128,6 @@ export async function PUT(
           },
         });
       } else {
-        // Actualizar el pago más reciente
         const latestPayment = order.Payment[0];
         if (latestPayment.status === PaymentStatus.PENDING) {
           await prisma.payment.update({
@@ -153,7 +146,7 @@ export async function PUT(
   } catch (error) {
     console.error('Error en transición de estado:', error);
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

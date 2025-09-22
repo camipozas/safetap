@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { authOptions } from '@/lib/auth';
 import {
   analyzePayments,
@@ -9,29 +10,28 @@ import { hasPermission } from '@/types/shared';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST(request: NextRequest) {
+/**
+ * POST - Fix inconsistencies
+ * @param request - The request object
+ * @returns - The response object
+ */
+export async function POST(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    // Development bypass - allow operations without session for testing
     if (process.env.NODE_ENV === 'development' && !session) {
       console.log('🚀 Development mode: Bypassing authentication for testing');
     } else {
-      // Normal authentication flow
       if (!session?.user?.role) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
       const canManage = hasPermission(session.user.role, 'canManageOrders');
       if (!canManage) {
-        return NextResponse.json(
-          { error: 'Insufficient permissions' },
-          { status: 403 }
-        );
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
     }
 
-    // Get all orders with their payments
     const orders = await prisma.sticker.findMany({
       include: {
         Payment: {
@@ -56,7 +56,6 @@ export async function POST(request: NextRequest) {
       reason: string;
     }> = [];
 
-    // Analyze each order for inconsistencies
     for (const order of orders) {
       const paymentInfo = analyzePayments(order.Payment);
       const displayStatus = getDisplayStatus(
@@ -64,7 +63,6 @@ export async function POST(request: NextRequest) {
         paymentInfo
       );
 
-      // If the display status is different from the current status, we need to update
       if (displayStatus.primaryStatus !== order.status) {
         updates.push({
           id: order.id,
@@ -75,11 +73,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Apply the updates
     const updatePromises = updates.map((update) =>
       prisma.sticker.update({
         where: { id: update.id },
-        data: { status: update.newStatus as any },
+        data: {
+          status: update.newStatus as
+            | 'ORDERED'
+            | 'PAID'
+            | 'PRINTING'
+            | 'SHIPPED'
+            | 'ACTIVE'
+            | 'LOST',
+        },
       })
     );
 
@@ -103,29 +108,28 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+/**
+ * GET - Check inconsistencies
+ * @param request - The request object
+ * @returns - The response object
+ */
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    // Development bypass - allow operations without session for testing
     if (process.env.NODE_ENV === 'development' && !session) {
       console.log('🚀 Development mode: Bypassing authentication for testing');
     } else {
-      // Normal authentication flow
       if (!session?.user?.role) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
       const canManage = hasPermission(session.user.role, 'canManageOrders');
       if (!canManage) {
-        return NextResponse.json(
-          { error: 'Insufficient permissions' },
-          { status: 403 }
-        );
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
     }
 
-    // Get all orders with their payments
     const orders = await prisma.sticker.findMany({
       include: {
         User: {
@@ -164,7 +168,6 @@ export async function GET(request: NextRequest) {
       };
     }> = [];
 
-    // Analyze each order for inconsistencies
     for (const order of orders) {
       const paymentInfo = analyzePayments(order.Payment);
       const displayStatus = getDisplayStatus(
@@ -172,7 +175,6 @@ export async function GET(request: NextRequest) {
         paymentInfo
       );
 
-      // If the display status is different from the current status, there's an inconsistency
       if (displayStatus.primaryStatus !== order.status) {
         inconsistencies.push({
           id: order.id,

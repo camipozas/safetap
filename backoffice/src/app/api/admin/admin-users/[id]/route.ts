@@ -20,7 +20,7 @@ export async function PUT(
       const session = await getServerSession(authOptions);
 
       if (!session?.user?.email) {
-        return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
       const user = await prisma.user.findUnique({
@@ -29,7 +29,7 @@ export async function PUT(
       });
 
       if (!user || !canManageAdmins(user.role)) {
-        return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
 
       currentUser = user;
@@ -81,7 +81,7 @@ export async function PUT(
     return NextResponse.json(updatedUser);
   } catch (error) {
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -96,7 +96,7 @@ export async function DELETE(
       process.env.NODE_ENV === 'development' &&
       process.env.ENABLE_DEV_SUPER_ADMIN === 'true'
     ) {
-      // En desarrollo, permitir eliminación directa solo si está explícitamente habilitado
+      // In development, allow direct deletion only if explicitly enabled
       console.log(
         '🚀 Development mode: Bypassing authentication for user deletion (ENABLE_DEV_SUPER_ADMIN=true)'
       );
@@ -104,7 +104,7 @@ export async function DELETE(
       const session = await getServerSession(authOptions);
 
       if (!session?.user?.email) {
-        return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
       const user = await prisma.user.findUnique({
@@ -113,11 +113,10 @@ export async function DELETE(
       });
 
       if (!user || !canManageAdmins(user.role)) {
-        return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
 
       const resolvedParams = await params;
-      // Prevent self-deletion
       if (user.id === resolvedParams.id) {
         return NextResponse.json(
           { error: 'No puedes eliminar tu propio acceso de admin' },
@@ -129,17 +128,14 @@ export async function DELETE(
     const resolvedParams = await params;
     const { id } = resolvedParams;
 
-    // First, delete associated accounts (Google OAuth)
     await prisma.account.deleteMany({
       where: { userId: id },
     });
 
-    // Then, delete associated sessions
     await prisma.session.deleteMany({
       where: { userId: id },
     });
 
-    // Finally, set role back to USER
     const updatedUser = await prisma.user.update({
       where: { id },
       data: { role: USER_ROLES.USER },
@@ -154,7 +150,7 @@ export async function DELETE(
     return NextResponse.json(updatedUser);
   } catch (error) {
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

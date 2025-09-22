@@ -39,9 +39,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
   const [showPreview, setShowPreview] = useState<Order | null>(null);
   const [fixingInconsistencies, setFixingInconsistencies] = useState(false);
 
-  // Filter orders based on selected filters
   const filteredOrders = orders.filter((order) => {
-    // Use displayStatus for filtering if available, otherwise use status
     const orderStatus = order.displayStatus || order.status;
     if (statusFilter !== 'ALL' && orderStatus !== statusFilter) return false;
     if (countryFilter !== 'ALL' && order.owner.country !== countryFilter)
@@ -49,12 +47,10 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
     return true;
   });
 
-  // Get unique countries for filter
   const countries = Array.from(
     new Set(orders.map((o) => o.owner.country).filter(Boolean))
   );
 
-  // Get available transitions using the helper
   const getAvailableTransitions = (
     currentStatus: OrderStatus,
     payments: Order['payments']
@@ -93,7 +89,6 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
         throw new Error('Error al actualizar el estado');
       }
 
-      // Reload the page to reflect changes
       window.location.reload();
     } catch (err) {
       console.error('Error al actualizar orden:', err);
@@ -105,10 +100,8 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
 
   const downloadQR = async (order: Order) => {
     try {
-      // Get the QR URL using the shared utility function
       const qrUrl = await getQrUrlForSticker(order.id, order.slug);
 
-      // Create canvas for the sticker
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
 
@@ -205,16 +198,13 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
 
   const downloadStickerHighRes = async (order: Order) => {
     try {
-      // Get the QR URL using the shared utility function
       const qrUrl = await getQrUrlForSticker(order.id, order.slug);
 
-      // Create canvas for the sticker
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
 
       if (!ctx) return;
 
-      // Configure the canvas for the sticker (high-res print size)
       canvas.width = 1200;
       canvas.height = 1800;
 
@@ -304,7 +294,6 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
   };
 
   const viewStickerPreview = (order: Order) => {
-    // Show the sticker preview modal
     setShowPreview(order);
   };
 
@@ -317,7 +306,6 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
     }
   };
 
-  // Toggle individual order selection
   const toggleOrderSelection = (orderId: string) => {
     const newSelected = new Set(selectedOrders);
     if (newSelected.has(orderId)) {
@@ -328,7 +316,6 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
     setSelectedOrders(newSelected);
   };
 
-  // Bulk update selected orders to next status
   const bulkUpdateStatus = async () => {
     if (selectedOrders.size === 0) return;
 
@@ -340,7 +327,6 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
         order.status,
         order.payments
       );
-      // Get the first available forward transition
       const nextTransition = availableTransitions.find(
         (t) => t.direction === 'forward'
       );
@@ -354,7 +340,6 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
     setSelectedOrders(new Set());
   };
 
-  // Download selected orders as high-res stickers
   const downloadSelectedStickers = async () => {
     if (selectedOrders.size === 0) return;
 
@@ -363,12 +348,10 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
     );
     for (const order of selectedOrdersList) {
       await downloadStickerHighRes(order);
-      // Add a small delay to prevent overwhelming the browser
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
   };
 
-  // Fix inconsistencies automatically
   const fixInconsistencies = async () => {
     setFixingInconsistencies(true);
     try {
@@ -386,7 +369,6 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
       const result = await response.json();
       alert(`Se arreglaron ${result.updates.length} inconsistencias`);
 
-      // Reload the page to reflect changes
       window.location.reload();
     } catch (err) {
       console.error('Error al arreglar inconsistencias:', err);
@@ -677,7 +659,6 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            // Ir a la página de visualización del perfil en el backoffice
                             const profileUrl = `/dashboard/users/${order.owner.id}/profile`;
                             window.open(profileUrl, '_blank');
                           }}
@@ -758,7 +739,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
           // Use pre-processed display status if available, otherwise calculate it
           const displayStatus = order.displayStatus
             ? {
-                primaryStatus: order.displayStatus as any,
+                primaryStatus: order.displayStatus as string,
                 secondaryStatuses: order.displaySecondaryStatuses || [],
                 description: order.displayDescription || '',
               }
@@ -797,7 +778,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                   <span
                     className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(displayStatus.primaryStatus)}`}
                   >
-                    {getStatusLabel(displayStatus.primaryStatus)}
+                    {getStatusLabel(displayStatus.primaryStatus as OrderStatus)}
                   </span>
                   {displayStatus.secondaryStatuses.length > 0 && (
                     <span
@@ -805,7 +786,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                     >
                       ▲{' '}
                       {getStatusLabel(
-                        displayStatus.secondaryStatuses[0] as any
+                        displayStatus.secondaryStatuses[0] as OrderStatus
                       )}
                     </span>
                   )}
@@ -914,7 +895,6 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      // Ir a la página de visualización del perfil en el backoffice
                       const profileUrl = `/dashboard/users/${order.owner.id}/profile`;
                       window.open(profileUrl, '_blank');
                     }}

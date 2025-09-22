@@ -3,6 +3,10 @@ import { NextResponse } from 'next/server';
 import { environment } from '@/environment/config';
 import { prisma } from '@/lib/prisma';
 
+/**
+ * GET - Ping
+ * @returns - The response object
+ */
 export async function GET() {
   const started = Date.now();
   try {
@@ -16,9 +20,7 @@ export async function GET() {
       environment: environment.app.environment,
     });
   } catch (error) {
-    // Log error for debugging
     if (environment.app.isDevelopment) {
-      // eslint-disable-next-line no-console
       console.error('Health check failed:', error);
     }
     return NextResponse.json(

@@ -119,4 +119,4 @@ global.fetch = vi.fn((url: string) => {
       json: () => Promise.resolve({ success: true }),
     });
   }
-}) as any;
+}) as never;

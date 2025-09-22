@@ -8,6 +8,12 @@ import { hasPermission } from '@/types/shared';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 
+/**
+ * PUT - Update order status
+ * @param request - The request object
+ * @param props - The properties object
+ * @returns - The response object
+ */
 export async function PUT(
   request: NextRequest,
   props: { params: Promise<{ id: string }> }
@@ -16,12 +22,10 @@ export async function PUT(
   try {
     const session = await getServerSession(authOptions);
 
-    // Development bypass - allow operations without session for testing
     if (process.env.NODE_ENV === 'development' && !session) {
       // eslint-disable-next-line no-console
       console.log('🚀 Development mode: Bypassing authentication for testing');
 
-      // Continue with the operation without authentication check
       const { status } = await request.json();
       const orderId = params.id;
 
@@ -31,7 +35,6 @@ export async function PUT(
         return NextResponse.json({ error: 'Invalid state' }, { status: 400 });
       }
 
-      // Check if this is a batch order (has groupId) or single order
       const currentSticker = await prisma.sticker.findUnique({
         where: { id: orderId },
         select: { id: true, groupId: true, status: true },
@@ -51,11 +54,9 @@ export async function PUT(
         newStatus: status,
       });
 
-      // Get the target payment status for this order status
       const targetPaymentStatus = getPaymentStatusForOrderStatus(status);
 
       if (isBatchOrder) {
-        // For batch orders, update ALL stickers in the group
         console.error(
           '📦 Updating batch order - all stickers in group will be updated'
         );
@@ -70,7 +71,6 @@ export async function PUT(
 
         console.error(`✅ Updated ${updateResult.count} stickers in batch`);
 
-        // Update payments for all stickers in the group
         if (targetPaymentStatus) {
           await prisma.payment.updateMany({
             where: {
@@ -85,7 +85,6 @@ export async function PUT(
           });
         }
 
-        // Return the updated original sticker for response
         const updatedSticker = await prisma.sticker.findUnique({
           where: { id: orderId },
           include: {
@@ -107,7 +106,6 @@ export async function PUT(
           devBypass: true,
         });
       } else {
-        // For single orders, update only this sticker
         console.error(
           '🎯 Updating single order - only this sticker will be updated'
         );
@@ -129,7 +127,6 @@ export async function PUT(
           },
         });
 
-        // Update payments for this specific sticker
         if (targetPaymentStatus) {
           await prisma.payment.updateMany({
             where: {
@@ -154,7 +151,6 @@ export async function PUT(
       }
     }
 
-    // Normal authentication flow
     if (!session) {
       return NextResponse.json(
         {
@@ -189,7 +185,7 @@ export async function PUT(
     if (!canManage) {
       return NextResponse.json(
         {
-          error: 'Insufficient permissions',
+          error: 'Unauthorized',
           debug: {
             userRole: session.user.role,
             canManageOrders: canManage,
@@ -209,7 +205,6 @@ export async function PUT(
       return NextResponse.json({ error: 'Invalid state' }, { status: 400 });
     }
 
-    // Check if this is a batch order (has groupId) or single order
     const currentSticker = await prisma.sticker.findUnique({
       where: { id: orderId },
       select: { id: true, groupId: true, status: true },
@@ -229,11 +224,9 @@ export async function PUT(
       newStatus: status,
     });
 
-    // Get the target payment status for this order status
     const targetPaymentStatus = getPaymentStatusForOrderStatus(status);
 
     if (isBatchOrder) {
-      // For batch orders, update ALL stickers in the group
       console.error(
         '📦 Updating batch order (authenticated) - all stickers in group will be updated'
       );
@@ -250,7 +243,6 @@ export async function PUT(
         `✅ Updated ${updateResult.count} stickers in batch (authenticated)`
       );
 
-      // Update payments for all stickers in the group
       if (targetPaymentStatus) {
         await prisma.payment.updateMany({
           where: {
@@ -265,7 +257,6 @@ export async function PUT(
         });
       }
 
-      // Return the updated original sticker for response
       const updatedSticker = await prisma.sticker.findUnique({
         where: { id: orderId },
         include: {
@@ -286,7 +277,6 @@ export async function PUT(
         updatedCount: updateResult.count,
       });
     } else {
-      // For single orders, update only this sticker
       console.error(
         '🎯 Updating single order (authenticated) - only this sticker will be updated'
       );
@@ -308,7 +298,6 @@ export async function PUT(
         },
       });
 
-      // Update payments for this specific sticker
       if (targetPaymentStatus) {
         await prisma.payment.updateMany({
           where: {
@@ -331,7 +320,6 @@ export async function PUT(
       });
     }
   } catch (error) {
-    // Si es un error de Prisma, proporcionar más detalles
     if (error instanceof Error) {
       if (error.message.includes('Record to update not found')) {
         return NextResponse.json({ error: 'Order not found' }, { status: 404 });
@@ -348,6 +336,12 @@ export async function PUT(
   }
 }
 
+/**
+ * GET - Get order
+ * @param request - The request object
+ * @param props - The properties object
+ * @returns - The response object
+ */
 export async function GET(
   request: NextRequest,
   props: { params: Promise<{ id: string }> }

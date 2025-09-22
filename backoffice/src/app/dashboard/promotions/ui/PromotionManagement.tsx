@@ -152,7 +152,7 @@ export default function PromotionManagement({
   };
 
   const calculateExampleDiscount = (promotion: Promotion) => {
-    const basePrice = 6990; // Precio base por sticker
+    const basePrice = 6990;
     const exampleQuantity = promotion.minQuantity;
     const subtotal = basePrice * exampleQuantity;
 

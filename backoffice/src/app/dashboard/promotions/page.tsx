@@ -30,7 +30,6 @@ export default async function PromotionsPage() {
     redirect('/');
   }
 
-  // Fetch initial promotions
   const promotions = await prisma.promotion.findMany({
     take: 20,
     orderBy: [
@@ -42,7 +41,6 @@ export default async function PromotionsPage() {
 
   const total = await prisma.promotion.count();
 
-  // Convert Prisma Decimal to number for the UI
   const serializedPromotions = promotions.map((promotion) => ({
     ...promotion,
     discountValue: Number(promotion.discountValue),

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PUT } from '@/app/api/admin/orders/[id]/route';
 import { prisma } from '@/lib/prisma';
 import { NextRequest } from 'next/server';
@@ -53,9 +52,13 @@ describe('/api/admin/orders/[id] PUT', () => {
       },
     };
 
-    (prisma.sticker.findUnique as any).mockResolvedValue(mockCurrentSticker);
-    (prisma.sticker.update as any).mockResolvedValue(mockUpdatedSticker);
-    (prisma.payment.updateMany as any).mockResolvedValue({ count: 1 });
+    vi.mocked(prisma.sticker.findUnique).mockResolvedValue(
+      mockCurrentSticker as never
+    );
+    vi.mocked(prisma.sticker.update).mockResolvedValue(
+      mockUpdatedSticker as never
+    );
+    vi.mocked(prisma.payment.updateMany).mockResolvedValue({ count: 1 });
 
     const request = new NextRequest(
       'http://localhost:3001/api/admin/orders/test-id',
@@ -124,9 +127,13 @@ describe('/api/admin/orders/[id] PUT', () => {
       },
     };
 
-    (prisma.sticker.findUnique as any).mockResolvedValue(mockCurrentSticker);
-    (prisma.sticker.update as any).mockResolvedValue(mockUpdatedSticker);
-    (prisma.payment.updateMany as any).mockResolvedValue({ count: 2 });
+    vi.mocked(prisma.sticker.findUnique).mockResolvedValue(
+      mockCurrentSticker as never
+    );
+    vi.mocked(prisma.sticker.update).mockResolvedValue(
+      mockUpdatedSticker as never
+    );
+    vi.mocked(prisma.payment.updateMany).mockResolvedValue({ count: 2 });
 
     const request = new NextRequest(
       'http://localhost:3001/api/admin/orders/test-id',
@@ -176,9 +183,13 @@ describe('/api/admin/orders/[id] PUT', () => {
       },
     };
 
-    (prisma.sticker.findUnique as any).mockResolvedValue(mockCurrentSticker);
-    (prisma.sticker.update as any).mockResolvedValue(mockUpdatedSticker);
-    (prisma.payment.updateMany as any).mockResolvedValue({ count: 1 });
+    vi.mocked(prisma.sticker.findUnique).mockResolvedValue(
+      mockCurrentSticker as never
+    );
+    vi.mocked(prisma.sticker.update).mockResolvedValue(
+      mockUpdatedSticker as never
+    );
+    vi.mocked(prisma.payment.updateMany).mockResolvedValue({ count: 1 });
 
     const request = new NextRequest(
       'http://localhost:3001/api/admin/orders/test-id',
@@ -228,9 +239,13 @@ describe('/api/admin/orders/[id] PUT', () => {
       },
     };
 
-    (prisma.sticker.findUnique as any).mockResolvedValue(mockCurrentSticker);
-    (prisma.sticker.update as any).mockResolvedValue(mockUpdatedSticker);
-    (prisma.payment.updateMany as any).mockResolvedValue({ count: 1 });
+    vi.mocked(prisma.sticker.findUnique).mockResolvedValue(
+      mockCurrentSticker as never
+    );
+    vi.mocked(prisma.sticker.update).mockResolvedValue(
+      mockUpdatedSticker as never
+    );
+    vi.mocked(prisma.payment.updateMany).mockResolvedValue({ count: 1 });
 
     const request = new NextRequest(
       'http://localhost:3001/api/admin/orders/test-id',
@@ -280,9 +295,13 @@ describe('/api/admin/orders/[id] PUT', () => {
       },
     };
 
-    (prisma.sticker.findUnique as any).mockResolvedValue(mockCurrentSticker);
-    (prisma.sticker.update as any).mockResolvedValue(mockUpdatedSticker);
-    (prisma.payment.updateMany as any).mockResolvedValue({ count: 0 });
+    vi.mocked(prisma.sticker.findUnique).mockResolvedValue(
+      mockCurrentSticker as never
+    );
+    vi.mocked(prisma.sticker.update).mockResolvedValue(
+      mockUpdatedSticker as never
+    );
+    vi.mocked(prisma.payment.updateMany).mockResolvedValue({ count: 0 });
 
     const request = new NextRequest(
       'http://localhost:3001/api/admin/orders/test-id',
@@ -335,7 +354,7 @@ describe('/api/admin/orders/[id] PUT', () => {
   });
 
   it('handles database errors', async () => {
-    (prisma.sticker.findUnique as any).mockRejectedValue(
+    vi.mocked(prisma.sticker.findUnique).mockRejectedValue(
       new Error('Database error')
     );
 
@@ -359,7 +378,7 @@ describe('/api/admin/orders/[id] PUT', () => {
   });
 
   it('handles record not found error', async () => {
-    (prisma.sticker.findUnique as any).mockResolvedValue(null);
+    vi.mocked(prisma.sticker.findUnique).mockResolvedValue(null);
 
     const request = new NextRequest(
       'http://localhost:3001/api/admin/orders/test-id',
@@ -408,8 +427,12 @@ describe('/api/admin/orders/[id] PUT', () => {
         },
       };
 
-      (prisma.sticker.findUnique as any).mockResolvedValue(mockCurrentSticker);
-      (prisma.sticker.update as any).mockResolvedValue(mockUpdatedSticker);
+      vi.mocked(prisma.sticker.findUnique).mockResolvedValue(
+        mockCurrentSticker as never
+      );
+      vi.mocked(prisma.sticker.update).mockResolvedValue(
+        mockUpdatedSticker as never
+      );
 
       const request = new NextRequest(
         'http://localhost:3001/api/admin/orders/test-id',

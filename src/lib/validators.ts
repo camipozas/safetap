@@ -80,18 +80,17 @@ export const profileSchema = z.object({
     })
     .refine(
       (data) => {
-        // Si es Isapre, debe especificar cuál (ya sea del dropdown o custom)
+        // If it's Isapre, it must specify which (either from dropdown or custom)
         if (data.type === 'isapre' && !data.isapre && !data.isapreCustom) {
           return false;
         }
-        // Si tiene seguro complementario, debe especificar cuál
         if (data.hasComplementary && !data.complementaryInsurance) {
           return false;
         }
         return true;
       },
       {
-        message: 'Debe completar toda la información de salud previsional',
+        message: 'Complete health insurance information is required',
       }
     )
     .optional(),
@@ -128,18 +127,17 @@ export const profileFormSchema = z.object({
     })
     .refine(
       (data) => {
-        // Si es Isapre, debe especificar cuál (ya sea del dropdown o custom)
+        // If it's Isapre, it must specify which (either from dropdown or custom)
         if (data.type === 'isapre' && !data.isapre && !data.isapreCustom) {
           return false;
         }
-        // Si tiene seguro complementario, debe especificar cuál
         if (data.hasComplementary && !data.complementaryInsurance) {
           return false;
         }
         return true;
       },
       {
-        message: 'Debe completar toda la información de salud previsional',
+        message: 'Complete health insurance information is required',
       }
     )
     .optional(),
@@ -172,7 +170,7 @@ export const checkoutSchema = z.object({
     .regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color format')
     .optional()
     .default('#000000'),
-  quantity: z.number().int().min(1).max(100), // Allow up to 100 stickers for bulk orders
+  quantity: z.number().int().min(1).max(100),
 });
 
 // Schema for multiple custom stickers in one order
@@ -207,7 +205,7 @@ export const multiStickerCheckoutSchema = z.object({
     .min(1, 'At least one sticker required')
     .max(100, 'Maximum 100 stickers allowed'),
   discountCode: z.string().optional(),
-  tempReference: z.string().optional(), // Accept temporary reference
+  tempReference: z.string().optional(),
 });
 
 export type ProfileInput = z.infer<typeof profileSchema>;

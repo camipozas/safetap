@@ -38,9 +38,9 @@ interface StickerSelectorGroupedProps {
   onSelectionChange: (stickerIds: string[]) => void;
   className?: string;
   showTitle?: boolean;
-  specificStickerId?: string; // Si se proporciona, solo muestra este sticker y lo deshabilita
-  filterSimilar?: boolean; // Si true, filtra por perfiles médicos similares
-  excludeStickerId?: string; // ID del sticker a excluir (para comparación)
+  specificStickerId?: string;
+  filterSimilar?: boolean;
+  excludeStickerId?: string;
 }
 
 export default function StickerSelectorGrouped({
@@ -67,14 +67,12 @@ export default function StickerSelectorGrouped({
         }
         setLoading(true);
 
-        // Si hay un sticker específico, usar el endpoint simple
         if (specificStickerId) {
           const response = await fetch('/api/user/stickers');
 
           if (response.ok) {
             const data = await response.json();
 
-            // Definir tipo para el sticker de la API (mismo que abajo)
             interface StickerFromAPI {
               id: string;
               nameOnSticker: string;
@@ -129,7 +127,6 @@ export default function StickerSelectorGrouped({
                 : null,
             };
 
-            // Crear un grupo único para el sticker específico
             const group: StickerGroup = {
               key: processedSticker.name,
               name: processedSticker.name,
@@ -145,7 +142,6 @@ export default function StickerSelectorGrouped({
             }
             setGroups([group]);
 
-            // Asegurar que esté seleccionado - solo si no está ya seleccionado
             if (!selectedStickers.includes(specificStickerId)) {
               onSelectionChange([specificStickerId]);
             }
@@ -153,12 +149,10 @@ export default function StickerSelectorGrouped({
             throw new Error('Error al cargar stickers');
           }
         } else {
-          // Usar el endpoint simple y agrupar por nombre del sticker
           const response = await fetch('/api/user/stickers');
           if (response.ok) {
             const data = await response.json();
 
-            // Definir tipo para el sticker de la API
             interface StickerFromAPI {
               id: string;
               nameOnSticker: string;
@@ -177,7 +171,6 @@ export default function StickerSelectorGrouped({
               } | null;
             }
 
-            // Agrupar por nombre del sticker para mostrar cantidades
             const stickerMap = new Map<string, ProcessedSticker[]>();
 
             data.stickers.forEach((s: StickerFromAPI) => {
@@ -209,10 +202,8 @@ export default function StickerSelectorGrouped({
               stickerMap.get(s.nameOnSticker)!.push(processedSticker);
             });
 
-            // Crear grupos basados en el agrupamiento por nombre
             const groups = Array.from(stickerMap.entries()).map(
               ([name, stickers]) => {
-                // Usar el perfil del sticker más reciente como resumen del grupo
                 const mostRecentSticker = stickers.sort(
                   (a, b) =>
                     new Date(b.createdAt).getTime() -
@@ -237,7 +228,7 @@ export default function StickerSelectorGrouped({
             setGroups(groups);
             setIsFiltered(false);
 
-            // No seleccionar automáticamente ningún sticker - el usuario debe elegir conscientemente
+            // No select automatically in multiple mode - the user must choose consciously
           } else {
             throw new Error('Error al cargar stickers');
           }
@@ -246,7 +237,7 @@ export default function StickerSelectorGrouped({
         if (!isMounted) {
           return;
         }
-        setError(err instanceof Error ? err.message : 'Error desconocido');
+        setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -277,13 +268,13 @@ export default function StickerSelectorGrouped({
     );
 
     if (allGroupSelected) {
-      // Deseleccionar todo el grupo
+      // Deselect all the group
       const newSelection = selectedStickers.filter(
         (id) => !groupStickerIds.includes(id)
       );
       onSelectionChange(newSelection);
     } else {
-      // Seleccionar todo el grupo
+      // Select all the group
       const newSelection = [
         ...new Set([...selectedStickers, ...groupStickerIds]),
       ];
@@ -417,7 +408,7 @@ export default function StickerSelectorGrouped({
       <div className="space-y-4 max-h-96 overflow-y-auto">
         {groups.map((group) => (
           <div key={group.key} className="border rounded-lg p-4 bg-white">
-            {/* Header del grupo */}
+            {/* Header of the group */}
             <div className="flex items-center justify-between mb-3">
               <div className="flex-1">
                 <div className="flex items-center gap-2">
@@ -456,7 +447,7 @@ export default function StickerSelectorGrouped({
               )}
             </div>
 
-            {/* Stickers del grupo */}
+            {/* Stickers of the group */}
             <div className="space-y-2">
               {group.stickers.map((sticker) => (
                 <div

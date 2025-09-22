@@ -10,7 +10,11 @@ type UserWithCounts = User & {
   };
   EmergencyProfile: {
     bloodType: string | null;
+    allergies: string[];
+    conditions: string[];
+    medications: string[];
   }[];
+  totalSpent: number;
 };
 
 async function getUsers(): Promise<UserWithCounts[]> {
@@ -25,6 +29,9 @@ async function getUsers(): Promise<UserWithCounts[]> {
       EmergencyProfile: {
         select: {
           bloodType: true,
+          allergies: true,
+          conditions: true,
+          medications: true,
         },
       },
     },
@@ -123,7 +130,7 @@ export default async function UsersPage() {
           <CardTitle>Usuarios Recientes</CardTitle>
         </CardHeader>
         <CardContent>
-          <UsersTable users={usersWithStats as any} />
+          <UsersTable users={usersWithStats} />
         </CardContent>
       </Card>
     </div>
