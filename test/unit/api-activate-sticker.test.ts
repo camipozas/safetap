@@ -43,7 +43,7 @@ describe('/api/stickers/[stickerId]/activate', () => {
 
     expect(response.status).toBe(401);
     const data = await response.json();
-    expect(data.error).toBe('No autorizado');
+    expect(data.error).toBe('Unauthorized');
   });
 
   it('returns 404 when sticker is not found', async () => {
@@ -211,6 +211,6 @@ describe('/api/stickers/[stickerId]/activate', () => {
 
     expect(response.status).toBe(500);
     const data = await response.json();
-    expect(data.error).toBe('Error interno del servidor');
+    expect(data.error).toBe('Internal server error');
   });
 });
