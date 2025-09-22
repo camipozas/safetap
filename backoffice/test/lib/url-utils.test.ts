@@ -198,7 +198,7 @@ describe('URL Utils', () => {
       expect(url).toBe('https://safetap.cl/s/test-slug');
     });
 
-    it('uses sticker ID as slug when no fallback slug provided', async () => {
+    it('uses missing-slug fallback when no fallback slug provided', async () => {
       process.env.NEXT_PUBLIC_MAIN_APP_URL = 'https://safetap.cl';
       mockFetch.mockResolvedValueOnce({
         ok: false,
@@ -206,7 +206,7 @@ describe('URL Utils', () => {
 
       const url = await getQrUrlForSticker('sticker-123');
 
-      expect(url).toBe('https://safetap.cl/s/sticker-123');
+      expect(url).toBe('https://safetap.cl/s/missing-slug');
     });
 
     it('uses dynamic main app URL in fallback', async () => {
