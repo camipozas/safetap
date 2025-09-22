@@ -944,6 +944,7 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
                       stickerColor={selectedOrder.stickerColor}
                       textColor={selectedOrder.textColor}
                       stickerId={selectedOrder.id}
+                      slug={selectedOrder.slug}
                       serial={selectedOrder.serial}
                       showRealQR={true}
                     />

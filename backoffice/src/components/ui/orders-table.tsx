@@ -963,7 +963,17 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
 
             <div className="flex justify-center">
               <div className="p-8">
-                <StickerPreview sticker={showPreview} size={300} />
+                <StickerPreview
+                  sticker={{
+                    id: showPreview.id,
+                    slug: showPreview.slug,
+                    serial: showPreview.serial,
+                    nameOnSticker: showPreview.nameOnSticker,
+                    flagCode: showPreview.flagCode,
+                    stickerColor: showPreview.stickerColor,
+                    textColor: showPreview.textColor,
+                  }}
+                />
               </div>
             </div>
 

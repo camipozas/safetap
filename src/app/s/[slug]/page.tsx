@@ -11,13 +11,24 @@ export default async function PublicProfile(props: {
 }) {
   const params = await props.params;
 
-  const profile = await prisma.emergencyProfile.findFirst({
+  // First, find the sticker by slug to get its owner
+  const sticker = await prisma.sticker.findUnique({
+    where: { slug: params.slug },
+    select: { id: true, ownerId: true, status: true },
+  });
+
+  if (!sticker) {
+    notFound();
+  }
+
+  // Find the emergency profile with correct priority:
+  // 1. Profile specifically linked to this sticker
+  // 2. If none, the most recently updated profile by the user
+  let profile = await prisma.emergencyProfile.findFirst({
     where: {
       consentPublic: true,
-      Sticker: {
-        slug: params.slug,
-        // Remove status filter to show all profiles regardless of payment status
-      },
+      userId: sticker.ownerId,
+      stickerId: sticker.id, // Profile specifically for this sticker
     },
     include: {
       EmergencyContact: {
@@ -30,25 +41,34 @@ export default async function PublicProfile(props: {
           country: true,
         },
       },
-      Sticker: {
-        select: {
-          slug: true,
-          status: true,
-          Payment: {
-            select: {
-              id: true,
-              status: true,
-              amount: true,
-              createdAt: true,
-            },
-            orderBy: {
-              createdAt: 'desc',
-            },
+    },
+  });
+
+  // If no profile is specifically linked to this sticker, find the user's most recent profile
+  if (!profile) {
+    profile = await prisma.emergencyProfile.findFirst({
+      where: {
+        consentPublic: true,
+        userId: sticker.ownerId,
+      },
+      include: {
+        EmergencyContact: {
+          orderBy: [{ preferred: 'desc' }, { createdAt: 'asc' }],
+        },
+        User: {
+          select: {
+            name: true,
+            email: true,
+            country: true,
           },
         },
       },
-    },
-  });
+      orderBy: [
+        { updatedByUserAt: 'desc' }, // Most recent user update first
+        { updatedAt: 'desc' }, // Then by most recent update
+      ],
+    });
+  }
 
   if (!profile) {
     notFound();
@@ -79,12 +99,11 @@ export default async function PublicProfile(props: {
             : undefined,
         contacts: profile.EmergencyContact,
         user: profile.User,
-        sticker: profile.Sticker
-          ? {
-              ...profile.Sticker,
-              payments: profile.Sticker.Payment,
-            }
-          : null,
+        sticker: {
+          slug: params.slug,
+          status: sticker.status,
+          payments: [], // No need for payment info in profile display
+        },
       }}
       showSafeTapId={false}
       isDemoMode={false}
@@ -97,13 +116,25 @@ export async function generateMetadata(props: {
 }) {
   const params = await props.params;
 
-  const profile = await prisma.emergencyProfile.findFirst({
+  // First, find the sticker by slug to get its owner
+  const sticker = await prisma.sticker.findUnique({
+    where: { slug: params.slug },
+    select: { id: true, ownerId: true, status: true },
+  });
+
+  if (!sticker) {
+    return {
+      title: 'Perfil no encontrado - SafeTap',
+      description: 'El perfil de emergencia solicitado no fue encontrado.',
+    };
+  }
+
+  // Find the emergency profile with same priority logic as main function
+  let profile = await prisma.emergencyProfile.findFirst({
     where: {
       consentPublic: true,
-      Sticker: {
-        slug: params.slug,
-        // Remove filters to be consistent with main function
-      },
+      userId: sticker.ownerId,
+      stickerId: sticker.id, // Profile specifically for this sticker
     },
     include: {
       User: {
@@ -115,6 +146,26 @@ export async function generateMetadata(props: {
       },
     },
   });
+
+  // If no profile is specifically linked to this sticker, find the user's most recent profile
+  if (!profile) {
+    profile = await prisma.emergencyProfile.findFirst({
+      where: {
+        consentPublic: true,
+        userId: sticker.ownerId,
+      },
+      include: {
+        User: {
+          select: {
+            name: true,
+            email: true,
+            country: true,
+          },
+        },
+      },
+      orderBy: [{ updatedByUserAt: 'desc' }, { updatedAt: 'desc' }],
+    });
+  }
 
   if (!profile) {
     return {

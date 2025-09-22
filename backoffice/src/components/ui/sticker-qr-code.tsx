@@ -4,7 +4,7 @@ import Image from 'next/image';
 import QRCode from 'qrcode';
 import { memo, useEffect, useRef, useState } from 'react';
 
-import { getQrUrlForSticker } from '@/lib/url-utils';
+import { getMainAppUrl, getQrUrlForSticker } from '@/lib/url-utils';
 
 // Configuration constants for high-quality QR generation
 const QR_HIGH_QUALITY = 1.0;
@@ -46,8 +46,15 @@ export const StickerQrCode = memo(function StickerQrCode({
 
       try {
         // Get QR URL using the shared utility function
-        // Use stickerId if available, fallback to slug for backward compatibility
-        const qrUrl = await getQrUrlForSticker(stickerId || slug!, slug);
+        let qrUrl: string;
+        if (stickerId) {
+          // If we have stickerId, use it for API lookup with slug as fallback
+          qrUrl = await getQrUrlForSticker(stickerId, slug);
+        } else {
+          // If we only have slug, generate URL directly using environment-aware utility
+          const mainAppUrl = getMainAppUrl();
+          qrUrl = `${mainAppUrl}/s/${slug}`;
+        }
 
         // High-quality QR code options
         const qrOptions = {

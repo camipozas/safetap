@@ -3,12 +3,21 @@ import QRCode from 'qrcode';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StickerQrCode } from '@/components/ui/sticker-qr-code';
+import { getMainAppUrl } from '@/lib/url-utils';
 
 // Mock QRCode library
 vi.mock('qrcode', () => ({
   default: {
     toDataURL: vi.fn().mockResolvedValue('data:image/png;base64,mock-qr-code'),
   },
+}));
+
+// Mock url-utils
+vi.mock('@/lib/url-utils', () => ({
+  getMainAppUrl: vi.fn().mockReturnValue('https://admin.safetap.com'),
+  getQrUrlForSticker: vi
+    .fn()
+    .mockResolvedValue('https://admin.safetap.com/s/test-slug'),
 }));
 
 // Mock window.location
@@ -151,10 +160,8 @@ describe('StickerQrCode (Backoffice)', () => {
       mockDataUrl
     );
 
-    // Mock fetch for emergency profile URL (should fail and fallback)
-    global.fetch = vi
-      .fn()
-      .mockRejectedValue(new Error('Emergency profile not found'));
+    // Mock getMainAppUrl to return specific URL for this test
+    vi.mocked(getMainAppUrl).mockReturnValue('https://admin.safetap.com');
 
     render(<StickerQrCode slug="test-slug" />);
 
@@ -162,36 +169,30 @@ describe('StickerQrCode (Backoffice)', () => {
       expect(screen.getByAltText('QR Code')).toBeInTheDocument();
     });
 
-    // Verify the fallback URL passed to QRCode.toDataURL
+    // Verify the fallback URL passed to QRCode.toDataURL uses getMainAppUrl
     expect(QRCode.toDataURL).toHaveBeenCalledWith(
       'https://admin.safetap.com/s/test-slug',
       expect.any(Object)
     );
   });
 
-  it('uses emergency profile URL when available', async () => {
+  it('uses slug-based URL when slug is provided', async () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
-    const mockEmergencyUrl = 'https://safetap.cl/qr/emergency-profile-123';
+    const expectedSlugUrl = 'https://admin.safetap.com/s/test-slug'; // Backoffice environment
 
     (vi.mocked(QRCode.toDataURL) as ReturnType<typeof vi.fn>).mockResolvedValue(
       mockDataUrl
     );
 
-    // Mock successful fetch for emergency profile URL
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ emergencyUrl: mockEmergencyUrl }),
-    } as Response);
-
-    render(<StickerQrCode slug="test-slug" />);
+    render(<StickerQrCode stickerId="sticker-123" slug="test-slug" />);
 
     await waitFor(() => {
       expect(screen.getByAltText('QR Code')).toBeInTheDocument();
     });
 
-    // Verify the emergency profile URL was used
+    // Verify the slug-based URL was used (no API call needed when slug is available)
     expect(QRCode.toDataURL).toHaveBeenCalledWith(
-      mockEmergencyUrl,
+      expectedSlugUrl,
       expect.any(Object)
     );
   });
