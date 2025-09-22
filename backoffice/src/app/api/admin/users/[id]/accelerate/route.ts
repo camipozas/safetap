@@ -16,6 +16,12 @@ async function createDirectAccelerateClient() {
   });
 }
 
+/**
+ * PUT - Update user in Accelerate
+ * @param request - The request object
+ * @param props - The properties object
+ * @returns - The response object
+ */
 export async function PUT(
   request: NextRequest,
   props: { params: Promise<{ id: string }> }
@@ -24,16 +30,13 @@ export async function PUT(
   let directPrisma;
 
   try {
-    // Create direct Accelerate connection
     directPrisma = await createDirectAccelerateClient();
 
-    // Authentication check using regular prisma
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check admin permissions using direct connection
     const adminUser = await directPrisma.user.findUnique({
       where: { email: session.user.email },
     });
@@ -45,7 +48,6 @@ export async function PUT(
     const { name, role, country } = await request.json();
     const userId = params.id;
 
-    // Find the user to update using direct connection
     const userToUpdate = await directPrisma.user.findUnique({
       where: { id: userId },
     });
@@ -62,9 +64,7 @@ export async function PUT(
       newCountry: country,
     });
 
-    // Use a transaction directly in Accelerate to ensure data consistency
     const updatedUser = await directPrisma.$transaction(async (tx) => {
-      // Update user data with force refresh
       const user = await tx.user.update({
         where: { id: userId },
         data: {
@@ -84,7 +84,6 @@ export async function PUT(
         },
       });
 
-      // If name is being updated and user has stickers, update sticker nameOnSticker too
       if (name !== undefined) {
         const stickerUpdateResult = await tx.sticker.updateMany({
           where: { ownerId: userId },
@@ -98,7 +97,6 @@ export async function PUT(
         );
       }
 
-      // If country is being updated and user has stickers, update sticker flagCode too
       if (country !== undefined) {
         const stickerCountryResult = await tx.sticker.updateMany({
           where: { ownerId: userId },
@@ -115,7 +113,6 @@ export async function PUT(
       return user;
     });
 
-    // Force a direct read from Accelerate to verify the update
     const verifyUser = await directPrisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -148,13 +145,18 @@ export async function PUT(
       { status: 500 }
     );
   } finally {
-    // Clean up direct connection
     if (directPrisma) {
       await directPrisma.$disconnect();
     }
   }
 }
 
+/**
+ * GET - Get user in Accelerate
+ * @param request - The request object
+ * @param props - The properties object
+ * @returns - The response object
+ */
 export async function GET(
   request: NextRequest,
   props: { params: Promise<{ id: string }> }
@@ -165,7 +167,6 @@ export async function GET(
   try {
     const userId = params.id;
 
-    // Create direct Accelerate connection for read
     directPrisma = await createDirectAccelerateClient();
 
     const user = await directPrisma.user.findUnique({
@@ -210,7 +211,6 @@ export async function GET(
       { status: 500 }
     );
   } finally {
-    // Clean up direct connection
     if (directPrisma) {
       await directPrisma.$disconnect();
     }

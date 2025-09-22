@@ -3,30 +3,32 @@ import { NextResponse } from 'next/server';
 import { environment } from '@/environment/config';
 import { prisma } from '@/lib/prisma';
 
-// ⚠️ SOLO PARA DESARROLLO - Las tablas ya fueron creadas
+/**
+ * Setup database - only for development
+ * @returns - The response body
+ */
 export async function POST() {
   if (environment.app.isProduction) {
     return NextResponse.json(
-      { error: 'No disponible en producción' },
+      { error: 'Not available in production' },
       { status: 403 }
     );
   }
 
   try {
-    // Verificar que la conexión funciona
     const userCount = await prisma.user.count();
 
     return NextResponse.json({
-      message: '✅ Base de datos configurada correctamente',
-      note: 'Las tablas ya fueron creadas usando `prisma db push`',
+      message: '✅ Database configured correctly',
+      note: 'The tables have already been created using `prisma db push`',
       status: {
         connected: true,
         userCount,
       },
       instructions: [
-        '1. Ve a /dev-login para probar el login de desarrollo',
-        '2. Usa el sistema normalmente',
-        '3. Las tablas ya están creadas y funcionando',
+        '1. Go to /dev-login to test the development login',
+        '2. Use the system normally',
+        '3. The tables have already been created and are working',
       ],
     });
   } catch (error: unknown) {
@@ -35,7 +37,7 @@ export async function POST() {
     return NextResponse.json(
       {
         error: errorMessage,
-        note: 'Error de conexión a la base de datos',
+        note: 'Error connecting to the database',
       },
       { status: 500 }
     );

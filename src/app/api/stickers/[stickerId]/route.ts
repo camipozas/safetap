@@ -15,6 +15,12 @@ const updateStickerSchema = z.object({
   textColor: z.string().optional(),
 });
 
+/**
+ * Update a sticker
+ * @param request - The request body
+ * @param params - The parameters
+ * @returns - The response body
+ */
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ stickerId: string }> }
@@ -22,14 +28,13 @@ export async function PUT(
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const resolvedParams = await params;
     const body = await request.json();
     const data = updateStickerSchema.parse(body);
 
-    // Verificar que el sticker pertenece al usuario
     const sticker = await prisma.sticker.findFirst({
       where: {
         id: resolvedParams.stickerId,
@@ -44,7 +49,6 @@ export async function PUT(
       );
     }
 
-    // Actualizar el sticker
     const updatedSticker = await prisma.sticker.update({
       where: { id: resolvedParams.stickerId },
       data: {
@@ -64,7 +68,7 @@ export async function PUT(
 
     console.error('Error updating sticker:', error);
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

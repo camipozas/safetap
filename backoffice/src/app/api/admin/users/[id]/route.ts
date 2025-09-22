@@ -9,6 +9,12 @@ const accelerateClient = new PrismaClient({
   datasourceUrl: process.env.DATABASE_URL, // This ensures we use the Accelerate URL
 });
 
+/**
+ * PUT - Update user
+ * @param request - The request object
+ * @param props - The properties object
+ * @returns - The response object
+ */
 export async function PUT(
   request: NextRequest,
   props: { params: Promise<{ id: string }> }
@@ -43,7 +49,6 @@ export async function PUT(
     }
 
     const updatedUser = await accelerateClient.$transaction(async (tx) => {
-      // Update user data
       const user = await tx.user.update({
         where: { id: userId },
         data: {
@@ -65,7 +70,6 @@ export async function PUT(
 
       console.error('User updated via Accelerate:', user);
 
-      // If name is being updated and user has stickers, update sticker nameOnSticker too
       if (name !== undefined) {
         const stickerUpdateResult = await tx.sticker.updateMany({
           where: { ownerId: userId },
@@ -77,7 +81,6 @@ export async function PUT(
         console.error('Stickers updated via Accelerate:', stickerUpdateResult);
       }
 
-      // If country is being updated and user has stickers, update sticker flagCode too
       if (country !== undefined) {
         const flagUpdateResult = await tx.sticker.updateMany({
           where: { ownerId: userId },
@@ -92,9 +95,7 @@ export async function PUT(
         );
       }
 
-      // Update emergency profile if provided (using optimized approach)
       if (profile) {
-        // Find or create the user's emergency profile (reuse existing)
         const emergencyProfile = await tx.emergencyProfile.findFirst({
           where: { userId },
           include: { EmergencyContact: true },
@@ -102,7 +103,6 @@ export async function PUT(
         });
 
         if (emergencyProfile) {
-          // Update existing profile
           await tx.emergencyProfile.update({
             where: { id: emergencyProfile.id },
             data: {
@@ -116,7 +116,6 @@ export async function PUT(
             },
           });
 
-          // Delete existing contacts and create new ones
           await tx.emergencyContact.deleteMany({
             where: { profileId: emergencyProfile.id },
           });
@@ -142,7 +141,6 @@ export async function PUT(
             });
           }
         } else {
-          // Create new profile for the user
           const newProfile = await tx.emergencyProfile.create({
             data: {
               id: `profile_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -160,7 +158,6 @@ export async function PUT(
             },
           });
 
-          // Create contacts for the new profile
           if (profile.contacts?.length > 0) {
             await tx.emergencyContact.createMany({
               data: profile.contacts.map(
@@ -201,6 +198,12 @@ export async function PUT(
   }
 }
 
+/**
+ * GET - Get user
+ * @param request - The request object
+ * @param props - The properties object
+ * @returns - The response object
+ */
 export async function GET(
   request: NextRequest,
   props: { params: Promise<{ id: string }> }

@@ -46,7 +46,12 @@ async function checkAdminAuth() {
   return { user };
 }
 
-// PUT /api/admin/promotions/[id] - Update promotion
+/**
+ * PUT - Update promotion
+ * @param req - The request object
+ * @param params - The parameters object
+ * @returns - The response object
+ */
 export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -64,7 +69,6 @@ export async function PUT(
     const json = await req.json();
     const data = updatePromotionSchema.parse(json);
 
-    // Check if promotion exists
     const existingPromotion = await prisma.promotion.findUnique({
       where: { id: resolvedParams.id },
     });
@@ -76,7 +80,6 @@ export async function PUT(
       );
     }
 
-    // Validate discount value based on type if both are provided
     if (data.discountType && data.discountValue) {
       if (data.discountType === 'PERCENTAGE' && data.discountValue > 100) {
         return NextResponse.json(
@@ -95,7 +98,6 @@ export async function PUT(
       );
     }
 
-    // Validate date range
     const startDate =
       data.startDate !== undefined
         ? data.startDate
@@ -116,7 +118,6 @@ export async function PUT(
       );
     }
 
-    // Check for conflicts with other active promotions if updating minQuantity
     if (
       data.minQuantity &&
       data.minQuantity !== existingPromotion.minQuantity
@@ -154,7 +155,6 @@ export async function PUT(
       }
     }
 
-    // Build update data
     const updateData: {
       name?: string;
       description?: string;
@@ -200,13 +200,18 @@ export async function PUT(
     }
 
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
 
-// GET /api/admin/promotions/[id] - Get specific promotion
+/**
+ * GET - Get specific promotion
+ * @param req - The request object
+ * @param params - The parameters object
+ * @returns - The response object
+ */
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -239,13 +244,18 @@ export async function GET(
   } catch (error) {
     console.error('Error fetching promotion:', error);
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
 
-// DELETE /api/admin/promotions/[id] - Soft delete (deactivate) promotion
+/**
+ * DELETE - Soft delete (deactivate) promotion
+ * @param req - The request object
+ * @param params - The parameters object
+ * @returns - The response object
+ */
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -261,7 +271,6 @@ export async function DELETE(
   try {
     const resolvedParams = await params;
 
-    // Check if promotion exists
     const existingPromotion = await prisma.promotion.findUnique({
       where: { id: resolvedParams.id },
     });
@@ -273,7 +282,6 @@ export async function DELETE(
       );
     }
 
-    // Soft delete by deactivating
     await prisma.promotion.update({
       where: { id: resolvedParams.id },
       data: { active: false },
@@ -283,7 +291,7 @@ export async function DELETE(
   } catch (error) {
     console.error('Error deleting promotion:', error);
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

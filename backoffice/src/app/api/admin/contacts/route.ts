@@ -22,7 +22,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Wrap profile creation, preferred update, and contact creation in a transaction
     const result = await prisma.$transaction(async (tx) => {
       let finalProfileId = profileId;
 

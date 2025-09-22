@@ -5,6 +5,10 @@ import { getServerSession } from 'next-auth';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
+/**
+ * Update discount code schema
+ * @returns - The schema object
+ */
 const updateDiscountSchema = z.object({
   code: z
     .string()
@@ -22,6 +26,10 @@ const updateDiscountSchema = z.object({
   active: z.boolean().optional(),
 });
 
+/**
+ * Check admin authentication
+ * @returns - The response object
+ */
 async function checkAdminAuth() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
@@ -40,7 +48,12 @@ async function checkAdminAuth() {
   return { user };
 }
 
-// PUT /api/discounts/[id] - Update discount code
+/**
+ * PUT - Update discount code
+ * @param req - The request object
+ * @param params - The parameters object
+ * @returns - The response object
+ */
 export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -58,7 +71,6 @@ export async function PUT(
     const json = await req.json();
     const data = updateDiscountSchema.parse(json);
 
-    // Check if discount exists
     const existingDiscount = await prisma.discountCode.findUnique({
       where: { id: resolvedParams.id },
     });
@@ -70,7 +82,6 @@ export async function PUT(
       );
     }
 
-    // Validate amount based on type if both are provided
     if (data.type && data.amount) {
       if (data.type === 'PERCENT' && data.amount > 100) {
         return NextResponse.json(
@@ -89,7 +100,6 @@ export async function PUT(
       );
     }
 
-    // If updating code, check for uniqueness
     if (data.code) {
       const normalizedCode = data.code.trim().toUpperCase();
       const codeExists = await prisma.discountCode.findFirst({
@@ -158,7 +168,12 @@ export async function PUT(
   }
 }
 
-// GET /api/discounts/[id] - Get specific discount code
+/**
+ * GET - Get specific discount code
+ * @param req - The request object
+ * @param params - The parameters object
+ * @returns - The response object
+ */
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -211,7 +226,12 @@ export async function GET(
   }
 }
 
-// DELETE /api/discounts/[id] - Soft delete (deactivate) discount code
+/**
+ * DELETE - Soft delete (deactivate) discount code
+ * @param req - The request object
+ * @param params - The parameters object
+ * @returns - The response object
+ */
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -227,7 +247,6 @@ export async function DELETE(
   try {
     const resolvedParams = await params;
 
-    // Check if discount exists
     const existingDiscount = await prisma.discountCode.findUnique({
       where: { id: resolvedParams.id },
     });
@@ -239,7 +258,6 @@ export async function DELETE(
       );
     }
 
-    // Soft delete by deactivating
     await prisma.discountCode.update({
       where: { id: resolvedParams.id },
       data: { active: false },

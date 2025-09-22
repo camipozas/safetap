@@ -257,7 +257,6 @@ export default function ProfileForm({
         return;
       }
 
-      // En modo múltiple, validar que al menos un sticker esté seleccionado
       if (!stickerId && selectedStickerIds.length === 0) {
         setServerError('Debe seleccionar al menos un sticker para actualizar');
         return;
@@ -299,10 +298,9 @@ export default function ProfileForm({
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          stickerId, // Para modo individual
+          stickerId,
           profileId: profile?.id,
           values,
-          // Para modo múltiple: enviar los stickers seleccionados conscientemente
           selectedStickerIds:
             !stickerId && selectedStickerIds.length > 0
               ? selectedStickerIds
@@ -329,7 +327,6 @@ export default function ProfileForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
       {stickerId && (
-        // Solo mostrar campo de nombre en modo individual
         <div>
           <label className="label" htmlFor="stickerName">
             Nombre en el sticker
@@ -353,7 +350,7 @@ export default function ProfileForm({
         </div>
       )}
 
-      {/* Profile Template Manager - Solo mostrar cuando es apropiado */}
+      {/* Profile Template Manager - Only show when appropriate */}
       {showTemplates && (
         <div>
           <ProfileTemplateManager
@@ -583,7 +580,7 @@ export default function ProfileForm({
         )}
       </fieldset>
 
-      {/* Salud Previsional */}
+      {/* Health Previsional */}
       <fieldset className="border rounded-md p-3">
         <legend className="font-medium">Salud Previsional</legend>
         <div className="space-y-3">
@@ -637,7 +634,7 @@ export default function ProfileForm({
             </div>
           )}
 
-          {/* Show custom Isapre field when "Otro" is selected */}
+          {/* Show custom Isapre field when "Other" is selected */}
           {watchedInsuranceType === 'isapre' && watchedIsapre === 'Otro' && (
             <div>
               <label className="label" htmlFor="isapreCustom">

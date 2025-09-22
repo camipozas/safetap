@@ -21,7 +21,6 @@ export default function AdminManagementPage() {
     'ADMIN'
   );
 
-  // Check if current user can manage admins
   const canManage =
     session?.user?.role && canManageAdmins(session.user.role as string);
 
@@ -31,6 +30,9 @@ export default function AdminManagementPage() {
     }
   }, [canManage]);
 
+  /**
+   * Fetch admin users
+   */
   const fetchAdminUsers = async () => {
     try {
       const response = await fetch('/api/admin/admin-users');
@@ -45,6 +47,10 @@ export default function AdminManagementPage() {
     }
   };
 
+  /**
+   * Add admin user
+   * @param e - The form event
+   */
   const addAdminUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newUserEmail.trim()) return;
@@ -73,6 +79,11 @@ export default function AdminManagementPage() {
     }
   };
 
+  /**
+   * Update user role
+   * @param userId - The user id
+   * @param newRole - The new role
+   */
   const updateUserRole = async (userId: string, newRole: string) => {
     try {
       const response = await fetch(`/api/admin/admin-users/${userId}`, {
@@ -93,6 +104,10 @@ export default function AdminManagementPage() {
     }
   };
 
+  /**
+   * Remove admin access
+   * @param userId - The user id
+   */
   const removeAdminAccess = async (userId: string) => {
     if (
       !confirm('¿Estás seguro de remover el acceso de admin a este usuario?')

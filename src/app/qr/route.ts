@@ -5,6 +5,11 @@ import { auth } from '@/lib/auth';
 import { getEmergencyProfileForSticker } from '@/lib/emergency-profile-service';
 import { prisma } from '@/lib/prisma';
 
+/**
+ * Get a QR code for a sticker
+ * @param request - The request body
+ * @returns - The response body
+ */
 export async function GET(request: NextRequest) {
   const session = await auth();
   if (!session?.user?.email) {
@@ -21,7 +26,6 @@ export async function GET(request: NextRequest) {
     return new Response('Sticker ID is required', { status: 400 });
   }
 
-  // Verificar que el usuario es propietario del sticker
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
   });
@@ -41,14 +45,13 @@ export async function GET(request: NextRequest) {
     return new Response('Sticker not found or access denied', { status: 404 });
   }
 
-  // Solo permitir descarga si el sticker está activo
+  // Only allow download if the sticker is active
   if (sticker.status !== 'ACTIVE') {
     return new Response('Sticker must be active to download QR code', {
       status: 400,
     });
   }
 
-  // Obtener el perfil de emergencia usando la lógica existente
   const emergencyProfile = await getEmergencyProfileForSticker(stickerId);
 
   if (!emergencyProfile) {
@@ -57,10 +60,8 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Construir la URL del QR para redireccionar a información de emergencia
   const emergencyProfileUrl = `${process.env.NEXTAUTH_URL}/qr/${emergencyProfile.id}`;
   const qrApiUrl = `/api/qr/generate?url=${encodeURIComponent(emergencyProfileUrl)}&format=${format}&size=${size}&dpi=${dpi}`;
 
-  // Redirigir al endpoint de generación de QR
   redirect(qrApiUrl);
 }

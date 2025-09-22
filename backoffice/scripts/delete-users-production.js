@@ -73,7 +73,6 @@ async function deleteUsers() {
     for (const email of usersToDelete) {
       console.log(`\n🔍 Procesando: ${email}`);
 
-      // Buscar el usuario
       const user = await prisma.user.findUnique({
         where: { email },
         select: {
@@ -92,24 +91,24 @@ async function deleteUsers() {
         `✅ Usuario encontrado: ${user.email} (ID: ${user.id}, Rol: ${user.role})`
       );
 
-      // Verificar cuentas asociadas
+      // Verify associated accounts
       const accounts = await prisma.account.findMany({
         where: { userId: user.id },
       });
 
       console.log(`📊 Cuentas asociadas: ${accounts.length}`);
 
-      // Verificar sesiones asociadas
+      // Verify associated sessions
       const sessions = await prisma.session.findMany({
         where: { userId: user.id },
       });
 
       console.log(`📊 Sesiones asociadas: ${sessions.length}`);
 
-      // Ejecutar eliminación
+      // Execute deletion
       console.log('🗑️  Ejecutando eliminación...');
 
-      // 1. Eliminar cuentas asociadas
+      // 1. Delete associated accounts
       if (accounts.length > 0) {
         await prisma.account.deleteMany({
           where: { userId: user.id },
@@ -117,7 +116,7 @@ async function deleteUsers() {
         console.log('✅ Cuentas eliminadas');
       }
 
-      // 2. Eliminar sesiones asociadas
+      // 2. Delete associated sessions
       if (sessions.length > 0) {
         await prisma.session.deleteMany({
           where: { userId: user.id },
@@ -125,7 +124,7 @@ async function deleteUsers() {
         console.log('✅ Sesiones eliminadas');
       }
 
-      // 3. Cambiar rol a USER
+      // 3. Change role to USER
       const updatedUser = await prisma.user.update({
         where: { id: user.id },
         data: { role: config.roles.USER },

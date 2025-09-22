@@ -11,10 +11,10 @@ interface StickerPreviewProps {
   flagCode: string;
   stickerColor?: string;
   textColor?: string;
-  showRealQR?: boolean; // To distinct between preview and real sticker
-  stickerId?: string; // For real stickers
-  serial?: string; // For real stickers
-  slug?: string; // For using slug instead of stickerId
+  showRealQR?: boolean;
+  stickerId?: string;
+  serial?: string;
+  slug?: string;
   className?: string;
 }
 
@@ -23,7 +23,7 @@ const StickerPreviewComponent = ({
   flagCode,
   stickerColor = '#f1f5f9',
   textColor = '#000000',
-  showRealQR = true, // Default to true in backoffice (no preview badge)
+  showRealQR = true,
   stickerId,
   serial,
   slug,
@@ -31,18 +31,17 @@ const StickerPreviewComponent = ({
 }: StickerPreviewProps) => {
   const flag = getCountryFlag(flagCode);
 
-  // Use slug if provided, otherwise use stickerId or serial
   const identifier = slug || serial || stickerId || 'demo-sticker';
 
   return (
     <div className={`relative ${className}`} data-testid="sticker-preview">
-      {/* Sticker container */}
+      {/* Sticker Container */}
       <div
         className="w-40 h-40 sm:w-48 sm:h-48 rounded-xl shadow-md border border-gray-200 p-2 sm:p-3 flex flex-col justify-between"
         style={{ backgroundColor: stickerColor }}
         data-testid="sticker-container"
       >
-        {/* Header */}
+        {/* Header SafeTap */}
         <div className="text-center">
           <h1
             className="text-sm sm:text-lg font-bold mb-1"
@@ -52,7 +51,7 @@ const StickerPreviewComponent = ({
           </h1>
         </div>
 
-        {/* Personal info */}
+        {/* Personal Information */}
         <div className="flex items-center justify-center gap-1 sm:gap-2 mb-2 sm:mb-3">
           <span className="text-xl sm:text-2xl">{flag}</span>
           <div className="text-center">
@@ -65,7 +64,7 @@ const StickerPreviewComponent = ({
           </div>
         </div>
 
-        {/* QR Code and NFC */}
+        {/* QR Code and NFC Icon */}
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <StickerQrCode
@@ -73,13 +72,13 @@ const StickerPreviewComponent = ({
               serial={serial}
               size={64}
               isPreview={!showRealQR}
-              highQuality={true} // Forzar alta calidad en backoffice
+              highQuality={true}
               className="mx-auto"
             />
           </div>
 
           <div className="flex-1 text-center">
-            {/* NFC Icon as image for better capture */}
+            {/* NFC Icon as image */}
             <div className="mb-1">
               <Image
                 className="w-6 h-6 sm:w-8 sm:h-8 mx-auto"
@@ -110,7 +109,7 @@ const StickerPreviewComponent = ({
         </div>
       </div>
 
-      {/* NO Preview badge in backoffice - always show real sticker */}
+      {/* NO Preview badge - always show real sticker */}
     </div>
   );
 };

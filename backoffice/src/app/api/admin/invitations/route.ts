@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { environment } from '@/environment/config';
 import { authOptions } from '@/lib/auth';
 import { createEmailService } from '@/lib/email';
@@ -7,6 +8,10 @@ import crypto from 'crypto';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 
+/**
+ * GET - Get pending invitations
+ * @returns - The response object
+ */
 export async function GET() {
   try {
     if (
@@ -31,7 +36,7 @@ export async function GET() {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
@@ -39,7 +44,7 @@ export async function GET() {
     });
 
     if (!user || !hasPermission(user.role, 'canManageAdmins')) {
-      return NextResponse.json({ error: 'Sin permisos' }, { status: 403 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const invitations = await prisma.adminInvitation.findMany({
@@ -58,12 +63,17 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching invitations:', error);
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
 
+/**
+ * POST - Create invitation
+ * @param request - The request object
+ * @returns - The response object
+ */
 export async function POST(request: NextRequest) {
   console.log('📨 Starting invitation creation process');
   try {
@@ -85,7 +95,6 @@ export async function POST(request: NextRequest) {
       environment.app.isDevelopment ||
       environment.app.environment === 'test'
     ) {
-      // eslint-disable-next-line no-console
       console.log(
         `🚀 ${environment.app.environment} mode: Bypassing authentication for invitation creation`
       );
@@ -252,7 +261,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(responseData);
   } catch (error) {
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

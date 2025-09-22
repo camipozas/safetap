@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+/**
+ * GET - Test Accelerate connection
+ * @returns - The response object
+ */
 export async function GET() {
   try {
-    // Create direct connection to Accelerate
     const { PrismaClient } = await import('@prisma/client');
     const directPrisma = new PrismaClient({
       log: ['query', 'info', 'warn'],
     });
 
-    // Test direct read from Accelerate
     const camilaUser = await directPrisma.user.findUnique({
       where: { email: 'camila@safetap.cl' },
       select: {
@@ -59,19 +61,21 @@ export async function GET() {
   }
 }
 
-export async function PUT(request: NextRequest) {
+/**
+ * PUT - Update Accelerate connection
+ * @param request - The request object
+ * @returns - The response object
+ */
+export async function PUT(_request: NextRequest) {
   try {
-    const { name, country } = await request.json();
+    const { name, country } = await _request.json();
 
-    // Create direct connection to Accelerate
     const { PrismaClient } = await import('@prisma/client');
     const directPrisma = new PrismaClient({
       log: ['query', 'info', 'warn'],
     });
 
-    // Direct update in Accelerate with transaction
     const result = await directPrisma.$transaction(async (tx) => {
-      // Update user
       const updatedUser = await tx.user.update({
         where: { email: 'camila@safetap.cl' },
         data: {
@@ -88,7 +92,6 @@ export async function PUT(request: NextRequest) {
         },
       });
 
-      // Update associated stickers
       const stickerUpdate = await tx.sticker.updateMany({
         where: { ownerId: updatedUser.id },
         data: {
@@ -104,7 +107,6 @@ export async function PUT(request: NextRequest) {
       };
     });
 
-    // Verify update with fresh read
     const verifyUser = await directPrisma.user.findUnique({
       where: { email: 'camila@safetap.cl' },
       select: {

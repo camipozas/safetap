@@ -1,5 +1,5 @@
 /**
- * Helper para generar referencias de pago consistentes y fáciles de recordar
+ * Helper to generate consistent and easy-to-remember payment references
  */
 
 export interface PaymentReferenceData {
@@ -15,7 +15,7 @@ export type ReferenceFormat =
   | 'DATE_PRODUCT';
 
 /**
- * Genera una referencia de pago en el formato especificado
+ * Generate a payment reference in the specified format
  */
 export function generatePaymentReference(
   data: PaymentReferenceData,
@@ -49,7 +49,7 @@ export function generatePaymentReference(
 }
 
 /**
- * Genera una referencia de pago con formato de fecha + secuencial (recomendado)
+ * Generate a payment reference with date + sequential format (recommended)
  */
 export function generateSequentialReference(
   date: Date,
@@ -59,7 +59,7 @@ export function generateSequentialReference(
 }
 
 /**
- * Genera una referencia de pago con formato de fecha + iniciales del cliente
+ * Generate a payment reference with date + customer initials format
  */
 export function generateCustomerReference(
   date: Date,
@@ -72,7 +72,7 @@ export function generateCustomerReference(
 }
 
 /**
- * Genera una referencia de pago con formato de fecha + código de producto
+ * Generate a payment reference with date + product code format
  */
 export function generateProductReference(
   date: Date,
@@ -85,7 +85,7 @@ export function generateProductReference(
 }
 
 /**
- * Valida si una referencia tiene el formato correcto
+ * Validate if a reference has the correct format
  */
 export function isValidPaymentReference(reference: string): boolean {
   const pattern = /^SAFETAP-\d{4}-\d{2}-\d{2}-[A-Z0-9]{1,3}$/;
@@ -93,7 +93,7 @@ export function isValidPaymentReference(reference: string): boolean {
 }
 
 /**
- * Extrae información de una referencia válida
+ * Extract information from a valid reference
  */
 export function parsePaymentReference(reference: string): {
   date: Date;
@@ -110,7 +110,7 @@ export function parsePaymentReference(reference: string): {
 
   const parts = reference.split('-');
   const year = parseInt(parts[1]);
-  const month = parseInt(parts[2]) - 1; // Month is 0-indexed
+  const month = parseInt(parts[2]) - 1;
   const day = parseInt(parts[3]);
   const identifier = parts[4];
 
@@ -122,7 +122,7 @@ export function parsePaymentReference(reference: string): {
 }
 
 /**
- * Ejemplos de uso
+ * Examples of use
  */
 export const REFERENCE_EXAMPLES = {
   sequential: [

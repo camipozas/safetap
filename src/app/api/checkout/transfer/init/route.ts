@@ -14,7 +14,7 @@ import { checkoutSchema } from '@/lib/validators';
 
 const bodySchema = checkoutSchema.extend({
   discountCode: z.string().optional(),
-  tempReference: z.string().optional(), // Accept temporary reference from frontend
+  tempReference: z.string().optional(),
 });
 
 export async function POST(req: Request) {
@@ -31,10 +31,8 @@ export async function POST(req: Request) {
     const data = bodySchema.parse(json);
     console.log('✅ Checkout data validation passed');
 
-    // Create or find user by email
     console.log('🔍 Creating or finding user:', data.email);
 
-    // First, check if user exists to determine whether to update name
     const existingUser = await prisma.user.findUnique({
       where: { email: data.email },
       select: { id: true, name: true },
@@ -50,9 +48,7 @@ export async function POST(req: Request) {
         updatedAt: new Date(),
       },
       update: {
-        // Only update name if user doesn't have one (preserve SSO names)
         ...(existingUser?.name ? {} : { name: data.nameOnSticker }),
-        // Always update country as it can change
         country: data.flagCode,
         updatedAt: new Date(),
       },
@@ -64,13 +60,11 @@ export async function POST(req: Request) {
       country: user.country,
     });
 
-    // Calculate base amount
     const baseAmount = PRICE_PER_STICKER_CLP * data.quantity;
 
-    // Apply discount if provided
     let discountResult = null;
     let finalAmount = baseAmount;
-    let discountCodeId = null;
+    let discountCodeId: string | null | undefined = null;
     let discountAmount = 0;
 
     if (data.discountCode) {
@@ -79,7 +73,7 @@ export async function POST(req: Request) {
         code: data.discountCode,
         cartTotal: baseAmount,
         userId: user.id,
-        preview: false, // This will increment usage count and create redemption
+        preview: false,
       });
 
       if (discountResult.valid && discountResult.newTotal !== undefined) {
@@ -100,10 +94,8 @@ export async function POST(req: Request) {
       }
     }
 
-    // Generate unique payment reference or use temp reference
     let reference: string;
     if (data.tempReference) {
-      // Validate that the temporary reference doesn't already exist in database
       const existingPayment = await prisma.payment.findUnique({
         where: { reference: data.tempReference },
       });
@@ -151,7 +143,7 @@ export async function POST(req: Request) {
           stickerColor: data.stickerColor || '#f1f5f9',
           textColor: data.textColor || '#000000',
           status: 'ORDERED',
-          groupId: null, // Single sticker purchases do NOT get a groupId
+          groupId: null,
           updatedAt: new Date(),
         },
       });
@@ -170,7 +162,7 @@ export async function POST(req: Request) {
           id: crypto.randomUUID(),
           userId: user.id,
           stickerId: sticker.id,
-          quantity: 1, // Single sticker purchase
+          quantity: 1,
           amount: finalAmount,
           originalAmount: discountCodeId ? baseAmount : undefined,
           discountCodeId,

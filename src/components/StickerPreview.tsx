@@ -10,9 +10,10 @@ interface StickerPreviewProps {
   flagCode: string;
   stickerColor?: string;
   textColor?: string;
-  showRealQR?: boolean; // To distinct between preview and real sticker
-  stickerId?: string; // For real stickers
-  serial?: string; // For real stickers
+  showRealQR?: boolean;
+  stickerId?: string;
+  serial?: string;
+  slug?: string;
   className?: string;
 }
 

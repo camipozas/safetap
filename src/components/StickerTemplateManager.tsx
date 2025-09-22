@@ -39,7 +39,7 @@ export default function StickerTemplateManager({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [hasTemplates, setHasTemplates] = useState<boolean | null>(null);
 
-  // Verificar si hay plantillas disponibles al montar el componente
+  // Verify if there are templates available when the component is mounted
   useEffect(() => {
     checkTemplatesAvailability();
   }, []);
@@ -75,7 +75,7 @@ export default function StickerTemplateManager({
       const response = await fetch('/api/profile/templates');
       if (response.ok) {
         const data = await response.json();
-        // Combinar templates de stickers existentes y diseños guardados
+        // Combine existing sticker templates and saved designs
         const allTemplates = [
           ...(data.stickerTemplates || []),
           ...(data.stickerDesigns || []),
@@ -127,8 +127,8 @@ export default function StickerTemplateManager({
         setShowSaveDialog(false);
         setTemplateName('');
         onSaveAsTemplate?.(currentCustomization, templateName.trim());
-        await checkTemplatesAvailability(); // Recheck templates availability
-        loadTemplates(); // Reload templates
+        await checkTemplatesAvailability();
+        loadTemplates();
       } else {
         setSaveError('Error al guardar la plantilla');
       }
@@ -137,12 +137,12 @@ export default function StickerTemplateManager({
     }
   };
 
-  // No mostrar nada si no hay plantillas disponibles y no se debe mostrar la opción de guardar
+  // No show anything if there are no templates available and the save option is not shown
   if (hasTemplates === false && !showSaveOption) {
     return null;
   }
 
-  // Mostrar indicador de carga mientras se verifica la disponibilidad de plantillas
+  // Show loading indicator while checking the availability of templates
   if (hasTemplates === null) {
     return null;
   }

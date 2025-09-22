@@ -3,6 +3,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+/**
+ * Activate a sticker
+ * @param request - The request body
+ * @param params - The parameters
+ * @returns - The response body
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ stickerId: string }> }
@@ -10,12 +16,11 @@ export async function POST(
   try {
     const session = await auth();
     if (!session?.user?.email) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { stickerId } = await params;
 
-    // Verificar que el sticker pertenece al usuario e incluir pagos
     const sticker = await prisma.sticker.findFirst({
       where: {
         id: stickerId,
@@ -38,7 +43,6 @@ export async function POST(
       );
     }
 
-    // Verificar que hay un pago verificado o completado
     const validPayment = sticker.Payment.find(
       (payment) => payment.status === 'VERIFIED' || payment.status === 'PAID'
     );
@@ -53,7 +57,6 @@ export async function POST(
       );
     }
 
-    // Solo permitir activación si está en estado SHIPPED
     if (sticker.status !== 'SHIPPED') {
       return NextResponse.json(
         {
@@ -64,7 +67,6 @@ export async function POST(
       );
     }
 
-    // Activar el sticker
     await prisma.sticker.update({
       where: { id: stickerId },
       data: { status: 'ACTIVE' },
@@ -74,7 +76,7 @@ export async function POST(
   } catch (error) {
     console.error('Error activating sticker:', error);
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

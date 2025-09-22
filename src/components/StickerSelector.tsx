@@ -17,7 +17,7 @@ interface StickerSelectorProps {
   onSelectionChange: (stickerIds: string[]) => void;
   className?: string;
   showTitle?: boolean;
-  specificStickerId?: string; // Si se proporciona, solo muestra este sticker y lo deshabilita
+  specificStickerId?: string;
 }
 
 export default function StickerSelector({
@@ -39,20 +39,19 @@ export default function StickerSelector({
         if (response.ok) {
           const data = await response.json();
 
-          // Si hay un sticker específico, mostrar solo ese
           const filteredStickers = specificStickerId
             ? data.stickers.filter((s: Sticker) => s.id === specificStickerId)
             : data.stickers;
 
           setStickers(filteredStickers);
 
-          // Si hay un sticker específico, asegurar que esté seleccionado
+          // If there is a specific sticker, ensure it is selected
           if (specificStickerId) {
             if (!selectedStickers.includes(specificStickerId)) {
               onSelectionChange([specificStickerId]);
             }
           }
-          // NO seleccionar automáticamente en modo múltiple - el usuario debe elegir conscientemente
+          // NO select automatically in multiple mode - the user must choose consciously
         } else {
           throw new Error('Error al cargar stickers');
         }

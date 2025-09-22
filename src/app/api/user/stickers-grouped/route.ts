@@ -14,7 +14,11 @@ interface EmergencyProfile {
   insurance: JsonValue;
 }
 
-// Función para crear un "fingerprint" de perfil médico para comparación
+/**
+ * Create a medical fingerprint for a profile
+ * @param profile - The profile to create a fingerprint for
+ * @returns - The fingerprint
+ */
 function createMedicalFingerprint(profile: EmergencyProfile | null): string {
   if (!profile) {
     return 'no-profile';
@@ -76,7 +80,11 @@ interface StickerGroup {
   } | null;
 }
 
-// GET /api/user/stickers-grouped - Obtener stickers del usuario agrupados por perfil médico similar
+/**
+ * Get stickers for the user grouped by similar medical profile
+ * @param request - The request body
+ * @returns - The response body
+ */
 export async function GET(request: Request) {
   try {
     const session = await auth();
@@ -109,8 +117,8 @@ export async function GET(request: Request) {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Si hay un sticker a excluir, obtener su perfil para comparación
-    let referenceFingerprint = null;
+    // If there is a sticker to exclude, get its profile for comparison
+    let referenceFingerprint: string | null = null;
     if (excludeStickerId && filterSimilar) {
       const referenceSticker = await prisma.sticker.findFirst({
         where: {
@@ -129,7 +137,7 @@ export async function GET(request: Request) {
       }
     }
 
-    // Agrupar stickers por nombre y perfil médico similar
+    // Group stickers by name and similar medical profile
     const processedStickers: ProcessedSticker[] = userStickers.map(
       (sticker) => {
         const fingerprint = createMedicalFingerprint(sticker.EmergencyProfile);
@@ -168,14 +176,14 @@ export async function GET(request: Request) {
       }
     );
 
-    // Filtrar por similitud si se requiere
+    // Filter by similarity if required
     const filteredStickers = referenceFingerprint
       ? processedStickers.filter(
           (sticker) => sticker.medicalFingerprint === referenceFingerprint
         )
       : processedStickers;
 
-    // Agrupar por nombre y perfil médico
+    // Group by name and medical profile
     const groupedStickers = filteredStickers.reduce(
       (groups, sticker) => {
         const key = `${sticker.name}|${sticker.medicalFingerprint}`;
@@ -188,7 +196,7 @@ export async function GET(request: Request) {
       {} as Record<string, ProcessedSticker[]>
     );
 
-    // Convertir a array y agregar información de grupo
+    // Convert to array and add group information
     const stickerGroups: StickerGroup[] = Object.entries(groupedStickers).map(
       ([key, stickers]) => {
         const [name] = key.split('|');
@@ -220,7 +228,7 @@ export async function GET(request: Request) {
       }
     );
 
-    // Ordenar grupos: primero los que tienen perfil, luego por nombre
+    // Sort groups: first the ones with a profile, then by name
     stickerGroups.sort((a, b) => {
       if (a.hasAnyProfile && !b.hasAnyProfile) {
         return -1;

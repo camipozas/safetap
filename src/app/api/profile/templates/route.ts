@@ -5,7 +5,11 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-// GET /api/profile/templates - Obtener templates del usuario
+/**
+ * Get templates for the user
+ * @param request - The request body
+ * @returns - The response body
+ */
 export async function GET(request: Request) {
   try {
     const session = await auth();
@@ -13,11 +17,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Obtener el parámetro de exclusión desde query params
     const { searchParams } = new URL(request.url);
     const excludeStickerId = searchParams.get('excludeStickerId');
 
-    // Obtener perfiles de emergencia usando una query optimizada que busca por email
     const allUserProfiles = await prisma.emergencyProfile.findMany({
       where: {
         User: {
@@ -37,22 +39,19 @@ export async function GET(request: Request) {
       orderBy: { updatedByUserAt: 'desc' },
     });
 
-    // Separar entre perfil general y perfiles de stickers específicos
     const emergencyProfile = allUserProfiles.find(
       (profile) => !profile.stickerId
     );
 
-    // Si no hay perfil general pero sí hay perfiles de stickers, usar el más reciente como base
     const fallbackEmergencyProfile =
       !emergencyProfile && allUserProfiles.length > 0
-        ? allUserProfiles[0] // El más reciente por el orderBy
+        ? allUserProfiles[0]
         : null;
 
     const stickerProfiles = allUserProfiles.filter(
       (profile) => profile.stickerId && profile.stickerId !== excludeStickerId
     );
 
-    // Obtener todos los stickers del usuario para extraer diseños únicos
     const userStickers = await prisma.sticker.findMany({
       where: {
         User: {
@@ -70,7 +69,6 @@ export async function GET(request: Request) {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Obtener diseños guardados explícitamente
     const stickerDesigns = await prisma.stickerDesign.findMany({
       where: {
         User: {
@@ -80,7 +78,6 @@ export async function GET(request: Request) {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Crear templates únicos de diseño basados en stickers existentes
     const stickerTemplates = userStickers.map((sticker) => ({
       id: `sticker-${sticker.id}`,
       name: `Diseño ${sticker.nameOnSticker}`,
@@ -128,7 +125,7 @@ export async function GET(request: Request) {
               })),
             }
           : null,
-      // Perfiles de otros stickers como templates
+      // Other stickers as templates
       stickerProfileTemplates: stickerProfiles.map((profile) => ({
         id: profile.id,
         name: `Perfil de ${profile.Sticker?.nameOnSticker || 'Sticker'}`,
@@ -152,9 +149,8 @@ export async function GET(request: Request) {
           preferred: contact.preferred,
         })),
       })),
-      // Templates de diseño de stickers
+
       stickerTemplates,
-      // Diseños guardados explícitamente
       stickerDesigns: stickerDesigns.map((design) => ({
         id: design.id,
         name: design.name,
@@ -188,7 +184,11 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/profile/templates - Guardar nuevo template de diseño
+/**
+ * Save a new template design
+ * @param request - The request body
+ * @returns - The response body
+ */
 export async function POST(request: Request) {
   try {
     const session = await auth();
@@ -227,7 +227,7 @@ export async function POST(request: Request) {
       message: 'Diseño guardado exitosamente',
     });
   } catch (error) {
-    console.error('Error saving template:', error);
+    console.error('Error saving template design:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

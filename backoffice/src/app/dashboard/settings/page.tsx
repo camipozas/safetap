@@ -38,28 +38,24 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [inviteLoading, setInviteLoading] = useState(false);
 
-  // Filter states
   const [emailFilter, setEmailFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState<FilterRole>('ALL');
   const [invitationEmailFilter, setInvitationEmailFilter] = useState('');
   const [invitationRoleFilter, setInvitationRoleFilter] =
     useState<FilterRole>('ALL');
 
-  // Confirmation modal states
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showRevokeModal, setShowRevokeModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const [inviteToRevoke, setInviteToRevoke] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Notification state
   const [notification, setNotification] = useState<{
     show: boolean;
     message: string;
     type: 'success' | 'error' | 'warning';
   }>({ show: false, message: '', type: 'success' });
 
-  // Show notification function
   const showNotification = (
     message: string,
     type: 'success' | 'error' | 'warning' = 'success'
@@ -70,7 +66,6 @@ export default function SettingsPage() {
     }, 5000);
   };
 
-  // Filter functions
   const filteredAdminUsers = adminUsers.filter((user) => {
     const emailMatch =
       user.email.toLowerCase().includes(emailFilter.toLowerCase()) ||
@@ -90,7 +85,6 @@ export default function SettingsPage() {
     return emailMatch && roleMatch;
   });
 
-  // Fetch admin users and pending invitations
   useEffect(() => {
     fetchAdminUsers();
     fetchPendingInvitations();
@@ -101,7 +95,6 @@ export default function SettingsPage() {
       const response = await fetch('/api/admin/admin-users');
       if (response.ok) {
         const data = await response.json();
-        // Asegurar que data es un array
         if (Array.isArray(data)) {
           setAdminUsers(data);
         } else {
@@ -109,7 +102,7 @@ export default function SettingsPage() {
         }
       }
     } catch (error) {
-      setAdminUsers([]); // Asegurar que siempre sea un array
+      setAdminUsers([]);
     } finally {
       setLoading(false);
     }
@@ -120,7 +113,6 @@ export default function SettingsPage() {
       const response = await fetch('/api/admin/invitations');
       if (response.ok) {
         const data = await response.json();
-        // Asegurar que data.invitations es un array
         if (Array.isArray(data.invitations)) {
           setPendingInvitations(data.invitations);
         } else {
@@ -128,7 +120,7 @@ export default function SettingsPage() {
         }
       }
     } catch (error) {
-      setPendingInvitations([]); // Asegurar que siempre sea un array
+      setPendingInvitations([]);
     }
   };
 
@@ -254,7 +246,7 @@ export default function SettingsPage() {
       });
 
       if (response.ok) {
-        fetchAdminUsers(); // Refresh the list
+        fetchAdminUsers();
         showNotification(
           `Rol actualizado a ${newRole} exitosamente`,
           'success'
@@ -262,12 +254,10 @@ export default function SettingsPage() {
       } else {
         const errorData = await response.json();
         showNotification(errorData.error || 'Error al actualizar rol', 'error');
-        // Refresh to revert the UI change
         fetchAdminUsers();
       }
     } catch (error) {
       showNotification('Error al actualizar rol', 'error');
-      // Refresh to revert the UI change
       fetchAdminUsers();
     }
   };

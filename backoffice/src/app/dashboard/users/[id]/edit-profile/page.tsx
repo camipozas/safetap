@@ -33,7 +33,6 @@ export default async function EditProfilePage({
     return <div>Usuario no encontrado</div>;
   }
 
-  // Obtener el perfil de emergencia principal del usuario
   const profile = user.EmergencyProfile?.[0];
   if (!profile) {
     return <div>El usuario no tiene un perfil de emergencia configurado</div>;
@@ -52,7 +51,6 @@ export default async function EditProfilePage({
     const medicationsString = formData.get('medications') as string;
     const notes = formData.get('notes') as string;
 
-    // Procesar información de salud previsional
     const insuranceType = formData.get('insuranceType') as string;
     const isapreProvider = formData.get('isapreProvider') as string;
     const isapreCustom = formData.get('isapreCustom') as string;
@@ -105,7 +103,6 @@ export default async function EditProfilePage({
           },
         });
 
-        // Actualizar el nombre en todos los stickers del usuario
         await prisma.sticker.updateMany({
           where: { ownerId: user.id },
           data: {
@@ -129,12 +126,10 @@ export default async function EditProfilePage({
         },
       });
 
-      // También actualizar contactos si existen
       const contactNames = formData.getAll('contactName') as string[];
       const contactPhones = formData.getAll('contactPhone') as string[];
       const contactRelations = formData.getAll('contactRelation') as string[];
 
-      // Eliminar contactos existentes y crear nuevos
       await prisma.emergencyContact.deleteMany({
         where: { profileId: profile.id },
       });
@@ -148,7 +143,7 @@ export default async function EditProfilePage({
               name: contactNames[i],
               phone: contactPhones[i],
               relation: contactRelations[i] || 'Contacto de emergencia',
-              preferred: i === 0, // El primero es preferido
+              preferred: i === 0,
               updatedAt: new Date(),
             },
           });
@@ -172,7 +167,7 @@ export default async function EditProfilePage({
       </div>
 
       <form action={handleSubmit} className="space-y-6">
-        {/* Información del Usuario */}
+        {/* User Information */}
         <div className="bg-white p-6 rounded-lg border">
           <h2 className="text-lg font-semibold mb-4">Información Personal</h2>
 
@@ -195,7 +190,7 @@ export default async function EditProfilePage({
           </div>
         </div>
 
-        {/* Información médica */}
+        {/* Medical Information */}
         <div className="bg-white p-6 rounded-lg border">
           <h2 className="text-lg font-semibold mb-4">Información Médica</h2>
 
@@ -289,7 +284,7 @@ export default async function EditProfilePage({
           </div>
         </div>
 
-        {/* Contactos de emergencia */}
+        {/* Emergency Contacts */}
         <div className="bg-white p-6 rounded-lg border">
           <h2 className="text-lg font-semibold mb-4">
             Contactos de Emergencia
@@ -357,7 +352,7 @@ export default async function EditProfilePage({
           )}
         </div>
 
-        {/* Salud Previsional */}
+        {/* Previsional Health */}
         <div className="bg-white p-6 rounded-lg border">
           <h2 className="text-lg font-semibold mb-4">Salud Previsional</h2>
 
@@ -465,7 +460,7 @@ export default async function EditProfilePage({
           </div>
         </div>
 
-        {/* Botones de acción */}
+        {/* Action Buttons */}
         <div className="flex gap-4">
           <button
             type="submit"

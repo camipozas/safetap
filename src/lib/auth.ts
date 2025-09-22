@@ -26,7 +26,6 @@ export const authOptions: NextAuthOptions = {
         profileId: profile?.sub,
       });
 
-      // Permitir sign-in para usuarios de Google (nuevos y existentes)
       if (account?.provider === 'google') {
         try {
           // Check if user exists in database
@@ -57,7 +56,6 @@ export const authOptions: NextAuthOptions = {
               );
             }
           } else {
-            // Crear nuevo usuario manualmente
             console.log('ℹ️ Creating new user with Google profile:', user.name);
             const newUser = await prisma.user.create({
               data: {
@@ -89,7 +87,6 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user && user.email) {
         try {
-          // Buscar usuario en la base de datos para obtener datos actualizados
           const dbUser = await prisma.user.findUnique({
             where: { email: user.email },
           });
@@ -108,7 +105,6 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      // Asegurar que el role esté disponible en la sesión
       if (token) {
         session.user.id = token.id as string;
         session.user.role =
@@ -120,7 +116,6 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // Handle different redirect scenarios
       if (url.startsWith('/')) {
         // Relative URL - prepend base URL
         const finalUrl = `${baseUrl}${url}`;
@@ -128,11 +123,9 @@ export const authOptions: NextAuthOptions = {
       }
 
       if (url.startsWith(baseUrl)) {
-        // Same origin URL - allow it
         return url;
       }
 
-      // For external URLs or unhandled cases, redirect to account
       const accountUrl = `${baseUrl}/account`;
       return accountUrl;
     },

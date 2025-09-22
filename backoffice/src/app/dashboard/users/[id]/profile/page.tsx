@@ -54,8 +54,8 @@ export default async function ProfileViewPage({
     notFound();
   }
 
-  const profile = user.EmergencyProfile?.[0]; // Tomar el primer perfil
-  const sticker = user.Sticker?.[0]; // Tomar el primer sticker
+  const profile = user.EmergencyProfile?.[0];
+  const sticker = user.Sticker?.[0];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100">

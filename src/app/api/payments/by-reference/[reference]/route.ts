@@ -16,7 +16,6 @@ export async function GET(
       );
     }
 
-    // Buscar el pago por referencia
     const payment = await PaymentReferenceService.findByReference(reference);
 
     if (!payment) {
@@ -26,7 +25,6 @@ export async function GET(
       );
     }
 
-    // Retornar solo la información necesaria para la página
     return NextResponse.json({
       reference: payment.reference,
       amount: payment.amount,

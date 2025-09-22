@@ -23,10 +23,13 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-// Import StickerPreview from local components
 import StickerPreview from '../../../components/StickerPreview';
 
-// Utility function for date formatting
+/**
+ * Format date
+ * @param date - The date
+ * @returns - The formatted date
+ */
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat('es-ES', {
     year: 'numeric',
@@ -50,7 +53,9 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
   );
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
-  // Read view mode from URL parameters on component mount
+  /**
+   * Read view mode from URL parameters on component mount
+   */
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const savedView = urlParams.get('view') as 'list' | 'user' | 'purchase';
@@ -59,7 +64,10 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
     }
   }, []);
 
-  // Toggle group expansion
+  /**
+   * Toggle group expansion
+   * @param groupKey - The group key
+   */
   const toggleGroup = (groupKey: string) => {
     const newExpanded = new Set(expandedGroups);
     if (newExpanded.has(groupKey)) {
@@ -70,7 +78,11 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
     setExpandedGroups(newExpanded);
   };
 
-  // Handle bulk actions for a group
+  /**
+   * Handle bulk actions for a group
+   * @param group - The group
+   * @param action - The action
+   */
   const handleGroupAction = async (
     group: {
       orders: Order[];
@@ -88,7 +100,6 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
     });
 
     try {
-      // Get all order IDs from the group
       const orderIds = group.orders.map((order) => order.id);
 
       console.warn('Making bulk update request:', {
@@ -98,7 +109,6 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
         totalOrders: orderIds.length,
       });
 
-      // Use bulk update API endpoint
       const response = await fetch('/api/admin/orders/bulk-update', {
         method: 'PUT',
         headers: {
@@ -130,7 +140,9 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
         groupsAffected: responseData.groupsAffected,
       });
 
-      // Instead of full reload, preserve the current view mode
+      /**
+       * Instead of full reload, preserve the current view mode
+       */
       const currentUrl = new URL(window.location.href);
       currentUrl.searchParams.set('view', viewMode);
       window.location.href = currentUrl.toString();
@@ -142,7 +154,9 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
     }
   };
 
-  // Group orders by groupId (much simpler and more reliable!)
+  /**
+   * Group orders by groupId (much simpler and more reliable!)
+   */
   const groupedOrders =
     viewMode !== 'list'
       ? orders.reduce(
@@ -150,12 +164,10 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
             let groupKey: string;
 
             if (viewMode === 'purchase') {
-              // Group by groupId (real transactions)
               groupKey =
                 order.groupId ||
                 `fallback_${order.owner.email}_${order.createdAt.toDateString()}`;
             } else {
-              // Group by user (all orders from same user)
               groupKey = `user_${order.owner.email}`;
             }
 
@@ -187,13 +199,11 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
   const handleStatusTransition = async (orderId: string, newStatus: string) => {
     setIsUpdating(orderId);
     try {
-      // Find the order being updated
       const order = orders.find((o) => o.id === orderId);
       if (!order) {
         throw new Error('Orden no encontrada');
       }
 
-      // If the order HAS a groupId, it's a batch order - use bulk update for ALL orders in that group
       if (order.groupId) {
         const groupOrders = orders.filter((o) => o.groupId === order.groupId);
         const orderIds = groupOrders.map((o) => o.id);
@@ -221,14 +231,12 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
           );
         }
 
-        // Preserve view mode when reloading
         const currentUrl = new URL(window.location.href);
         currentUrl.searchParams.set('view', viewMode);
         window.location.href = currentUrl.toString();
         return;
       }
 
-      // If the order doesn't have a groupId, it's a single order - update only this sticker
       console.warn(`Actualizando single order: ${orderId.slice(0, 8)}...`);
 
       const response = await fetch(`/api/admin/orders/${orderId}`, {
@@ -244,7 +252,6 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
         throw new Error(errorData.error || 'Error al actualizar el estado');
       }
 
-      // Preserve view mode when reloading
       const currentUrl = new URL(window.location.href);
       currentUrl.searchParams.set('view', viewMode);
       window.location.href = currentUrl.toString();
@@ -264,13 +271,11 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
   };
 
   const editUser = (userId: string) => {
-    // Redirigir a la página de edición del usuario
     window.open(`/dashboard/users?user=${userId}`, '_blank');
   };
 
   const handleDownloadSVG = async (order: Order) => {
     try {
-      // Capturar solo el sticker sin sombras ni efectos del modal
       const stickerElement = document.querySelector(
         '[data-testid="sticker-preview"]'
       ) as HTMLElement;
@@ -279,7 +284,6 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
         return;
       }
 
-      // Esperar a que las imágenes se carguen completamente
       const images = stickerElement.querySelectorAll('img');
       await Promise.all(
         Array.from(images).map((img) => {
@@ -293,7 +297,6 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
 
       const htmlToImage = await import('html-to-image');
 
-      // Generar SVG con alta resolución
       const svgDataUrl = await htmlToImage.toSvg(stickerElement, {
         width: stickerElement.offsetWidth * 8,
         height: stickerElement.offsetHeight * 8,
@@ -305,12 +308,10 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
         quality: 1,
         backgroundColor: 'transparent',
         filter: (_node) => {
-          // Incluir todos los nodos
           return true;
         },
       });
 
-      // Descargar directamente el data URL como SVG
       const link = document.createElement('a');
       link.href = svgDataUrl;
       link.download = `sticker-${order.id}.svg`;
@@ -325,7 +326,6 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
 
   const handleDownloadPNG = async (order: Order) => {
     try {
-      // Capturar solo el sticker sin sombras ni efectos del modal
       const stickerElement = document.querySelector(
         '[data-testid="sticker-preview"]'
       ) as HTMLElement;
@@ -334,7 +334,6 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
         return;
       }
 
-      // Esperar a que las imágenes se carguen completamente
       const images = stickerElement.querySelectorAll('img');
       await Promise.all(
         Array.from(images).map((img) => {
@@ -348,7 +347,6 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
 
       const htmlToImage = await import('html-to-image');
 
-      // Generar PNG con máxima resolución
       const dataUrl = await htmlToImage.toPng(stickerElement, {
         width: stickerElement.offsetWidth * 10,
         height: stickerElement.offsetHeight * 10,
@@ -356,18 +354,16 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
           transform: 'scale(10)',
           transformOrigin: 'top left',
         },
-        pixelRatio: 4, // Incrementar pixelRatio para mejor calidad del QR
+        pixelRatio: 4,
         quality: 1,
         backgroundColor: 'transparent',
         canvasWidth: stickerElement.offsetWidth * 10,
         canvasHeight: stickerElement.offsetHeight * 10,
         filter: (_node) => {
-          // Incluir todos los nodos
           return true;
         },
       });
 
-      // Convertir data URL a blob
       const response = await fetch(dataUrl);
       const blob = await response.blob();
       downloadFile(blob, `sticker-${order.id}.png`, 'image/png');
@@ -474,7 +470,6 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
               Object.entries(groupedOrders).map(([groupKey, group]) => {
                 const isExpanded = expandedGroups.has(groupKey);
 
-                // For calculating totals, handle batch vs individual orders differently
                 let totalAmount = 0;
                 let totalOriginalAmount = 0;
                 let totalDiscountAmount = 0;
@@ -832,7 +827,7 @@ export default function OrdersManagement({ orders }: OrdersManagementProps) {
                 />
               ))}
         </div>
-        {/* Modal de vista previa */}
+        {/* Modal preview */}
         {showPreview && selectedOrder && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
@@ -1028,7 +1023,7 @@ function hasValidPayment(
 
   return payments.some(
     (p) =>
-      p.amount > 0 && // Only count payments with actual amounts
+      p.amount > 0 &&
       (p.status === PAYMENT_STATUS.PAID ||
         p.status === PAYMENT_STATUS.VERIFIED ||
         p.status === PAYMENT_STATUS.PENDING)
@@ -1044,7 +1039,7 @@ function formatCurrency(amount: number, currency: string): string {
 
 interface OrderCardProps {
   order: Order;
-  orders: Order[]; // Add orders array to check group payments
+  orders: Order[];
   onViewOrder: (order: Order) => void;
   onEditUser: (userId: string) => void;
   onStatusTransition: (orderId: string, status: string) => Promise<void>;
@@ -1082,8 +1077,9 @@ function OrderCard({
     }
   };
 
-  // Simple logic: now that all stickers in a batch have the same payment reference,
-  // we can just check this specific sticker's payments
+  /**
+   * Check if the order is a batch order
+   */
   const isBatchOrder = !!order.groupId;
   const hasPayment = hasValidPayment(order.payments);
 
@@ -1098,7 +1094,7 @@ function OrderCard({
       } rounded-lg p-6 transition-all duration-200 hover:shadow-md hover:border-gray-300`}
     >
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-        {/* Order Info & User (if standalone) */}
+        {/* Order Info & User */}
         <div className="md:col-span-3">
           {standalone && (
             <div className="flex items-center gap-3 mb-3">

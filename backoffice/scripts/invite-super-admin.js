@@ -43,7 +43,7 @@ async function inviteSuperAdmin() {
     console.log(`📧 Email: ${email}`);
     console.log(`👑 Rol: ${role}`);
 
-    // Verificar si el usuario ya existe
+    // Verify if the user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
       select: {
@@ -96,7 +96,7 @@ async function inviteSuperAdmin() {
       console.log('   Role:', newUser.role);
     }
 
-    // Limpiar invitaciones expiradas o usadas
+    // Clean up expired or used invitations
     const cleanupResult = await prisma.adminInvitation.deleteMany({
       where: {
         email,
@@ -110,7 +110,7 @@ async function inviteSuperAdmin() {
       );
     }
 
-    // Crear nueva invitación
+    // Create new invitation
     const token = require('crypto').randomBytes(32).toString('hex');
     const invitationId = require('crypto').randomBytes(12).toString('hex');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -133,7 +133,7 @@ async function inviteSuperAdmin() {
       expiresAt: invitation.expiresAt,
     });
 
-    // Generar URL de invitación
+    // Generate invitation URL
     const baseUrl = config.nextauth.production;
     const inviteUrl = `${baseUrl}/auth/accept-invitation?token=${token}`;
 
