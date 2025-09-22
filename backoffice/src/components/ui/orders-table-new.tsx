@@ -8,6 +8,7 @@ import {
   getPaymentDisplayInfo,
   type OrderStatus,
 } from '@/lib/order-helpers';
+import { getQrUrlForSticker } from '@/lib/url-utils';
 import { formatDateTime, getStatusColor } from '@/lib/utils';
 import { Order } from '@/types/dashboard';
 import {
@@ -99,7 +100,9 @@ export default function OrdersTableNew({ orders }: OrdersTableNewProps) {
 
   const downloadQR = async (order: Order) => {
     try {
-      const qrUrl = `${window.location.origin.replace(':3001', '')}/s/${order.slug}`;
+      // Get the QR URL using the shared utility function
+      const qrUrl = await getQrUrlForSticker(order.id, order.slug);
+
       const qrDataUrl = await QRCode.toDataURL(qrUrl, {
         width: 300,
         margin: 2,

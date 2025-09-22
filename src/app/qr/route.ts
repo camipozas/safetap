@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { NextRequest } from 'next/server';
 
 import { auth } from '@/lib/auth';
+import { getEmergencyProfileForSticker } from '@/lib/emergency-profile-service';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
@@ -47,9 +48,18 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Construir la URL del QR sin exponer información técnica
-  const stickerUrl = `${process.env.NEXTAUTH_URL}/s/${sticker.slug}`;
-  const qrApiUrl = `/api/qr/generate?url=${encodeURIComponent(stickerUrl)}&format=${format}&size=${size}&dpi=${dpi}`;
+  // Obtener el perfil de emergencia usando la lógica existente
+  const emergencyProfile = await getEmergencyProfileForSticker(stickerId);
+
+  if (!emergencyProfile) {
+    return new Response('Emergency profile not found for this sticker', {
+      status: 400,
+    });
+  }
+
+  // Construir la URL del QR para redireccionar a información de emergencia
+  const emergencyProfileUrl = `${process.env.NEXTAUTH_URL}/qr/${emergencyProfile.id}`;
+  const qrApiUrl = `/api/qr/generate?url=${encodeURIComponent(emergencyProfileUrl)}&format=${format}&size=${size}&dpi=${dpi}`;
 
   // Redirigir al endpoint de generación de QR
   redirect(qrApiUrl);

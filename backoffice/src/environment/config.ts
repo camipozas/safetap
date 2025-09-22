@@ -43,6 +43,7 @@ export const environment = {
     environment: process.env.NODE_ENV || 'development',
     isProduction: process.env.NODE_ENV === 'production',
     isDevelopment: process.env.NODE_ENV === 'development',
+    mainAppUrl: process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://safetap.cl',
   },
 
   newrelic: {

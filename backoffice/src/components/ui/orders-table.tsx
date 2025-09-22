@@ -9,6 +9,7 @@ import {
   type OrderStatus,
   type OrderStatusTransition,
 } from '@/lib/order-helpers';
+import { getQrUrlForSticker } from '@/lib/url-utils';
 import { formatDateTime, getStatusColor } from '@/lib/utils';
 import { Order } from '@/types/dashboard';
 import {
@@ -104,8 +105,8 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
 
   const downloadQR = async (order: Order) => {
     try {
-      // Create URL for the QR
-      const qrUrl = `${window.location.origin.replace(':3002', '')}/s/${order.slug}`;
+      // Get the QR URL using the shared utility function
+      const qrUrl = await getQrUrlForSticker(order.id, order.slug);
 
       // Create canvas for the sticker
       const canvas = document.createElement('canvas');
@@ -204,8 +205,8 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
 
   const downloadStickerHighRes = async (order: Order) => {
     try {
-      // Create URL for the QR
-      const qrUrl = `${window.location.origin.replace(':3002', '')}/s/${order.slug}`;
+      // Get the QR URL using the shared utility function
+      const qrUrl = await getQrUrlForSticker(order.id, order.slug);
 
       // Create canvas for the sticker
       const canvas = document.createElement('canvas');

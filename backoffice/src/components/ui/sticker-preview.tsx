@@ -84,6 +84,7 @@ const StickerPreviewComponent = ({
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <StickerQrCode
+              stickerId={sticker.id}
               slug={sticker.slug}
               size={64}
               isPreview={false}

@@ -4,43 +4,23 @@ import Image from 'next/image';
 import QRCode from 'qrcode';
 import { memo, useEffect, useRef, useState } from 'react';
 
+import { getQrUrlForSticker } from '@/lib/url-utils';
+
 // Configuration constants for high-quality QR generation
 const QR_HIGH_QUALITY = 1.0;
 const RESOLUTION_SCALE_FACTOR = 4; // Higher scale for crisp rendering
 const ERROR_CORRECTION_LEVEL = 'H'; // High error correction for better readability
 
 interface StickerQrCodeProps {
+  stickerId?: string;
   slug?: string;
   size?: number;
   isPreview?: boolean;
   className?: string;
 }
 
-const getBaseUrl = () => {
-  if (typeof window === 'undefined') {
-    const MAINAPP_PORT = process.env.NEXT_PUBLIC_MAINAPP_PORT || '3000';
-    return (
-      process.env.NEXT_PUBLIC_BASE_URL || `http://localhost:${MAINAPP_PORT}`
-    );
-  }
-
-  // Use environment variables for ports, fallback to defaults if not set
-  const BACKOFFICE_PORT = process.env.NEXT_PUBLIC_BACKOFFICE_PORT || '3001';
-  const MAINAPP_PORT = process.env.NEXT_PUBLIC_MAINAPP_PORT || '3000';
-  const { protocol, hostname } = window.location;
-
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    const currentOrigin = window.location.origin;
-    if (currentOrigin.includes(`:${BACKOFFICE_PORT}`)) {
-      return currentOrigin.replace(`:${BACKOFFICE_PORT}`, `:${MAINAPP_PORT}`);
-    }
-    return `${protocol}//${hostname}:${MAINAPP_PORT}`;
-  }
-
-  return `${protocol}//${hostname}`;
-};
-
 export const StickerQrCode = memo(function StickerQrCode({
+  stickerId,
   slug,
   size = 120,
   isPreview = false,
@@ -59,13 +39,15 @@ export const StickerQrCode = memo(function StickerQrCode({
     let isMounted = true;
 
     const generateQR = async () => {
-      if (!slug || isPreview) return;
+      if ((!stickerId && !slug) || isPreview) return;
 
       // Check if running in browser environment
       if (typeof window === 'undefined') return;
 
       try {
-        const qrUrl = `${getBaseUrl()}/s/${slug}`;
+        // Get QR URL using the shared utility function
+        // Use stickerId if available, fallback to slug for backward compatibility
+        const qrUrl = await getQrUrlForSticker(stickerId || slug!, slug);
 
         // High-quality QR code options
         const qrOptions = {
@@ -105,7 +87,7 @@ export const StickerQrCode = memo(function StickerQrCode({
         abortControllerRef.current.abort();
       }
     };
-  }, [slug, size, isPreview]);
+  }, [stickerId, slug, size, isPreview]);
 
   if (isPreview) {
     // Show a fake QR code pattern for preview mode
@@ -175,7 +157,7 @@ export const StickerQrCode = memo(function StickerQrCode({
     );
   }
 
-  if (!slug || !qrDataUrl) {
+  if ((!stickerId && !slug) || !qrDataUrl) {
     // Show loading state
     return (
       <div
