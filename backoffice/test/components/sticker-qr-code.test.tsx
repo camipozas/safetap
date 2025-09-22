@@ -3,12 +3,21 @@ import QRCode from 'qrcode';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StickerQrCode } from '@/components/ui/sticker-qr-code';
+import { getMainAppUrl } from '@/lib/url-utils';
 
 // Mock QRCode library
 vi.mock('qrcode', () => ({
   default: {
     toDataURL: vi.fn().mockResolvedValue('data:image/png;base64,mock-qr-code'),
   },
+}));
+
+// Mock url-utils
+vi.mock('@/lib/url-utils', () => ({
+  getMainAppUrl: vi.fn().mockReturnValue('https://admin.safetap.com'),
+  getQrUrlForSticker: vi
+    .fn()
+    .mockResolvedValue('https://admin.safetap.com/s/test-slug'),
 }));
 
 // Mock window.location
@@ -151,10 +160,8 @@ describe('StickerQrCode (Backoffice)', () => {
       mockDataUrl
     );
 
-    // Mock fetch for emergency profile URL (should fail and fallback)
-    global.fetch = vi
-      .fn()
-      .mockRejectedValue(new Error('Emergency profile not found'));
+    // Mock getMainAppUrl to return specific URL for this test
+    vi.mocked(getMainAppUrl).mockReturnValue('https://admin.safetap.com');
 
     render(<StickerQrCode slug="test-slug" />);
 
@@ -162,9 +169,9 @@ describe('StickerQrCode (Backoffice)', () => {
       expect(screen.getByAltText('QR Code')).toBeInTheDocument();
     });
 
-    // Verify the fallback URL passed to QRCode.toDataURL
+    // Verify the fallback URL passed to QRCode.toDataURL uses getMainAppUrl
     expect(QRCode.toDataURL).toHaveBeenCalledWith(
-      'https://safetap.cl/s/test-slug',
+      'https://admin.safetap.com/s/test-slug',
       expect.any(Object)
     );
   });

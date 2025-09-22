@@ -4,7 +4,7 @@ import Image from 'next/image';
 import QRCode from 'qrcode';
 import { memo, useEffect, useRef, useState } from 'react';
 
-import { getQrUrlForSticker } from '@/lib/url-utils';
+import { getMainAppUrl, getQrUrlForSticker } from '@/lib/url-utils';
 
 // Configuration constants for high-quality QR generation
 const QR_HIGH_QUALITY = 1.0;
@@ -51,9 +51,8 @@ export const StickerQrCode = memo(function StickerQrCode({
           // If we have stickerId, use it for API lookup with slug as fallback
           qrUrl = await getQrUrlForSticker(stickerId, slug);
         } else {
-          // If we only have slug, generate URL directly
-          const mainAppUrl =
-            process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://safetap.cl';
+          // If we only have slug, generate URL directly using environment-aware utility
+          const mainAppUrl = getMainAppUrl();
           qrUrl = `${mainAppUrl}/s/${slug}`;
         }
 
