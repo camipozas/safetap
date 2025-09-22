@@ -169,19 +169,13 @@ describe('StickerQrCode (Backoffice)', () => {
     );
   });
 
-  it('uses emergency profile URL when available', async () => {
+  it('uses slug-based URL when slug is provided', async () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
-    const mockEmergencyUrl = 'https://safetap.cl/qr/emergency-profile-123';
+    const expectedSlugUrl = 'https://admin.safetap.com/s/test-slug'; // Backoffice environment
 
     (vi.mocked(QRCode.toDataURL) as ReturnType<typeof vi.fn>).mockResolvedValue(
       mockDataUrl
     );
-
-    // Mock successful fetch for emergency profile URL
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ emergencyUrl: mockEmergencyUrl }),
-    } as Response);
 
     render(<StickerQrCode stickerId="sticker-123" slug="test-slug" />);
 
@@ -189,9 +183,9 @@ describe('StickerQrCode (Backoffice)', () => {
       expect(screen.getByAltText('QR Code')).toBeInTheDocument();
     });
 
-    // Verify the emergency profile URL was used
+    // Verify the slug-based URL was used (no API call needed when slug is available)
     expect(QRCode.toDataURL).toHaveBeenCalledWith(
-      mockEmergencyUrl,
+      expectedSlugUrl,
       expect.any(Object)
     );
   });

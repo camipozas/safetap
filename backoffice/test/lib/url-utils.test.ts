@@ -163,14 +163,24 @@ describe('URL Utils', () => {
   });
 
   describe('getQrUrlForSticker', () => {
-    it('returns emergency profile URL when API call succeeds', async () => {
+    it('returns slug-based URL when fallback slug is provided', async () => {
+      const expectedUrl = 'http://localhost:3000/s/test-slug'; // Test environment default
+
+      const url = await getQrUrlForSticker('sticker-123', 'test-slug');
+
+      expect(url).toBe(expectedUrl);
+      // Should not make API call when fallback slug is available
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it('returns emergency profile URL when API call succeeds and no fallback slug', async () => {
       const mockEmergencyUrl = 'https://safetap.cl/qr/emergency-123';
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ emergencyUrl: mockEmergencyUrl }),
       });
 
-      const url = await getQrUrlForSticker('sticker-123', 'test-slug');
+      const url = await getQrUrlForSticker('sticker-123'); // No fallback slug
 
       expect(url).toBe(mockEmergencyUrl);
       expect(mockFetch).toHaveBeenCalledWith(
@@ -200,13 +210,17 @@ describe('URL Utils', () => {
 
     it('uses missing-slug fallback when no fallback slug provided', async () => {
       process.env.NEXT_PUBLIC_MAIN_APP_URL = 'https://safetap.cl';
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-      });
+
+      // Mock API call to fail so it uses fallback
+      mockFetch.mockRejectedValueOnce(new Error('API failed'));
 
       const url = await getQrUrlForSticker('sticker-123');
 
       expect(url).toBe('https://safetap.cl/s/missing-slug');
+      // Verify API was called
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/admin/emergency-profile-url/sticker-123'
+      );
     });
 
     it('uses dynamic main app URL in fallback', async () => {
