@@ -132,7 +132,7 @@ describe('/api/admin/emergency-profile-url/[orderId]', () => {
 
     expect(response.status).toBe(500);
     expect(data).toEqual({
-      error: 'Error interno del servidor',
+      error: 'Internal server error',
       details: 'Database connection failed',
     });
   });

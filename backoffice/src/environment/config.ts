@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 // Next.js automatically loads .env, .env.local, etc. from the project root
 
 export const environment = {
