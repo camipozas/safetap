@@ -3,7 +3,8 @@ import { QrCanvas } from '@/components/QrCanvas';
 
 interface StickerQrCodeProps {
   stickerId?: string;
-  serial?: string;
+  slug?: string; // The slug is what we actually need for the URL
+  serial?: string; // Keep for backwards compatibility but prefer slug
   size?: number;
   isPreview?: boolean;
   className?: string;
@@ -13,6 +14,7 @@ interface StickerQrCodeProps {
 
 export function StickerQrCode({
   stickerId,
+  slug,
   serial,
   size = 64,
   isPreview = false,
@@ -23,7 +25,8 @@ export function StickerQrCode({
   const defaultBaseUrl = 'https://safetap.cl';
   const resolvedBaseUrl = baseUrl || defaultBaseUrl;
 
-  const identifier = serial || stickerId || 'demo-sticker';
+  // Use slug first (correct), then serial for backwards compatibility
+  const identifier = slug || serial || stickerId || 'demo-sticker';
   const qrUrl = `${resolvedBaseUrl}/s/${identifier}`;
 
   const qrKey = `${identifier}-${size}-${isPreview}-${highQuality}`;

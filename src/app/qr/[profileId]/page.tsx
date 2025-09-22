@@ -13,20 +13,14 @@ interface QrProfilePageProps {
 export default async function QrProfilePage({ params }: QrProfilePageProps) {
   const { profileId } = await params;
 
-  // Find the profile by ID and check if it's public and has active payment
+  // Find the profile by ID and check if it's public
+  // Relaxed conditions to match /s/[slug] behavior
   const profile = await prisma.emergencyProfile.findFirst({
     where: {
       id: profileId,
       consentPublic: true,
       Sticker: {
-        status: 'ACTIVE', // Only show profiles with active stickers
-        Payment: {
-          some: {
-            status: {
-              in: ['VERIFIED', 'PAID'], // Accept paid and verified statuses
-            },
-          },
-        },
+        // Remove strict status and payment filters to be more permissive like /s/[slug]
       },
     },
     include: {
@@ -112,14 +106,7 @@ export async function generateMetadata({ params }: QrProfilePageProps) {
       id: profileId,
       consentPublic: true,
       Sticker: {
-        status: 'ACTIVE',
-        Payment: {
-          some: {
-            status: {
-              in: ['VERIFIED'],
-            },
-          },
-        },
+        // Remove filters to be consistent with main function
       },
     },
     include: {

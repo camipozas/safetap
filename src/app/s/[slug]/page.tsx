@@ -10,6 +10,7 @@ export default async function PublicProfile(props: {
   params: Promise<{ slug: string }>;
 }) {
   const params = await props.params;
+
   const profile = await prisma.emergencyProfile.findFirst({
     where: {
       consentPublic: true,

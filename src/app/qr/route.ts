@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 import { NextRequest } from 'next/server';
 
 import { auth } from '@/lib/auth';
-import { getEmergencyProfileForSticker } from '@/lib/emergency-profile-service';
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -39,6 +38,9 @@ export async function GET(request: NextRequest) {
       id: stickerId,
       ownerId: user.id,
     },
+    include: {
+      EmergencyProfile: true,
+    },
   });
 
   if (!sticker) {
@@ -52,15 +54,14 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const emergencyProfile = await getEmergencyProfileForSticker(stickerId);
-
-  if (!emergencyProfile) {
+  if (!sticker.EmergencyProfile) {
     return new Response('Emergency profile not found for this sticker', {
       status: 400,
     });
   }
 
-  const emergencyProfileUrl = `${process.env.NEXTAUTH_URL}/qr/${emergencyProfile.id}`;
+  // Use slug-based URL for better compatibility with existing QR codes
+  const emergencyProfileUrl = `${process.env.NEXTAUTH_URL}/s/${sticker.slug}`;
   const qrApiUrl = `/api/qr/generate?url=${encodeURIComponent(emergencyProfileUrl)}&format=${format}&size=${size}&dpi=${dpi}`;
 
   redirect(qrApiUrl);

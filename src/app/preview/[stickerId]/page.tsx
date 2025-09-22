@@ -74,6 +74,7 @@ export default async function PreviewPage(props: {
                 sticker.status === 'SHIPPED' || sticker.status === 'ACTIVE'
               }
               stickerId={sticker.id}
+              slug={sticker.slug}
               serial={sticker.serial}
               className="w-64 h-64"
             />

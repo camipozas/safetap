@@ -25,6 +25,7 @@ const StickerPreviewComponent = ({
   showRealQR = false,
   stickerId,
   serial,
+  slug,
   className = '',
 }: StickerPreviewProps) => {
   const flag = getCountryFlag(flagCode);
@@ -64,6 +65,7 @@ const StickerPreviewComponent = ({
           <div className="flex-1">
             <StickerQrCode
               stickerId={stickerId}
+              slug={slug}
               serial={serial}
               size={64}
               isPreview={!showRealQR}

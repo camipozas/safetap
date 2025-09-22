@@ -141,18 +141,25 @@ export async function shouldReuseEmergencyProfile(
 }
 
 /**
- * Gets the emergency profile URL for a sticker by finding the profile ID
- * and constructing the correct QR URL for emergency information.
+ * Gets the emergency profile URL for a sticker.
+ * Uses the slug-based URL (/s/{slug}) for better compatibility with existing QR codes.
  */
 export async function getEmergencyProfileUrlForSticker(
   stickerId: string,
   baseUrl: string
 ): Promise<string | null> {
-  const emergencyProfile = await getEmergencyProfileForSticker(stickerId);
+  // Get the sticker to access its slug
+  const sticker = await prisma.sticker.findUnique({
+    where: { id: stickerId },
+    select: {
+      slug: true,
+    },
+  });
 
-  if (!emergencyProfile) {
+  if (!sticker) {
     return null;
   }
 
-  return `${baseUrl}/qr/${emergencyProfile.id}`;
+  // Use slug-based URL for better compatibility
+  return `${baseUrl}/s/${sticker.slug}`;
 }
