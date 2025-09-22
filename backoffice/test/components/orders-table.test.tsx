@@ -15,6 +15,13 @@ vi.mock('@/lib/utils', () => ({
 // Mock fetch for API calls
 global.fetch = vi.fn();
 
+// Mock QRCode for download functionality
+vi.mock('qrcode', () => ({
+  default: {
+    toDataURL: vi.fn().mockResolvedValue('data:image/png;base64,mock-qr-data'),
+  },
+}));
+
 const mockOrders = [
   {
     id: 'test-order-1',
@@ -84,10 +91,33 @@ const mockOrders = [
 describe('OrdersTable', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ success: true }),
-    } as Response);
+
+    // Default mock for order status updates
+    vi.mocked(fetch).mockImplementation((url) => {
+      if (typeof url === 'string' && url.includes('/api/admin/orders/')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ success: true }),
+        } as Response);
+      }
+
+      // Default mock for emergency profile URLs (returns 404 to test fallback)
+      if (
+        typeof url === 'string' &&
+        url.includes('/api/admin/emergency-profile-url/')
+      ) {
+        return Promise.resolve({
+          ok: false,
+          status: 404,
+          json: () => Promise.resolve({ error: 'Profile not found' }),
+        } as Response);
+      }
+
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({}),
+      } as Response);
+    });
   });
 
   it('renders orders correctly', () => {

@@ -18,10 +18,16 @@ interface StickerQrCodeProps {
 
 const getBaseUrl = () => {
   if (typeof window === 'undefined') {
-    const MAINAPP_PORT = process.env.NEXT_PUBLIC_MAINAPP_PORT || '3000';
     return (
-      process.env.NEXT_PUBLIC_BASE_URL || `http://localhost:${MAINAPP_PORT}`
+      process.env.NEXT_PUBLIC_MAIN_APP_URL ||
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      `http://localhost:${process.env.NEXT_PUBLIC_MAINAPP_PORT || '3000'}`
     );
+  }
+
+  // Check if we have a dedicated main app URL set
+  if (process.env.NEXT_PUBLIC_MAIN_APP_URL) {
+    return process.env.NEXT_PUBLIC_MAIN_APP_URL;
   }
 
   // Use environment variables for ports, fallback to defaults if not set
@@ -65,7 +71,23 @@ export const StickerQrCode = memo(function StickerQrCode({
       if (typeof window === 'undefined') return;
 
       try {
-        const qrUrl = `${getBaseUrl()}/s/${slug}`;
+        // Try to get emergency profile URL first, fallback to slug URL
+        let qrUrl: string;
+        try {
+          // Assume slug corresponds to sticker ID for this component context
+          const response = await fetch(
+            `/api/admin/emergency-profile-url/${slug}`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            qrUrl = data.emergencyUrl;
+          } else {
+            qrUrl = `${getBaseUrl()}/s/${slug}`;
+          }
+        } catch {
+          // Fallback to original URL if emergency profile fetch fails
+          qrUrl = `${getBaseUrl()}/s/${slug}`;
+        }
 
         // High-quality QR code options
         const qrOptions = {

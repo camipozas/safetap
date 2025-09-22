@@ -67,6 +67,10 @@ DATABASE_URL="postgresql://user:password@host:port/database"
 NEXTAUTH_URL="http://localhost:3001"
 NEXTAUTH_SECRET="your-secret-here"
 
+# Main Application URL (for QR code generation)
+NEXT_PUBLIC_MAIN_APP_URL="http://localhost:3001"  # In development
+# NEXT_PUBLIC_MAIN_APP_URL="https://safetap.cl"  # In production
+
 # Google OAuth (required for admin authentication)
 GOOGLE_CLIENT_ID="123456789-abc123.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET="GOCSPX-abc123def456"

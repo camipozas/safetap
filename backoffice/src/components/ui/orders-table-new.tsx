@@ -99,7 +99,27 @@ export default function OrdersTableNew({ orders }: OrdersTableNewProps) {
 
   const downloadQR = async (order: Order) => {
     try {
-      const qrUrl = `${window.location.origin.replace(':3001', '')}/s/${order.slug}`;
+      // Get the emergency profile URL for this sticker
+      const response = await fetch(
+        `/api/admin/emergency-profile-url/${order.id}`
+      );
+
+      let qrUrl: string;
+      if (response.ok) {
+        const data = await response.json();
+        qrUrl = data.emergencyUrl;
+      } else {
+        // Fallback to the old slug-based URL if emergency profile not available
+        const mainAppUrl =
+          process.env.NEXT_PUBLIC_MAIN_APP_URL ||
+          window.location.origin.replace(':3001', '');
+        qrUrl = `${mainAppUrl}/s/${order.slug}`;
+        console.warn(
+          'Emergency profile not found for order, using fallback URL:',
+          order.id
+        );
+      }
+
       const qrDataUrl = await QRCode.toDataURL(qrUrl, {
         width: 300,
         margin: 2,

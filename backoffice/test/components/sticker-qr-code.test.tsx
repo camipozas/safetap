@@ -54,6 +54,11 @@ describe('StickerQrCode (Backoffice)', () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
     (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
 
+    // Mock fetch to fail so it falls back to slug URL
+    global.fetch = vi
+      .fn()
+      .mockRejectedValue(new Error('Emergency profile not found'));
+
     render(<StickerQrCode slug="test-slug" size={48} />);
 
     await waitFor(() => {
@@ -75,6 +80,11 @@ describe('StickerQrCode (Backoffice)', () => {
   it('uses standard quality for large QR codes', async () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
     (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
+
+    // Mock fetch to fail so it falls back to slug URL
+    global.fetch = vi
+      .fn()
+      .mockRejectedValue(new Error('Emergency profile not found'));
 
     render(<StickerQrCode slug="test-slug" size={128} />);
 
@@ -106,9 +116,14 @@ describe('StickerQrCode (Backoffice)', () => {
     expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 
-  it('generates correct URL for QR code', async () => {
+  it('generates correct URL for QR code with fallback', async () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
     (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
+
+    // Mock fetch for emergency profile URL (should fail and fallback)
+    global.fetch = vi
+      .fn()
+      .mockRejectedValue(new Error('Emergency profile not found'));
 
     render(<StickerQrCode slug="test-slug" />);
 
@@ -116,9 +131,34 @@ describe('StickerQrCode (Backoffice)', () => {
       expect(screen.getByAltText('QR Code')).toBeInTheDocument();
     });
 
-    // Verify the URL passed to QRCode.toDataURL
+    // Verify the fallback URL passed to QRCode.toDataURL
     expect(QRCode.toDataURL).toHaveBeenCalledWith(
       'https://admin.safetap.com/s/test-slug',
+      expect.any(Object)
+    );
+  });
+
+  it('uses emergency profile URL when available', async () => {
+    const mockDataUrl = 'data:image/png;base64,mockdata';
+    const mockEmergencyUrl = 'https://safetap.cl/qr/emergency-profile-123';
+
+    (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
+
+    // Mock successful fetch for emergency profile URL
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ emergencyUrl: mockEmergencyUrl }),
+    } as Response);
+
+    render(<StickerQrCode slug="test-slug" />);
+
+    await waitFor(() => {
+      expect(screen.getByAltText('QR Code')).toBeInTheDocument();
+    });
+
+    // Verify the emergency profile URL was used
+    expect(QRCode.toDataURL).toHaveBeenCalledWith(
+      mockEmergencyUrl,
       expect.any(Object)
     );
   });
