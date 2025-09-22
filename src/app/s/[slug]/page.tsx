@@ -11,13 +11,21 @@ export default async function PublicProfile(props: {
 }) {
   const params = await props.params;
 
+  // First, find the sticker by slug to get its owner
+  const sticker = await prisma.sticker.findUnique({
+    where: { slug: params.slug },
+    select: { id: true, ownerId: true, status: true },
+  });
+
+  if (!sticker) {
+    notFound();
+  }
+
+  // Then find the emergency profile for that user
   const profile = await prisma.emergencyProfile.findFirst({
     where: {
       consentPublic: true,
-      Sticker: {
-        slug: params.slug,
-        // Remove status filter to show all profiles regardless of payment status
-      },
+      userId: sticker.ownerId, // Find profile by sticker owner
     },
     include: {
       EmergencyContact: {
@@ -28,23 +36,6 @@ export default async function PublicProfile(props: {
           name: true,
           email: true,
           country: true,
-        },
-      },
-      Sticker: {
-        select: {
-          slug: true,
-          status: true,
-          Payment: {
-            select: {
-              id: true,
-              status: true,
-              amount: true,
-              createdAt: true,
-            },
-            orderBy: {
-              createdAt: 'desc',
-            },
-          },
         },
       },
     },
@@ -79,12 +70,11 @@ export default async function PublicProfile(props: {
             : undefined,
         contacts: profile.EmergencyContact,
         user: profile.User,
-        sticker: profile.Sticker
-          ? {
-              ...profile.Sticker,
-              payments: profile.Sticker.Payment,
-            }
-          : null,
+        sticker: {
+          slug: params.slug,
+          status: sticker.status,
+          payments: [], // No need for payment info in profile display
+        },
       }}
       showSafeTapId={false}
       isDemoMode={false}

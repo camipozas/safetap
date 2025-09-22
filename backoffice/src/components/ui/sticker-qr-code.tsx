@@ -46,8 +46,16 @@ export const StickerQrCode = memo(function StickerQrCode({
 
       try {
         // Get QR URL using the shared utility function
-        // Use stickerId if available, fallback to slug for backward compatibility
-        const qrUrl = await getQrUrlForSticker(stickerId || slug!, slug);
+        let qrUrl: string;
+        if (stickerId) {
+          // If we have stickerId, use it for API lookup with slug as fallback
+          qrUrl = await getQrUrlForSticker(stickerId, slug);
+        } else {
+          // If we only have slug, generate URL directly
+          const mainAppUrl =
+            process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://safetap.cl';
+          qrUrl = `${mainAppUrl}/s/${slug}`;
+        }
 
         // High-quality QR code options
         const qrOptions = {

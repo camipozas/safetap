@@ -46,6 +46,13 @@ export async function getQrUrlForSticker(
   stickerId: string,
   fallbackSlug?: string
 ): Promise<string> {
+  // If we have a fallback slug, use it directly
+  // This bypasses the API call for better reliability
+  if (fallbackSlug && fallbackSlug !== 'missing-slug') {
+    const mainAppUrl = getMainAppUrl();
+    return `${mainAppUrl}/s/${fallbackSlug}`;
+  }
+
   try {
     const response = await fetch(
       `/api/admin/emergency-profile-url/${stickerId}`
@@ -63,7 +70,7 @@ export async function getQrUrlForSticker(
     );
   }
 
-  // CRITICAL: Use the fallbackSlug if provided, don't use stickerId as slug
+  // Use the fallbackSlug if provided, don't use stickerId as slug
   if (!fallbackSlug) {
     console.error(
       `No fallback slug provided for sticker ${stickerId}. This will likely result in a broken URL.`

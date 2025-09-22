@@ -164,7 +164,7 @@ describe('StickerQrCode (Backoffice)', () => {
 
     // Verify the fallback URL passed to QRCode.toDataURL
     expect(QRCode.toDataURL).toHaveBeenCalledWith(
-      'https://admin.safetap.com/s/test-slug',
+      'https://safetap.cl/s/test-slug',
       expect.any(Object)
     );
   });
@@ -183,7 +183,7 @@ describe('StickerQrCode (Backoffice)', () => {
       json: () => Promise.resolve({ emergencyUrl: mockEmergencyUrl }),
     } as Response);
 
-    render(<StickerQrCode slug="test-slug" />);
+    render(<StickerQrCode stickerId="sticker-123" slug="test-slug" />);
 
     await waitFor(() => {
       expect(screen.getByAltText('QR Code')).toBeInTheDocument();

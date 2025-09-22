@@ -21,7 +21,17 @@ const previewDiscountSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     // Parse and validate request body
-    const body = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      // Handle empty or malformed JSON
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body' },
+        { status: 400 }
+      );
+    }
+
     const validatedData = previewDiscountSchema.parse(body);
 
     // Fetch active promotions from database
