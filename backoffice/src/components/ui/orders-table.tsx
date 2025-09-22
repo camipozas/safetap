@@ -9,6 +9,7 @@ import {
   type OrderStatus,
   type OrderStatusTransition,
 } from '@/lib/order-helpers';
+import { getQrUrlForSticker } from '@/lib/url-utils';
 import { formatDateTime, getStatusColor } from '@/lib/utils';
 import { Order } from '@/types/dashboard';
 import {
@@ -104,26 +105,8 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
 
   const downloadQR = async (order: Order) => {
     try {
-      // Get the emergency profile URL for this sticker
-      const response = await fetch(
-        `/api/admin/emergency-profile-url/${order.id}`
-      );
-
-      let qrUrl: string;
-      if (response.ok) {
-        const data = await response.json();
-        qrUrl = data.emergencyUrl;
-      } else {
-        // Fallback to the old slug-based URL if emergency profile not available
-        const mainAppUrl =
-          process.env.NEXT_PUBLIC_MAIN_APP_URL ||
-          window.location.origin.replace(':3001', '');
-        qrUrl = `${mainAppUrl}/s/${order.slug}`;
-        console.warn(
-          'Emergency profile not found for order, using fallback URL:',
-          order.id
-        );
-      }
+      // Get the QR URL using the shared utility function
+      const qrUrl = await getQrUrlForSticker(order.id, order.slug);
 
       // Create canvas for the sticker
       const canvas = document.createElement('canvas');
@@ -222,26 +205,8 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
 
   const downloadStickerHighRes = async (order: Order) => {
     try {
-      // Get the emergency profile URL for this sticker
-      const response = await fetch(
-        `/api/admin/emergency-profile-url/${order.id}`
-      );
-
-      let qrUrl: string;
-      if (response.ok) {
-        const data = await response.json();
-        qrUrl = data.emergencyUrl;
-      } else {
-        // Fallback to the old slug-based URL if emergency profile not available
-        const mainAppUrl =
-          process.env.NEXT_PUBLIC_MAIN_APP_URL ||
-          window.location.origin.replace(':3001', '');
-        qrUrl = `${mainAppUrl}/s/${order.slug}`;
-        console.warn(
-          'Emergency profile not found for order, using fallback URL:',
-          order.id
-        );
-      }
+      // Get the QR URL using the shared utility function
+      const qrUrl = await getQrUrlForSticker(order.id, order.slug);
 
       // Create canvas for the sticker
       const canvas = document.createElement('canvas');

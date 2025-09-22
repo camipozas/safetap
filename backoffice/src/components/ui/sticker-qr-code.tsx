@@ -4,6 +4,8 @@ import Image from 'next/image';
 import QRCode from 'qrcode';
 import { memo, useEffect, useRef, useState } from 'react';
 
+import { getQrUrlForSticker } from '@/lib/url-utils';
+
 // Configuration constants for high-quality QR generation
 const QR_HIGH_QUALITY = 1.0;
 const RESOLUTION_SCALE_FACTOR = 4; // Higher scale for crisp rendering
@@ -15,36 +17,6 @@ interface StickerQrCodeProps {
   isPreview?: boolean;
   className?: string;
 }
-
-const getBaseUrl = () => {
-  if (typeof window === 'undefined') {
-    return (
-      process.env.NEXT_PUBLIC_MAIN_APP_URL ||
-      process.env.NEXT_PUBLIC_BASE_URL ||
-      `http://localhost:${process.env.NEXT_PUBLIC_MAINAPP_PORT || '3000'}`
-    );
-  }
-
-  // Check if we have a dedicated main app URL set
-  if (process.env.NEXT_PUBLIC_MAIN_APP_URL) {
-    return process.env.NEXT_PUBLIC_MAIN_APP_URL;
-  }
-
-  // Use environment variables for ports, fallback to defaults if not set
-  const BACKOFFICE_PORT = process.env.NEXT_PUBLIC_BACKOFFICE_PORT || '3001';
-  const MAINAPP_PORT = process.env.NEXT_PUBLIC_MAINAPP_PORT || '3000';
-  const { protocol, hostname } = window.location;
-
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    const currentOrigin = window.location.origin;
-    if (currentOrigin.includes(`:${BACKOFFICE_PORT}`)) {
-      return currentOrigin.replace(`:${BACKOFFICE_PORT}`, `:${MAINAPP_PORT}`);
-    }
-    return `${protocol}//${hostname}:${MAINAPP_PORT}`;
-  }
-
-  return `${protocol}//${hostname}`;
-};
 
 export const StickerQrCode = memo(function StickerQrCode({
   slug,
@@ -71,23 +43,8 @@ export const StickerQrCode = memo(function StickerQrCode({
       if (typeof window === 'undefined') return;
 
       try {
-        // Try to get emergency profile URL first, fallback to slug URL
-        let qrUrl: string;
-        try {
-          // Assume slug corresponds to sticker ID for this component context
-          const response = await fetch(
-            `/api/admin/emergency-profile-url/${slug}`
-          );
-          if (response.ok) {
-            const data = await response.json();
-            qrUrl = data.emergencyUrl;
-          } else {
-            qrUrl = `${getBaseUrl()}/s/${slug}`;
-          }
-        } catch {
-          // Fallback to original URL if emergency profile fetch fails
-          qrUrl = `${getBaseUrl()}/s/${slug}`;
-        }
+        // Get QR URL using the shared utility function
+        const qrUrl = await getQrUrlForSticker(slug, slug);
 
         // High-quality QR code options
         const qrOptions = {
