@@ -32,7 +32,7 @@ describe('/api/admin/emergency-profile-url/[orderId]', () => {
       id: 'sticker-123',
       slug: 'test-slug',
       status: 'ACTIVE' as const,
-    } as any;
+    } as never;
 
     const mockEmergencyUrl = 'https://safetap.cl/qr/emergency-profile-456';
 
@@ -99,7 +99,7 @@ describe('/api/admin/emergency-profile-url/[orderId]', () => {
       id: 'sticker-123',
       slug: 'test-slug',
       status: 'ACTIVE' as const,
-    } as any;
+    } as never;
 
     vi.mocked(prisma.sticker.findFirst).mockResolvedValue(mockSticker);
     vi.mocked(getEmergencyProfileUrlForSticker).mockResolvedValue(null);
@@ -146,7 +146,7 @@ describe('/api/admin/emergency-profile-url/[orderId]', () => {
       id: 'sticker-123',
       slug: 'test-slug',
       status: 'ACTIVE' as const,
-    } as any;
+    } as never;
 
     const mockEmergencyUrl = 'https://safetap.cl/qr/emergency-profile-456';
 
@@ -177,7 +177,7 @@ describe('/api/admin/emergency-profile-url/[orderId]', () => {
       id: 'sticker-123',
       slug: 'test-slug',
       status: 'ACTIVE' as const,
-    } as any;
+    } as never;
 
     const mockEmergencyUrl =
       'https://main-app.safetap.cl/qr/emergency-profile-456';

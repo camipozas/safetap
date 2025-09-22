@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { EmergencyProfileDisplay } from '@/components/EmergencyProfileDisplay';
 import { prisma } from '@/lib/prisma';
+import { InsuranceData } from '@/types/database';
 
 // Force dynamic rendering to avoid database connection during build
 export const dynamic = 'force-dynamic';
@@ -146,14 +147,21 @@ export default async function DemoChilePage() {
   const profile = await ensureDemoProfile();
 
   // Transform the data to match the expected interface
-  let insurance: any = profile.insurance;
-  if (typeof insurance === 'string') {
-    try {
-      insurance = JSON.parse(insurance);
-    } catch {
+  let insurance: InsuranceData | undefined;
+
+  try {
+    if (profile.insurance && typeof profile.insurance === 'object') {
+      insurance = profile.insurance as unknown as InsuranceData;
+    } else if (typeof profile.insurance === 'string') {
+      insurance = JSON.parse(profile.insurance) as InsuranceData;
+    } else {
       insurance = undefined;
     }
+  } catch {
+    insurance = undefined;
   }
+
+  // Validate insurance structure
   if (
     insurance &&
     typeof insurance === 'object' &&

@@ -107,7 +107,7 @@ export async function PUT(
       }
     }
 
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (data.code) {
       updateData.code = data.code.trim().toUpperCase();
     }

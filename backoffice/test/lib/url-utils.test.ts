@@ -110,17 +110,24 @@ describe('URL Utils', () => {
     });
 
     describe('server-side behavior', () => {
-      let originalWindow: any;
+      let originalWindow: typeof window | undefined;
 
       beforeEach(() => {
         // Mock server-side environment by removing window
-        originalWindow = (global as any).window;
-        delete (global as any).window;
+        originalWindow = (
+          global as typeof globalThis & { window?: typeof window }
+        ).window;
+        // @ts-expect-error - Deleting window property for server-side simulation
+        delete (global as typeof globalThis & { window?: typeof window })
+          .window;
       });
 
       afterEach(() => {
         // Restore window
-        (global as any).window = originalWindow;
+        if (originalWindow) {
+          (global as typeof globalThis & { window?: typeof window }).window =
+            originalWindow;
+        }
       });
 
       it('returns NEXT_PUBLIC_MAIN_APP_URL when set on server', () => {

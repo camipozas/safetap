@@ -69,7 +69,7 @@ export async function PUT(
         ),
         totalAmount: order.Payment.reduce((sum, p) => sum + p.amount, 0),
         currency: order.Payment[0]?.currency || 'EUR',
-        latestStatus: (order.Payment[0]?.status as any) || null,
+        latestStatus: order.Payment[0]?.status || null,
         paymentCount: order.Payment.length,
       })
     ) {

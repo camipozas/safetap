@@ -99,7 +99,7 @@ export default async function UserDetailsPage(props: {
 
   const profile = user.EmergencyProfile?.[0]; // Get the first profile since it's an array
   const totalSpent = user.Payment.reduce(
-    (sum: number, payment: any) => sum + payment.amount,
+    (sum: number, payment: { amount: number }) => sum + payment.amount,
     0
   );
 
@@ -272,32 +272,41 @@ export default async function UserDetailsPage(props: {
           <CardContent>
             {user.Sticker.length > 0 ? (
               <div className="space-y-3">
-                {user.Sticker.map((sticker: any) => (
-                  <div
-                    key={sticker.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div>
-                      <div className="font-medium text-sm">#{sticker.slug}</div>
-                      <div className="text-xs text-gray-500">
-                        {formatDateTime(sticker.createdAt)}
-                      </div>
-                    </div>
-                    <span
-                      className={`inline-block px-2 py-1 text-xs rounded-full ${
-                        sticker.status === StickerStatus.ACTIVE
-                          ? 'bg-green-100 text-green-800'
-                          : sticker.status === StickerStatus.PAID
-                            ? 'bg-blue-100 text-blue-800'
-                            : sticker.status === StickerStatus.SHIPPED
-                              ? 'bg-purple-100 text-purple-800'
-                              : 'bg-gray-100 text-gray-800'
-                      }`}
+                {user.Sticker.map(
+                  (sticker: {
+                    id: string;
+                    slug: string;
+                    createdAt: Date;
+                    status: string;
+                  }) => (
+                    <div
+                      key={sticker.id}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                     >
-                      {sticker.status}
-                    </span>
-                  </div>
-                ))}
+                      <div>
+                        <div className="font-medium text-sm">
+                          #{sticker.slug}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {formatDateTime(sticker.createdAt)}
+                        </div>
+                      </div>
+                      <span
+                        className={`inline-block px-2 py-1 text-xs rounded-full ${
+                          sticker.status === StickerStatus.ACTIVE
+                            ? 'bg-green-100 text-green-800'
+                            : sticker.status === StickerStatus.PAID
+                              ? 'bg-blue-100 text-blue-800'
+                              : sticker.status === StickerStatus.SHIPPED
+                                ? 'bg-purple-100 text-purple-800'
+                                : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        {sticker.status}
+                      </span>
+                    </div>
+                  )
+                )}
                 {user._count.Sticker > 5 && (
                   <div className="text-center">
                     <Link
@@ -326,24 +335,29 @@ export default async function UserDetailsPage(props: {
           <CardContent>
             {user.Payment.length > 0 ? (
               <div className="space-y-3">
-                {user.Payment.map((payment: any, index: number) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div>
-                      <div className="font-medium text-sm text-green-600">
-                        {formatCurrency(payment.amount)}
+                {user.Payment.map(
+                  (
+                    payment: { amount: number; createdAt: Date },
+                    index: number
+                  ) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    >
+                      <div>
+                        <div className="font-medium text-sm text-green-600">
+                          {formatCurrency(payment.amount)}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {formatDateTime(payment.createdAt)}
+                        </div>
                       </div>
-                      <div className="text-xs text-gray-500">
-                        {formatDateTime(payment.createdAt)}
-                      </div>
+                      <span className="inline-block px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                        {PaymentStatus.VERIFIED}
+                      </span>
                     </div>
-                    <span className="inline-block px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                      {PaymentStatus.VERIFIED}
-                    </span>
-                  </div>
-                ))}
+                  )
+                )}
                 {user._count.Payment > 5 && (
                   <div className="text-center">
                     <Link
@@ -373,22 +387,30 @@ export default async function UserDetailsPage(props: {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {profile.EmergencyContact.slice(0, 3).map((contact: any) => (
-                <div key={contact.id} className="p-4 border rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="font-medium">{contact.name}</div>
-                    {contact.preferred && (
-                      <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                        Preferido
-                      </span>
-                    )}
+              {profile.EmergencyContact.slice(0, 3).map(
+                (contact: {
+                  id: string;
+                  name: string;
+                  relation: string;
+                  phone: string;
+                  preferred: boolean;
+                }) => (
+                  <div key={contact.id} className="p-4 border rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-medium">{contact.name}</div>
+                      {contact.preferred && (
+                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                          Preferido
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {contact.relation}
+                    </div>
+                    <div className="text-sm text-gray-600">{contact.phone}</div>
                   </div>
-                  <div className="text-sm text-gray-600">
-                    {contact.relation}
-                  </div>
-                  <div className="text-sm text-gray-600">{contact.phone}</div>
-                </div>
-              ))}
+                )
+              )}
             </div>
             {profile.EmergencyContact.length > 3 && (
               <div className="mt-4 text-center">

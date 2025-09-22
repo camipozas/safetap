@@ -65,7 +65,7 @@ describe('/api/checkout/transfer/verify', () => {
       };
 
       vi.mocked(prisma.payment.findUnique).mockResolvedValue(
-        mockPayment as any
+        mockPayment as never
       );
       vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
         const tx = {
@@ -85,7 +85,7 @@ describe('/api/checkout/transfer/verify', () => {
             create: vi.fn().mockResolvedValue(mockProfile),
           },
         };
-        return callback(tx as any);
+        return callback(tx as never);
       });
 
       const response = await POST(
@@ -129,7 +129,7 @@ describe('/api/checkout/transfer/verify', () => {
       };
 
       vi.mocked(prisma.payment.findUnique).mockResolvedValue(
-        mockPayment as any
+        mockPayment as never
       );
       vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
         const tx = {
@@ -144,7 +144,7 @@ describe('/api/checkout/transfer/verify', () => {
             create: vi.fn(),
           },
         };
-        return callback(tx as any);
+        return callback(tx as never);
       });
 
       const response = await POST(
@@ -197,7 +197,7 @@ describe('/api/checkout/transfer/verify', () => {
       };
 
       vi.mocked(prisma.payment.findUnique).mockResolvedValue(
-        mockPayment as any
+        mockPayment as never
       );
 
       const response = await POST(
@@ -257,7 +257,7 @@ describe('/api/checkout/transfer/verify', () => {
       };
 
       vi.mocked(prisma.payment.findUnique).mockResolvedValue(
-        mockPayment as any
+        mockPayment as never
       );
       vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
         const tx = {
@@ -281,7 +281,7 @@ describe('/api/checkout/transfer/verify', () => {
             create: vi.fn(), // Should not be called
           },
         };
-        return callback(tx as any);
+        return callback(tx as never);
       });
 
       const request = new Request(
@@ -314,7 +314,7 @@ describe('/api/checkout/transfer/verify', () => {
       };
 
       vi.mocked(prisma.payment.findUnique).mockResolvedValue(
-        mockPayment as any
+        mockPayment as never
       );
 
       const url = new URL(

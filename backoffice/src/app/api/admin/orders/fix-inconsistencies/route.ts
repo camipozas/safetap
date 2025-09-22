@@ -79,7 +79,15 @@ export async function POST(request: NextRequest) {
     const updatePromises = updates.map((update) =>
       prisma.sticker.update({
         where: { id: update.id },
-        data: { status: update.newStatus as any },
+        data: {
+          status: update.newStatus as
+            | 'ORDERED'
+            | 'PAID'
+            | 'PRINTING'
+            | 'SHIPPED'
+            | 'ACTIVE'
+            | 'LOST',
+        },
       })
     );
 

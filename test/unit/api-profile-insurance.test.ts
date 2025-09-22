@@ -44,15 +44,13 @@ describe('Profile API - Insurance with isapreCustom', () => {
     // Mock authentication
     vi.mocked(auth).mockResolvedValue({
       user: { email: 'test@example.com' },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any);
+    } as never);
 
     // Mock user lookup
     vi.mocked(prisma.user.findUnique).mockResolvedValue({
       id: 'user-id',
       email: 'test@example.com',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any);
+    } as never);
 
     // Mock profile data with isapreCustom
     const mockProfileData = {
@@ -89,13 +87,13 @@ describe('Profile API - Insurance with isapreCustom', () => {
         ownerId: 'user-id',
         EmergencyProfile: null,
       },
-    ] as any);
+    ] as never);
 
     // Mock profile creation
     vi.mocked(prisma.emergencyProfile.create).mockResolvedValue({
       id: 'profile-id',
       ...mockProfileData,
-    } as any);
+    } as never);
 
     // Create request
     const request = new NextRequest('http://localhost:3000/api/profile', {
@@ -136,13 +134,13 @@ describe('Profile API - Insurance with isapreCustom', () => {
     // Mock authentication
     vi.mocked(auth).mockResolvedValue({
       user: { email: 'test@example.com' },
-    } as any);
+    } as never);
 
     // Mock user lookup
     vi.mocked(prisma.user.findUnique).mockResolvedValue({
       id: 'user-id',
       email: 'test@example.com',
-    } as any);
+    } as never);
 
     // Mock profile data with predefined isapre
     const mockProfileData = {
@@ -177,13 +175,13 @@ describe('Profile API - Insurance with isapreCustom', () => {
         ownerId: 'user-id',
         EmergencyProfile: null,
       },
-    ] as any);
+    ] as never);
 
     // Mock profile creation
     vi.mocked(prisma.emergencyProfile.create).mockResolvedValue({
       id: 'profile-id',
       ...mockProfileData,
-    } as any);
+    } as never);
 
     // Create request
     const request = new NextRequest('http://localhost:3000/api/profile', {

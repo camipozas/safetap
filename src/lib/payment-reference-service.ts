@@ -171,7 +171,15 @@ export class PaymentReferenceService {
 
         return acc;
       },
-      {} as Record<string, any>
+      {} as Record<
+        string,
+        {
+          date: string;
+          totalPayments: number;
+          totalAmount: number;
+          references: string[];
+        }
+      >
     );
 
     return Object.values(statsByDate);

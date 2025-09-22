@@ -181,11 +181,13 @@ export async function POST(request: NextRequest) {
     console.log('💾 Creating invitation in database');
     const invitation = await prisma.adminInvitation.create({
       data: {
+        id: `invitation-${Date.now()}`,
         email,
         role,
         token,
         expiresAt,
-      } as any,
+        updatedAt: new Date(),
+      },
     });
     console.log('✅ Invitation created with ID:', invitation.id);
 

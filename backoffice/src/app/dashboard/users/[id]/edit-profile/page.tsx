@@ -10,17 +10,15 @@ async function getUser(id: string) {
   return await prisma.user.findUnique({
     where: { id },
     include: {
-      Sticker: {
+      EmergencyProfile: {
         include: {
-          EmergencyProfile: {
-            include: {
-              EmergencyContact: {
-                orderBy: [{ preferred: 'desc' }, { createdAt: 'asc' }],
-              },
-            },
+          EmergencyContact: {
+            orderBy: [{ preferred: 'desc' }, { createdAt: 'asc' }],
           },
+          Sticker: true,
         },
       },
+      Sticker: true,
     },
   });
 }
@@ -35,15 +33,15 @@ export default async function EditProfilePage({
     return <div>Usuario no encontrado</div>;
   }
 
-  const sticker = user.Sticker[0] as any; // Asumimos que solo hay un sticker por usuario
-  if (!sticker) {
-    return <div>El usuario no tiene stickers</div>;
+  // Obtener el perfil de emergencia principal del usuario
+  const profile = user.EmergencyProfile?.[0];
+  if (!profile) {
+    return <div>El usuario no tiene un perfil de emergencia configurado</div>;
   }
 
   const handleSubmit = async (formData: FormData) => {
     'use server';
 
-    const profile = sticker.EmergencyProfile;
     if (!profile) return;
 
     const userName = formData.get('userName') as string;
@@ -107,6 +105,7 @@ export default async function EditProfilePage({
           },
         });
 
+        // Actualizar el nombre en todos los stickers del usuario
         await prisma.sticker.updateMany({
           where: { ownerId: user.id },
           data: {
@@ -124,7 +123,9 @@ export default async function EditProfilePage({
           conditions,
           medications,
           notes: notes || null,
-          insurance: insuranceData as any,
+          insurance: insuranceData
+            ? JSON.parse(JSON.stringify(insuranceData))
+            : null,
         },
       });
 
@@ -142,12 +143,14 @@ export default async function EditProfilePage({
         if (contactNames[i] && contactPhones[i]) {
           await prisma.emergencyContact.create({
             data: {
+              id: `contact-${Date.now()}-${i}`,
               profileId: profile.id,
               name: contactNames[i],
               phone: contactPhones[i],
               relation: contactRelations[i] || 'Contacto de emergencia',
               preferred: i === 0, // El primero es preferido
-            } as any,
+              updatedAt: new Date(),
+            },
           });
         }
       }
@@ -203,7 +206,7 @@ export default async function EditProfilePage({
               </label>
               <select
                 name="bloodType"
-                defaultValue={sticker.profile?.bloodType || ''}
+                defaultValue={profile.bloodType || ''}
                 className="w-full border rounded px-3 py-2"
               >
                 <option value="">Seleccionar tipo</option>
@@ -223,7 +226,7 @@ export default async function EditProfilePage({
                 <input
                   type="checkbox"
                   name="organDonor"
-                  defaultChecked={sticker.profile?.organDonor || false}
+                  defaultChecked={profile.organDonor || false}
                   className="rounded"
                 />
                 <span className="text-sm font-medium">Donante de Órganos</span>
@@ -239,7 +242,7 @@ export default async function EditProfilePage({
               <input
                 type="text"
                 name="allergies"
-                defaultValue={sticker.profile?.allergies?.join(', ') || ''}
+                defaultValue={profile.allergies?.join(', ') || ''}
                 className="w-full border rounded px-3 py-2"
                 placeholder="Ej. Penicilina, Mariscos"
               />
@@ -252,7 +255,7 @@ export default async function EditProfilePage({
               <input
                 type="text"
                 name="conditions"
-                defaultValue={sticker.profile?.conditions?.join(', ') || ''}
+                defaultValue={profile.conditions?.join(', ') || ''}
                 className="w-full border rounded px-3 py-2"
                 placeholder="Ej. Diabetes, Hipertensión"
               />
@@ -265,7 +268,7 @@ export default async function EditProfilePage({
               <input
                 type="text"
                 name="medications"
-                defaultValue={sticker.profile?.medications?.join(', ') || ''}
+                defaultValue={profile.medications?.join(', ') || ''}
                 className="w-full border rounded px-3 py-2"
                 placeholder="Ej. Metformina, Lisinopril"
               />
@@ -278,7 +281,7 @@ export default async function EditProfilePage({
             </label>
             <textarea
               name="notes"
-              defaultValue={sticker.profile?.notes || ''}
+              defaultValue={profile.notes || ''}
               rows={3}
               className="w-full border rounded px-3 py-2"
               placeholder="Información adicional relevante para emergencias..."
@@ -292,8 +295,16 @@ export default async function EditProfilePage({
             Contactos de Emergencia
           </h2>
 
-          {sticker.EmergencyProfile?.EmergencyContact?.map(
-            (contact: any, _index: any) => (
+          {profile.EmergencyContact?.map(
+            (
+              contact: {
+                id: string;
+                name: string;
+                relation: string;
+                phone: string;
+              },
+              _index: number
+            ) => (
               <div
                 key={contact.id}
                 className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 border rounded"
@@ -357,7 +368,9 @@ export default async function EditProfilePage({
               </label>{' '}
               <select
                 name="insuranceType"
-                defaultValue={(sticker.profile?.insurance as any)?.type || ''}
+                defaultValue={
+                  (profile.insurance as { type?: string })?.type || ''
+                }
                 className="w-full border rounded px-3 py-2"
               >
                 <option value="">Seleccionar</option>
@@ -372,7 +385,9 @@ export default async function EditProfilePage({
               </label>
               <select
                 name="isapreProvider"
-                defaultValue={(sticker.profile?.insurance as any)?.isapre || ''}
+                defaultValue={
+                  (profile.insurance as { isapre?: string })?.isapre || ''
+                }
                 className="w-full border rounded px-3 py-2"
               >
                 <option value="">Seleccionar Isapre</option>
@@ -406,7 +421,8 @@ export default async function EditProfilePage({
                 type="text"
                 name="isapreCustom"
                 defaultValue={
-                  (sticker.profile?.insurance as any)?.isapreCustom || ''
+                  (profile.insurance as { isapreCustom?: string })
+                    ?.isapreCustom || ''
                 }
                 className="w-full border rounded px-3 py-2"
                 placeholder="Escribir nombre de la Isapre"
@@ -421,7 +437,7 @@ export default async function EditProfilePage({
                 name="hasComplementary"
                 defaultValue={
                   (
-                    sticker.profile?.insurance as any
+                    profile.insurance as { hasComplementary?: boolean }
                   )?.hasComplementary?.toString() || 'false'
                 }
                 className="w-full border rounded px-3 py-2"
@@ -439,8 +455,8 @@ export default async function EditProfilePage({
                 type="text"
                 name="complementaryInsurance"
                 defaultValue={
-                  (sticker.profile?.insurance as any)?.complementaryInsurance ||
-                  ''
+                  (profile.insurance as { complementaryInsurance?: string })
+                    ?.complementaryInsurance || ''
                 }
                 className="w-full border rounded px-3 py-2"
                 placeholder="Ej. Vida Tres, Colmena Golden Cross"

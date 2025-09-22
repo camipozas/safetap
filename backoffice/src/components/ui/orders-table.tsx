@@ -758,7 +758,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
           // Use pre-processed display status if available, otherwise calculate it
           const displayStatus = order.displayStatus
             ? {
-                primaryStatus: order.displayStatus as any,
+                primaryStatus: order.displayStatus as string,
                 secondaryStatuses: order.displaySecondaryStatuses || [],
                 description: order.displayDescription || '',
               }
@@ -797,7 +797,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                   <span
                     className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(displayStatus.primaryStatus)}`}
                   >
-                    {getStatusLabel(displayStatus.primaryStatus)}
+                    {getStatusLabel(displayStatus.primaryStatus as OrderStatus)}
                   </span>
                   {displayStatus.secondaryStatuses.length > 0 && (
                     <span
@@ -805,7 +805,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                     >
                       ▲{' '}
                       {getStatusLabel(
-                        displayStatus.secondaryStatuses[0] as any
+                        displayStatus.secondaryStatuses[0] as OrderStatus
                       )}
                     </span>
                   )}
