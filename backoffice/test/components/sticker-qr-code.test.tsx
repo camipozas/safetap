@@ -50,6 +50,21 @@ describe('StickerQrCode (Backoffice)', () => {
     });
   });
 
+  it('prioritizes stickerId over slug when both are provided', async () => {
+    const mockDataUrl = 'data:image/png;base64,mockdata';
+    (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
+
+    render(
+      <StickerQrCode stickerId="sticker-123" slug="test-slug" size={64} />
+    );
+
+    await waitFor(() => {
+      const image = screen.getByAltText('QR Code');
+      expect(image).toBeInTheDocument();
+      expect(image).toHaveAttribute('src', mockDataUrl);
+    });
+  });
+
   it('optimizes quality for small QR codes', async () => {
     const mockDataUrl = 'data:image/png;base64,mockdata';
     (QRCode.toDataURL as any).mockResolvedValue(mockDataUrl);
@@ -104,7 +119,7 @@ describe('StickerQrCode (Backoffice)', () => {
     );
   });
 
-  it('shows loading state when no slug provided', () => {
+  it('shows loading state when no slug or stickerId provided', () => {
     render(<StickerQrCode />);
 
     expect(screen.getByText('Loading...')).toBeInTheDocument();
@@ -112,6 +127,12 @@ describe('StickerQrCode (Backoffice)', () => {
 
   it('shows loading state when slug is empty', () => {
     render(<StickerQrCode slug="" />);
+
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+  });
+
+  it('shows loading state when both stickerId and slug are empty', () => {
+    render(<StickerQrCode stickerId="" slug="" />);
 
     expect(screen.getByText('Loading...')).toBeInTheDocument();
   });

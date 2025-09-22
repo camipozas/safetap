@@ -12,6 +12,7 @@ const RESOLUTION_SCALE_FACTOR = 4; // Higher scale for crisp rendering
 const ERROR_CORRECTION_LEVEL = 'H'; // High error correction for better readability
 
 interface StickerQrCodeProps {
+  stickerId?: string;
   slug?: string;
   size?: number;
   isPreview?: boolean;
@@ -19,6 +20,7 @@ interface StickerQrCodeProps {
 }
 
 export const StickerQrCode = memo(function StickerQrCode({
+  stickerId,
   slug,
   size = 120,
   isPreview = false,
@@ -37,14 +39,15 @@ export const StickerQrCode = memo(function StickerQrCode({
     let isMounted = true;
 
     const generateQR = async () => {
-      if (!slug || isPreview) return;
+      if ((!stickerId && !slug) || isPreview) return;
 
       // Check if running in browser environment
       if (typeof window === 'undefined') return;
 
       try {
         // Get QR URL using the shared utility function
-        const qrUrl = await getQrUrlForSticker(slug, slug);
+        // Use stickerId if available, fallback to slug for backward compatibility
+        const qrUrl = await getQrUrlForSticker(stickerId || slug!, slug);
 
         // High-quality QR code options
         const qrOptions = {
@@ -84,7 +87,7 @@ export const StickerQrCode = memo(function StickerQrCode({
         abortControllerRef.current.abort();
       }
     };
-  }, [slug, size, isPreview]);
+  }, [stickerId, slug, size, isPreview]);
 
   if (isPreview) {
     // Show a fake QR code pattern for preview mode
@@ -154,7 +157,7 @@ export const StickerQrCode = memo(function StickerQrCode({
     );
   }
 
-  if (!slug || !qrDataUrl) {
+  if ((!stickerId && !slug) || !qrDataUrl) {
     // Show loading state
     return (
       <div

@@ -44,6 +44,10 @@ export function getMainAppUrl(): string {
 /**
  * Gets the emergency profile URL for a sticker, with fallback to slug-based URL.
  * This function handles the API call and fallback logic used in QR generation.
+ *
+ * @param stickerId - The sticker's database ID (preferred) or slug (fallback)
+ * @param fallbackSlug - The slug to use in fallback URL construction if API call fails
+ * @returns Promise resolving to the QR URL (either emergency profile or slug-based)
  */
 export async function getQrUrlForSticker(
   stickerId: string,
