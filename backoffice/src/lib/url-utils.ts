@@ -38,7 +38,7 @@ export function getMainAppUrl(): string {
  * Gets the emergency profile URL for a sticker, with fallback to slug-based URL.
  * This function handles the API call and fallback logic used in QR generation.
  *
- * @param stickerId - The sticker's database ID (preferred) or slug (fallback)
+ * @param stickerId - The sticker's database ID
  * @param fallbackSlug - The slug to use in fallback URL construction if API call fails
  * @returns Promise resolving to the QR URL (either emergency profile or slug-based)
  */
@@ -63,7 +63,14 @@ export async function getQrUrlForSticker(
     );
   }
 
+  // CRITICAL: Use the fallbackSlug if provided, don't use stickerId as slug
+  if (!fallbackSlug) {
+    console.error(
+      `No fallback slug provided for sticker ${stickerId}. This will likely result in a broken URL.`
+    );
+  }
+
   const mainAppUrl = getMainAppUrl();
-  const slug = fallbackSlug || stickerId;
+  const slug = fallbackSlug || 'missing-slug';
   return `${mainAppUrl}/s/${slug}`;
 }
