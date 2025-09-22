@@ -70,6 +70,7 @@ const StickerPreviewComponent = ({
             <StickerQrCode
               stickerId={identifier}
               serial={serial}
+              slug={slug}
               size={64}
               isPreview={!showRealQR}
               highQuality={true}
