@@ -131,7 +131,7 @@ export default async function AccountPage({
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="w-full">
       {/* Payment reference handler - restores payment ref after login */}
       <Suspense fallback={null}>
         <PaymentReferenceHandler />
@@ -241,9 +241,9 @@ export default async function AccountPage({
           </div>
         )}
 
-      <h1 className="text-2xl font-semibold">Mi cuenta</h1>
+      <h1 className="text-2xl font-semibold mb-6">Mi cuenta</h1>
 
-      <section>
+      <section className="mb-6">
         <h2 className="text-xl font-semibold">Mis stickers</h2>
         <ul className="mt-2 grid gap-4">
           {user?.Payment?.filter(
@@ -477,7 +477,9 @@ export default async function AccountPage({
       </section>
 
       {/* Payments section - now using API endpoint */}
-      <PaymentsTable />
+      <section className="w-full">
+        <PaymentsTable />
+      </section>
     </div>
   );
 }
