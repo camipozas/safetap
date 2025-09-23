@@ -81,7 +81,7 @@ export async function POST(req: Request) {
       user = await prisma.user.create({
         data: {
           email,
-          name: email.split('@')[0], // Use email prefix as default name
+          name: 'Usuario', // Use generic name as default
           id: crypto.randomUUID(), // Generate a unique id
           updatedAt: new Date(), // Set updatedAt to now
         },

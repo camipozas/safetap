@@ -70,7 +70,7 @@ export async function GET(req: Request) {
         data: {
           id: crypto.randomUUID(),
           email,
-          name: email.split('@')[0],
+          name: 'Usuario',
           updatedAt: new Date(),
         },
       });

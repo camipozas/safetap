@@ -42,6 +42,26 @@ export async function POST(req: Request) {
 
     const { contacts, ...profileData } = data;
 
+    // Update user name if provided in the profile data
+    if (data.userName && data.userName.trim() && data.userName !== user.name) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          name: data.userName.trim(),
+          updatedAt: new Date(),
+        },
+      });
+
+      // Also update nameOnSticker for all stickers owned by this user
+      await prisma.sticker.updateMany({
+        where: { ownerId: user.id },
+        data: {
+          nameOnSticker: data.userName.trim(),
+          updatedAt: new Date(),
+        },
+      });
+    }
+
     if (stickerId && profileId) {
       const existing = await prisma.emergencyProfile.findFirst({
         where: {
