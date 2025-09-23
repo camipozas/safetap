@@ -56,8 +56,7 @@ export function EmergencyProfileDisplay({
   showSafeTapId = false,
   isDemoMode = false,
 }: EmergencyProfileDisplayProps) {
-  const userName =
-    profile.user.name ?? profile.user.email?.split('@')[0] ?? 'Usuario';
+  const userName = profile.user.name || 'Usuario';
 
   return (
     <div className="max-w-2xl mx-auto bg-gray-50 min-h-screen">

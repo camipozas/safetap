@@ -124,33 +124,33 @@ export function PaymentsTable() {
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white rounded-lg border border-gray-200 p-6 w-full">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Pagos</h3>
 
       {payments.length === 0 ? (
         <p className="text-gray-500 text-sm">No hay pagos registrados.</p>
       ) : (
         <>
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
+          <div className="overflow-x-auto w-full">
+            <table className="min-w-full table-fixed">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-900">
+                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-900 w-24">
                     Fecha
                   </th>
-                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-900">
+                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-900 w-32">
                     Referencia
                   </th>
-                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-900">
+                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-900 w-48">
                     Descripción
                   </th>
-                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-900">
+                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-900 w-20">
                     Cantidad
                   </th>
-                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-900">
+                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-900 w-24">
                     Monto
                   </th>
-                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-900">
+                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-900 w-28">
                     Estado
                   </th>
                 </tr>

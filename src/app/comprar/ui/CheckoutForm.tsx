@@ -88,7 +88,7 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
-      {/* Nombre en sticker */}
+      {/* Name on sticker */}
       <div>
         <label
           className="block text-sm font-semibold text-slate-900 mb-2"
@@ -125,7 +125,7 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
         )}
       </div>
 
-      {/* Selector de país */}
+      {/* Country selector */}
       <div>
         <label
           className="block text-sm font-semibold text-slate-900 mb-2"
@@ -141,7 +141,7 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
         />
       </div>
 
-      {/* Cantidad */}
+      {/* Quantity */}
       <div>
         <label
           className="block text-sm font-semibold text-slate-900 mb-2"
@@ -219,7 +219,7 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
         </div>
       )}
 
-      {/* Discount Code Input */}
+      {/* Discount code input */}
       <DiscountCodeInput
         cartTotal={subtotal}
         onDiscountApplied={(result) => {
@@ -239,7 +239,7 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
         appliedDiscount={appliedDiscount}
       />
 
-      {/* Resumen de precio */}
+      {/* Price summary */}
       <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
         <h3 className="font-semibold text-slate-900 mb-4">
           Resumen del pedido
@@ -307,10 +307,10 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
         </div>
       </div>
 
-      {/* Datos Bancarios */}
-      <BankAccountInfo />
+      {/* Bank info - Only show if the amount is greater than 0 */}
+      {total > 0 && <BankAccountInfo />}
 
-      {/* Error del servidor */}
+      {/* Server error */}
       {serverError && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4">
           <div className="flex items-center">
@@ -330,7 +330,7 @@ export default function CheckoutForm({ userEmail }: { userEmail?: string }) {
         </div>
       )}
 
-      {/* Botón de envío */}
+      {/* Submit button */}
       <button
         className="w-full bg-brand hover:bg-brand-600 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
         type="submit"

@@ -174,8 +174,7 @@ export async function generateMetadata(props: {
     };
   }
 
-  const userName =
-    profile.User.name ?? profile.User.email?.split('@')[0] ?? 'Usuario';
+  const userName = profile.User.name || 'Usuario';
 
   const profileUrl = `https://safetap.cl/s/${params.slug}`;
   const profileDescription = `Información de emergencia de ${userName}. Acceso rápido a datos médicos vitales y contactos de emergencia a través de SafeTap.`;

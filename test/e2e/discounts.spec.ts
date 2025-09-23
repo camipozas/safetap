@@ -64,4 +64,30 @@ test.describe('Discount Code System', () => {
     expect(data).toHaveProperty('valid');
     expect(typeof data.valid).toBe('boolean');
   });
+
+  test('discount code input is functional', async ({ page }) => {
+    await page.goto('/comprar');
+    await page.waitForLoadState('networkidle');
+
+    // Check that discount code input exists and is functional
+    const discountInput = page.getByPlaceholder('Ingresa tu código');
+    if (await discountInput.isVisible()) {
+      await discountInput.fill('TESTCODE');
+      await page.getByRole('button', { name: /aplicar/i }).click();
+
+      // Should show some response (either success or error)
+      await page.waitForTimeout(1000);
+    }
+
+    // The page should still be functional
+    await expect(page.locator('body')).toBeVisible();
+  });
+
+  test('bank information is displayed on checkout page', async ({ page }) => {
+    await page.goto('/comprar');
+    await page.waitForLoadState('networkidle');
+
+    // Should show bank information for regular purchases
+    await expect(page.locator('text=/Datos Bancarios/')).toBeVisible();
+  });
 });

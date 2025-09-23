@@ -127,8 +127,7 @@ export async function generateMetadata({ params }: QrProfilePageProps) {
     };
   }
 
-  const userName =
-    profile.User.name ?? profile.User.email?.split('@')[0] ?? 'Usuario';
+  const userName = profile.User.name || 'Usuario';
 
   const profileUrl = `https://safetap.cl/qr/${profileId}`;
   const profileDescription = `Información de emergencia de ${userName}. Acceso rápido a datos médicos vitales y contactos de emergencia a través de SafeTap.`;

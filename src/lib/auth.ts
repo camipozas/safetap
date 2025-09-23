@@ -61,7 +61,7 @@ export const authOptions: NextAuthOptions = {
               data: {
                 id: cuid(),
                 email: user.email!,
-                name: user.name || 'Usuario',
+                name: user.name || user.email!.split('@')[0] || 'Usuario',
                 role: USER_ROLES.USER,
                 emailVerified: new Date(),
                 updatedAt: new Date(),

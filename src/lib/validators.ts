@@ -22,6 +22,7 @@ export const emergencyContactSchema = z.object({
 });
 
 export const profileSchema = z.object({
+  userName: z.string().min(1, 'Name required').max(100).optional(),
   bloodType: bloodTypeEnum.optional(),
   allergies: z
     .string()

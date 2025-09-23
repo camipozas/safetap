@@ -1,3 +1,4 @@
+import { $Enums } from '@prisma/client';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
@@ -19,7 +20,56 @@ export default async function AccountPage({
 }: {
   searchParams?: Promise<Record<string, string>>;
 }) {
-  let user = null;
+  let user:
+    | ({
+        Payment: ({
+          Sticker: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            status: $Enums.StickerStatus;
+            slug: string;
+            serial: string;
+            ownerId: string;
+            nameOnSticker: string;
+            flagCode: string;
+            colorPresetId: string;
+            stickerColor: string;
+            textColor: string;
+            groupId: string | null;
+          } | null;
+        } & {
+          reference: string;
+          id: string;
+          createdAt: Date;
+          updatedAt: Date;
+          userId: string;
+          stickerId: string | null;
+          amount: number;
+          currency: string;
+          method: string;
+          status: $Enums.PaymentStatus;
+          receivedAt: Date | null;
+          discountAmount: number | null;
+          discountCodeId: string | null;
+          originalAmount: number | null;
+          quantity: number;
+          promotionId: string | null;
+        })[];
+      } & {
+        id: string;
+        email: string;
+        name: string | null;
+        image: string | null;
+        country: string | null;
+        role: $Enums.Role;
+        emailVerified: Date | null;
+        totalSpent: number;
+        lastLoginAt: Date | null;
+        createdAt: Date;
+        updatedAt: Date;
+      })
+    | null = null;
   const session = await auth();
   const resolvedSearchParams = await searchParams;
 
@@ -81,53 +131,92 @@ export default async function AccountPage({
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="w-full">
       {/* Payment reference handler - restores payment ref after login */}
       <Suspense fallback={null}>
         <PaymentReferenceHandler />
       </Suspense>
 
-      {/* Mostrar información bancaria si hay referencia de pago */}
-      {resolvedSearchParams?.ref && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-          <div className="flex items-start mb-4">
-            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
-              <svg
-                className="w-4 h-4 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-                />
-              </svg>
+      {/* Show bank info if there is a payment reference and the amount is greater than 0 */}
+      {resolvedSearchParams?.ref &&
+        (() => {
+          const payment = user.Payment.find(
+            (payment) => payment.reference === resolvedSearchParams.ref
+          );
+          const amount = payment?.amount || 15000;
+
+          // Only show bank info for zero amounts
+          if (amount === 0) {
+            return (
+              <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+                <div className="flex items-start mb-4">
+                  <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                    <svg
+                      className="w-4 h-4 text-green-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-green-900 mb-1">
+                      Pedido Gratuito
+                    </h4>
+                    <p className="text-green-700 text-sm">
+                      Tu pedido es gratuito gracias al código de descuento
+                      aplicado. No necesitas realizar ningún pago.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+              <div className="flex items-start mb-4">
+                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                  <svg
+                    className="w-4 h-4 text-blue-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-blue-900 mb-1">
+                    Pago Pendiente
+                  </h4>
+                  <p className="text-blue-700 text-sm">
+                    Tienes un pago pendiente. Usa la información bancaria de
+                    abajo para realizar la transferencia.
+                  </p>
+                </div>
+              </div>
+              <BankAccountInfo
+                paymentReference={{
+                  reference: resolvedSearchParams.ref,
+                  amount,
+                  description: 'Pago de sticker SafeTap',
+                }}
+              />
             </div>
-            <div>
-              <h4 className="font-semibold text-blue-900 mb-1">
-                Pago Pendiente
-              </h4>
-              <p className="text-blue-700 text-sm">
-                Tienes un pago pendiente. Usa la información bancaria de abajo
-                para realizar la transferencia.
-              </p>
-            </div>
-          </div>
-          <BankAccountInfo
-            paymentReference={{
-              reference: resolvedSearchParams.ref,
-              amount:
-                user.Payment.find(
-                  (payment) => payment.reference === resolvedSearchParams.ref
-                )?.amount || 15000,
-              description: 'Pago de sticker SafeTap',
-            }}
-          />
-        </div>
-      )}
+          );
+        })()}
 
       {/* Dev Auth Banner */}
       {resolvedSearchParams?.['dev-auth'] &&
@@ -152,13 +241,13 @@ export default async function AccountPage({
           </div>
         )}
 
-      <h1 className="text-2xl font-semibold">Mi cuenta</h1>
+      <h1 className="text-2xl font-semibold mb-6">Mi cuenta</h1>
 
-      <section>
+      <section className="mb-6">
         <h2 className="text-xl font-semibold">Mis stickers</h2>
         <ul className="mt-2 grid gap-4">
-          {user.Payment?.filter(
-            (p) => p.Sticker && p.Sticker.ownerId === user.id
+          {user?.Payment?.filter(
+            (p) => p.Sticker && p.Sticker.ownerId === user?.id
           ).map((payment) => {
             const s = payment.Sticker!;
             const quantity = payment.quantity || 1;
@@ -215,13 +304,17 @@ export default async function AccountPage({
                                 </p>
                               </div>
                             </div>
-                            {payment.reference ? (
+                            {payment.reference && payment.amount > 0 ? (
                               <Link
                                 className="mt-3 text-sm bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1.5 rounded transition-colors inline-block"
                                 href={`/bank-details?ref=${encodeURIComponent(payment.reference)}`}
                               >
                                 Ver datos bancarios
                               </Link>
+                            ) : payment.reference && payment.amount === 0 ? (
+                              <span className="mt-3 text-sm bg-green-600 text-white px-3 py-1.5 rounded inline-block">
+                                Pedido gratuito - No requiere pago
+                              </span>
                             ) : (
                               <span className="mt-3 text-sm bg-gray-400 text-white px-3 py-1.5 rounded inline-block cursor-not-allowed">
                                 Referencia no disponible
@@ -384,7 +477,9 @@ export default async function AccountPage({
       </section>
 
       {/* Payments section - now using API endpoint */}
-      <PaymentsTable />
+      <section className="w-full">
+        <PaymentsTable />
+      </section>
     </div>
   );
 }

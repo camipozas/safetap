@@ -134,7 +134,7 @@ export default async function PreviewPage(props: {
             <article className="space-y-6">
               <header>
                 <h3 className="text-2xl font-bold flex items-center gap-2">
-                  {sticker.User.name ?? sticker.User.email?.split('@')[0]}{' '}
+                  {sticker.User.name || 'Usuario'}{' '}
                   <span className="text-sm rounded bg-slate-200 px-2 py-1">
                     {profile.language ?? 'es'}
                   </span>

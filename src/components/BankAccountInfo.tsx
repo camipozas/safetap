@@ -21,6 +21,11 @@ export default function BankAccountInfo({
 
   const bankInfo = BANK_INFO;
 
+  // Don't show bank info for zero-amount transactions
+  if (paymentReference && paymentReference.amount === 0) {
+    return null;
+  }
+
   const copyToClipboard = async (text: string, field: string) => {
     try {
       await navigator.clipboard.writeText(text);

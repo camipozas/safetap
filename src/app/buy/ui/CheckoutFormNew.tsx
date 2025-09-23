@@ -482,18 +482,20 @@ export default function CheckoutForm({ customization }: CheckoutFormProps) {
         </div>
       </div>
 
-      {/* Datos Bancarios */}
-      <BankAccountInfo
-        paymentReference={
-          tempReference
-            ? {
-                reference: tempReference,
-                amount: finalTotal,
-                description: `${qty} sticker${qty > 1 ? 's' : ''} SafeTap - ${customization.name}`,
-              }
-            : null
-        }
-      />
+      {/* Bank info - Only show if the amount is greater than 0 */}
+      {finalTotal > 0 && (
+        <BankAccountInfo
+          paymentReference={
+            tempReference
+              ? {
+                  reference: tempReference,
+                  amount: finalTotal,
+                  description: `${qty} sticker${qty > 1 ? 's' : ''} SafeTap - ${customization.name}`,
+                }
+              : null
+          }
+        />
+      )}
 
       {/* Server error */}
       {serverError && (

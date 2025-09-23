@@ -50,14 +50,24 @@ export async function POST(req: Request) {
 
     console.log('💾 Starting payment verification transaction...');
 
+    // For zero-amount transactions, automatically confirm as PAID
+    const isZeroAmount = payment.amount === 0;
+    const shouldConfirm = data.transferConfirmed || isZeroAmount;
+
     const result = await prisma.$transaction(async (tx) => {
+      if (isZeroAmount) {
+        console.log(
+          '🆓 Zero-amount transaction detected, auto-confirming as PAID'
+        );
+      }
+
       // Update payment status based on confirmation
-      const newStatus = data.transferConfirmed ? 'PAID' : 'REJECTED';
+      const newStatus = shouldConfirm ? 'PAID' : 'REJECTED';
       const updatedPayment = await tx.payment.update({
         where: { id: payment.id },
         data: {
           status: newStatus,
-          receivedAt: data.transferConfirmed ? new Date() : null,
+          receivedAt: shouldConfirm ? new Date() : null,
         },
       });
 
@@ -65,7 +75,7 @@ export async function POST(req: Request) {
       let updatedUser = payment.User;
 
       // If transfer payment is confirmed, mark sticker as PAID and update user totalSpent
-      if (data.transferConfirmed && payment.Sticker) {
+      if (shouldConfirm && payment.Sticker) {
         console.log(
           '✅ Transfer payment confirmed, updating sticker to PAID:',
           payment.Sticker.id
@@ -78,18 +88,23 @@ export async function POST(req: Request) {
         });
 
         // Update user's totalSpent using atomic increment to prevent race conditions
-        console.log(
-          '💰 Updating user totalSpent by:',
-          payment.amount,
-          'for user:',
-          payment.User.email
-        );
-        updatedUser = await tx.user.update({
-          where: { id: payment.userId },
-          data: {
-            totalSpent: { increment: payment.amount },
-          },
-        });
+        // Only increment if amount > 0 to avoid unnecessary updates
+        if (payment.amount > 0) {
+          console.log(
+            '💰 Updating user totalSpent by:',
+            payment.amount,
+            'for user:',
+            payment.User.email
+          );
+          updatedUser = await tx.user.update({
+            where: { id: payment.userId },
+            data: {
+              totalSpent: { increment: payment.amount },
+            },
+          });
+        } else {
+          console.log('🆓 Zero-amount transaction, skipping totalSpent update');
+        }
       }
 
       return {
@@ -121,7 +136,7 @@ export async function POST(req: Request) {
             serial: result.sticker.serial,
           }
         : null,
-      message: data.transferConfirmed
+      message: shouldConfirm
         ? 'Transferencia confirmada y sticker activado correctamente'
         : 'Pago rechazado',
     });
