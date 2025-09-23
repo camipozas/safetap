@@ -277,6 +277,11 @@ export async function POST(req: Request) {
         quantity: stickers.length, // Add explicit quantity logging
       });
 
+      // For zero-amount transactions, create payment as PAID and update sticker statuses
+      const isZeroAmount = finalAmount === 0;
+      const paymentStatus = isZeroAmount ? 'PAID' : 'PENDING';
+      const stickerStatus = isZeroAmount ? 'PAID' : 'ORDERED';
+
       // Create ONE payment for the entire purchase
       // For batch orders, the payment represents the TOTAL amount, not per-sticker
       const payment = await tx.payment.create({
@@ -293,10 +298,21 @@ export async function POST(req: Request) {
           currency: DEFAULT_CURRENCY,
           method: PAYMENT_METHOD,
           reference, // Single reference for the entire batch
-          status: 'PENDING',
+          status: paymentStatus,
           updatedAt: new Date(),
         },
       });
+
+      // Update all stickers status for zero-amount transactions
+      if (isZeroAmount) {
+        await tx.sticker.updateMany({
+          where: { id: { in: stickers.map((s) => s.id) } },
+          data: { status: stickerStatus },
+        });
+        console.log(
+          '🆓 Zero-amount batch transaction: Payment and all stickers marked as PAID'
+        );
+      }
 
       // Create PromotionRedemption record if an automatic promotion was applied
       if (appliedPromotionId) {

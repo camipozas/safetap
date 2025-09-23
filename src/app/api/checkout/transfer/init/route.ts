@@ -157,6 +157,11 @@ export async function POST(req: Request) {
         method: PAYMENT_METHOD,
       });
 
+      // For zero-amount transactions, create payment as PAID and update sticker status
+      const isZeroAmount = finalAmount === 0;
+      const paymentStatus = isZeroAmount ? 'PAID' : 'PENDING';
+      const stickerStatus = isZeroAmount ? 'PAID' : 'ORDERED';
+
       const payment = await tx.payment.create({
         data: {
           id: crypto.randomUUID(),
@@ -170,10 +175,21 @@ export async function POST(req: Request) {
           currency: DEFAULT_CURRENCY,
           method: PAYMENT_METHOD,
           reference,
-          status: 'PENDING',
+          status: paymentStatus,
           updatedAt: new Date(),
         },
       });
+
+      // Update sticker status for zero-amount transactions
+      if (isZeroAmount) {
+        await tx.sticker.update({
+          where: { id: sticker.id },
+          data: { status: stickerStatus },
+        });
+        console.log(
+          '🆓 Zero-amount transaction: Payment and sticker marked as PAID'
+        );
+      }
       return { sticker, payment };
     });
 
