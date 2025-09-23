@@ -136,6 +136,15 @@ export function isValidStatusTransition(
     );
   }
 
+  const isZeroAmountTransaction = paymentInfo.totalAmount === 0;
+  if (
+    isZeroAmountTransaction &&
+    currentStatus === ORDER_STATUS.ORDERED &&
+    newStatus === ORDER_STATUS.PRINTING
+  ) {
+    return true;
+  }
+
   // Business rules for status transitions
   switch (currentStatus) {
     case ORDER_STATUS.ORDERED:
@@ -219,6 +228,12 @@ export function getAvailableStatusTransitions(
         direction: TRANSITION_DIRECTION.FORWARD,
         requiresPayment: true,
         description: 'Marcar como pagada (requiere pago confirmado)',
+      },
+      {
+        status: ORDER_STATUS.PRINTING,
+        direction: TRANSITION_DIRECTION.FORWARD,
+        requiresPayment: false,
+        description: 'Iniciar impresión (para transacciones sin costo)',
       },
       {
         status: ORDER_STATUS.REJECTED,
@@ -368,7 +383,12 @@ export function getDisplayStatus(
   }
 
   // If the order is PAID but has no confirmed payments, this is inconsistent
-  if (currentStatus === ORDER_STATUS.PAID && !paymentInfo.hasConfirmedPayment) {
+  // EXCEPT for zero-amount transactions which are valid
+  if (
+    currentStatus === ORDER_STATUS.PAID &&
+    !paymentInfo.hasConfirmedPayment &&
+    paymentInfo.totalAmount > 0
+  ) {
     return {
       primaryStatus: ORDER_STATUS.ORDERED,
       secondaryStatuses: [ORDER_STATUS.PAID],

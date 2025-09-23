@@ -1024,10 +1024,11 @@ function hasValidPayment(
 
   return payments.some(
     (p) =>
-      p.amount > 0 &&
-      (p.status === PAYMENT_STATUS.PAID ||
-        p.status === PAYMENT_STATUS.VERIFIED ||
-        p.status === PAYMENT_STATUS.PENDING)
+      (p.amount > 0 &&
+        (p.status === PAYMENT_STATUS.PAID ||
+          p.status === PAYMENT_STATUS.VERIFIED ||
+          p.status === PAYMENT_STATUS.PENDING)) ||
+      (p.amount === 0 && p.status === PAYMENT_STATUS.PAID) // Zero-amount transactions are valid if they're marked as PAID
   );
 }
 
